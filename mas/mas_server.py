@@ -9,6 +9,7 @@ Endpoints:
   GET  /metrics             — Prometheus metrics
   GET  /personas            — List all personas
   GET  /personas/select     — Dry-run persona selection
+  GET  /personas/<id>/character — Get persona character content
   POST /request             — Submit a task request
   GET  /request/<id>        — Get request status
 """
@@ -92,6 +93,9 @@ class MASHandler(http.server.BaseHTTPRequestHandler):
             self._handle_personas(params)
         elif path == "/personas/select":
             self._handle_persona_select(params)
+        elif path.startswith("/personas/") and path.endswith("/character"):
+            persona_id = path.split("/personas/")[1].rsplit("/character")[0]
+            self._handle_persona_character(persona_id)
         elif path.startswith("/request/"):
             req_id = path.split("/request/")[1]
             self._handle_get_request(req_id)
@@ -197,6 +201,29 @@ class MASHandler(http.server.BaseHTTPRequestHandler):
                  "role": e.role, "category": e.category}
                 for e in selected
             ],
+        })
+
+    def _handle_persona_character(self, persona_id):
+        """Return character file content for a persona (key sections, token-efficient)."""
+        idx = persona_idx.get_index()
+        entry = idx.get(persona_id)
+        if not entry:
+            self._send_json(404, {"error": f"persona {persona_id} not found"})
+            return
+
+        try:
+            content = idx.extract_character_sections(persona_id)
+        except Exception as e:
+            log(f"[WARN] character load failed for {persona_id}: {e}")
+            content = f"(character file unavailable: {e})"
+
+        self._send_json(200, {
+            "id": entry.id,
+            "name": entry.name,
+            "callsign": entry.callsign,
+            "role": entry.role,
+            "category": entry.category,
+            "character_content": content,
         })
 
     def _handle_submit_request(self):
