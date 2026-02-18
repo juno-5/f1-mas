@@ -1,0 +1,33 @@
+{
+  "port": 7720,
+  "token_manager_url": "http://localhost:7700",
+  "model_router_url": "http://localhost:7710",
+  "anthropic_api_key": "",
+  "anthropic_api_key_file": "/home/mayacrew/.f1crew/shared/anthropic-api-key",
+  "claude_api_base": "https://api.anthropic.com",
+  "claude_model": "claude-sonnet-4-5-20250929",
+  "synthesis_model": "claude-sonnet-4-5-20250929",
+  "max_agents": 5,
+  "agent_timeout_seconds": 120,
+  "thread_pool_workers": 5,
+  "persona_registry_path": "/home/mayacrew/projects/mayacrew-f1crew/f1-mas/config/persona-registry.md",
+  "characters_base_dir": "/home/mayacrew/projects/mayacrew-f1crew/f1-mas/characters",
+  "selection_rules_path": "/home/mayacrew/projects/mayacrew-f1crew/f1-mas/config/selection-rules.md",
+  "task_templates_path": "/home/mayacrew/projects/mayacrew-f1crew/f1-mas/config/task-templates.md",
+  "state_file": "/home/mayacrew/.f1crew/shared/mas-state.json",
+  "slack": {
+    "enabled": false,
+    "bot_token": "",
+    "app_token": "",
+    "channel_id": ""
+  },
+  "constitution": {
+    "enabled": true,
+    "p0_block": true,
+    "p1_refuse": true
+  },
+  "metrics_enabled": true,
+  "hot_reload_interval": 30,
+  "persona_cache_ttl": 300,
+  "log_level": "info"
+}

@@ -1,0 +1,15 @@
+[Unit]
+Description=F1Crew MAS - Master Agent System (Port 7720)
+After=network.target token-manager.service model-router.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /home/mayacrew/.f1crew/scripts/mas/mas_server.py
+WorkingDirectory=/home/mayacrew/.f1crew/scripts
+Restart=always
+RestartSec=5
+Environment=HOME=/home/mayacrew
+Environment=PYTHONPATH=/home/mayacrew/.f1crew/scripts
+
+[Install]
+WantedBy=default.target
