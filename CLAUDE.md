@@ -189,6 +189,24 @@ When combining multiple persona outputs:
 6. **Context preservation**: Pass relevant conversation context to spawned agents.
 7. **Cost consciousness**: Use `model: "haiku"` for simple tasks, default (sonnet) for complex.
 
+## FAS Token Integration
+
+MAS는 FAS의 registered consumer로, token-manager가 토큰을 관리합니다.
+
+- **토큰 소스**: `~/.f1crew/agents/mas/agent/auth-profiles.json` (token-manager가 작성)
+- **토큰 공유**: 모든 MAS 에이전트(Zero, 마스터들, 합성)가 1개 consumer 토큰을 공유
+- **로테이션**: token-manager가 WRR 기반으로 자동 로테이션 — MAS는 읽기만
+- **격리**: 각 agent spawn 시 `~/.f1crew/mas-agents/<session>/` 에 토큰 복사하여 격리
+
+### Gateway API 규칙 (외부 호출 시)
+
+MAS가 FAS Gateway API를 직접 호출할 때:
+
+1. **`user` 필드 필수**: `"user": "mas:<task>"` (예: `"mas:persona-spawn"`)
+2. **엔드포인트**: `POST /v1/chat/completions`
+3. **인증**: `Authorization: Bearer <GATEWAY_TOKEN>`
+4. **상세 문서**: `~/F1/f1-fas/docs/TOKEN-CLIENT-GUIDE.md`
+
 ## File Structure Reference
 
 ```

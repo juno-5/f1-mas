@@ -1,8 +1,8 @@
-"""MAS Agent Runner — ThreadPoolExecutor + Claude Code CLI via Token Manager.
+"""MAS Agent Runner — ThreadPoolExecutor + Claude Code CLI via FAS consumer token.
 
-Uses the FAS token system: acquire OAuth token from token-manager,
-create isolated config dir with auth-profiles.json, then invoke `claude -p`.
-Each agent gets its own config dir to avoid auth-profiles race conditions.
+Uses the FAS token system: token-manager writes auth-profiles.json for MAS,
+agent_runner reads it to get the current OAuth token. Each agent gets its own
+isolated config dir with a copy of the token to avoid auth-profiles race conditions.
 """
 
 import json
@@ -10,8 +10,6 @@ import os
 import shutil
 import subprocess
 import time
-import urllib.request
-import urllib.error
 from concurrent.futures import ThreadPoolExecutor, Future
 
 from . import mas_config as cfg
@@ -22,6 +20,7 @@ _pool: ThreadPoolExecutor | None = None
 
 HOME = os.path.expanduser("~")
 MAS_WORK_DIR = os.path.join(HOME, ".f1crew", "mas-agents")
+MAS_AUTH_FILE = os.path.join(HOME, ".f1crew", "agents", "mas", "agent", "auth-profiles.json")
 
 
 def _get_pool() -> ThreadPoolExecutor:
@@ -34,34 +33,43 @@ def _get_pool() -> ThreadPoolExecutor:
     return _pool
 
 
-def _http_get(url: str, timeout: int = 10) -> dict:
-    """Simple HTTP GET returning JSON."""
-    req = urllib.request.Request(url)
-    with urllib.request.urlopen(req, timeout=timeout) as resp:
-        return json.loads(resp.read())
+def read_consumer_token() -> dict | None:
+    """Read the current OAuth token from FAS-managed auth-profiles.json.
 
-
-def acquire_token(session_id: str) -> dict | None:
-    """Acquire an OAuth token from token-manager.
-
-    Returns {"token": str, "name": str, "sessionId": str} or None.
+    Returns {"token": str, "name": str} or None if unavailable.
+    The token-manager writes this file via update_agent_auth() on rotation.
     """
-    tm_url = cfg.get("token_manager_url", "http://localhost:7700")
     try:
-        result = _http_get(f"{tm_url}/token?session=mas-{session_id}", timeout=5)
-        return result
-    except Exception as e:
-        print(f"[agent-runner] Token acquire failed: {e}", flush=True)
+        with open(MAS_AUTH_FILE, "r") as f:
+            data = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError) as e:
+        print(f"[agent-runner] Cannot read auth-profiles: {e}", flush=True)
         return None
 
+    # order is {"anthropic": ["anthropic:xxx"]} — get the first profile key
+    order = data.get("order", {})
+    if isinstance(order, dict):
+        profile_keys = order.get("anthropic", [])
+    elif isinstance(order, list):
+        profile_keys = order
+    else:
+        profile_keys = []
 
-def release_token(session_id: str):
-    """Release a token lease back to pool."""
-    tm_url = cfg.get("token_manager_url", "http://localhost:7700")
-    try:
-        _http_get(f"{tm_url}/release?session=mas-{session_id}", timeout=5)
-    except Exception:
-        pass
+    if not profile_keys:
+        print("[agent-runner] No profile in auth-profiles order", flush=True)
+        return None
+
+    profile_key = profile_keys[0]
+    profile = data.get("profiles", {}).get(profile_key, {})
+    token = profile.get("token", "")
+
+    if not token:
+        print(f"[agent-runner] Empty token for profile {profile_key}", flush=True)
+        return None
+
+    # Extract short name from profile key (e.g. "anthropic:kernel" → "kernel")
+    name = profile_key.split(":", 1)[-1] if ":" in profile_key else profile_key
+    return {"token": token, "name": name}
 
 
 def _create_agent_config_dir(session_id: str, oauth_token: str) -> str:
@@ -82,7 +90,7 @@ def _create_agent_config_dir(session_id: str, oauth_token: str) -> str:
                 "token": oauth_token,
             }
         },
-        "order": [profile_name],
+        "order": {"anthropic": [profile_name]},
     }
     with open(os.path.join(config_dir, "auth-profiles.json"), "w") as f:
         json.dump(profiles, f)
@@ -144,7 +152,7 @@ def run_agent(
     persona_id: str,
     callsign: str,
 ) -> dict:
-    """Execute a single agent: acquire token → isolated config → claude CLI → cleanup.
+    """Execute a single agent: read consumer token → isolated config → claude CLI → cleanup.
 
     Returns {"text": str, "tokens_used": int, "model": str, "duration_ms": int}.
     """
@@ -154,16 +162,16 @@ def run_agent(
 
     session_id = f"{request_id}-{agent_id}"
 
-    # 1. Acquire token from token-manager
-    token_info = acquire_token(session_id)
+    # 1. Read token from FAS-managed auth-profiles
+    token_info = read_consumer_token()
     if not token_info:
         state.update_agent(request_id, agent_id,
                            status="failed", error="no token available")
         return {"text": "", "tokens_used": 0, "model": "", "duration_ms": 0,
                 "error": "no token available"}
 
-    oauth_token = token_info.get("token", "")
-    token_name = token_info.get("name", "?")
+    oauth_token = token_info["token"]
+    token_name = token_info["name"]
 
     config_dir = None
     try:
@@ -221,7 +229,6 @@ def run_agent(
         }
     finally:
         _cleanup_agent_config_dir(session_id)
-        release_token(session_id)
 
 
 def run_agents_parallel(
@@ -266,11 +273,11 @@ def run_synthesis(request_id: str, prompt: str) -> dict:
     start = time.time()
     session_id = f"{request_id}-synth"
 
-    token_info = acquire_token(session_id)
+    token_info = read_consumer_token()
     if not token_info:
         return {"text": "", "tokens_used": 0, "error": "no token for synthesis"}
 
-    oauth_token = token_info.get("token", "")
+    oauth_token = token_info["token"]
     synth_model = cfg.get("synthesis_model", cfg.get("claude_model"))
 
     config_dir = None
@@ -292,4 +299,3 @@ def run_synthesis(request_id: str, prompt: str) -> dict:
         return {"text": "", "tokens_used": 0, "error": str(e)}
     finally:
         _cleanup_agent_config_dir(session_id)
-        release_token(session_id)
