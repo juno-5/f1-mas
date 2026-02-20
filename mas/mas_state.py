@@ -8,6 +8,9 @@ import uuid
 from dataclasses import dataclass, field, asdict
 from enum import Enum
 
+from f1common.io import save_json_atomic
+from f1common.events import record_event as _common_record_event
+
 from . import mas_config as cfg
 
 
@@ -81,10 +84,8 @@ def _state_file():
 
 
 def _save():
-    """Atomic JSON write."""
+    """Atomic JSON write via f1common."""
     path = _state_file()
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    tmp = path + ".tmp"
     try:
         data = {
             "version": 1,
@@ -96,9 +97,7 @@ def _save():
                 if r.status in ("pending", "analyzing", "assembling", "running", "synthesizing")
             },
         }
-        with open(tmp, "w") as f:
-            json.dump(data, f, indent=2, ensure_ascii=False)
-        os.replace(tmp, path)
+        save_json_atomic(path, data)
     except OSError:
         pass
 
@@ -117,16 +116,10 @@ def _load():
 
 
 def record_event(event_type: str, detail: str, request_id: str = ""):
-    """Append to activity timeline."""
+    """Append to activity timeline via f1common."""
     with _state_lock:
-        _timeline.append({
-            "ts": int(time.time()),
-            "type": event_type,
-            "detail": detail,
-            "request_id": request_id,
-        })
-        if len(_timeline) > 200:
-            _timeline[:] = _timeline[-200:]
+        extra = {"request_id": request_id} if request_id else {}
+        _common_record_event(_timeline, event_type, detail, **extra)
 
 
 def create_request(user_query: str) -> RequestState:

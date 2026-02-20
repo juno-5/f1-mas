@@ -5,8 +5,9 @@ import os
 import threading
 import time
 
-HOME = os.path.expanduser("~")
-F1CREW = f"{HOME}/.f1crew"
+from f1common.paths import HOME, F1CREW_ROOT
+
+F1CREW = str(F1CREW_ROOT)
 CONFIG_FILE = f"{F1CREW}/shared/mas-config.json"
 
 _DEFAULTS = {

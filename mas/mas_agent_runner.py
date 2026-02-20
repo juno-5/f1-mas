@@ -12,15 +12,17 @@ import subprocess
 import time
 from concurrent.futures import ThreadPoolExecutor, Future
 
+from f1common.paths import HOME, F1CREW_ROOT, agent_auth_profiles, agent_sessions_dir
+
 from . import mas_config as cfg
 from . import mas_state as state
 from .mas_constitution import filter_output
 
 _pool: ThreadPoolExecutor | None = None
 
-HOME = os.path.expanduser("~")
 MAS_WORK_DIR = os.path.join(HOME, ".f1crew", "mas-agents")
-MAS_AUTH_FILE = os.path.join(HOME, ".f1crew", "agents", "mas", "agent", "auth-profiles.json")
+MAS_AUTH_FILE = str(agent_auth_profiles("mas"))
+MAS_SESSIONS_DIR = str(agent_sessions_dir("mas"))
 
 
 def _get_pool() -> ThreadPoolExecutor:
@@ -72,7 +74,7 @@ def read_consumer_token() -> dict | None:
     return {"token": token, "name": name}
 
 
-def _create_agent_config_dir(session_id: str, oauth_token: str) -> str:
+def _create_agent_config_dir(session_id: str, oauth_token: str, token_name: str) -> str:
     """Create an isolated ~/.claude-like config dir for one agent.
 
     Returns the config dir path. The caller must clean it up.
@@ -80,8 +82,8 @@ def _create_agent_config_dir(session_id: str, oauth_token: str) -> str:
     config_dir = os.path.join(MAS_WORK_DIR, session_id)
     os.makedirs(config_dir, exist_ok=True)
 
-    # Write auth-profiles.json with this token
-    profile_name = f"anthropic:mas-{session_id}"
+    # Use actual token profile name so authProfileOverride maps correctly
+    profile_name = f"anthropic:{token_name}"
     profiles = {
         "profiles": {
             profile_name: {
@@ -96,6 +98,43 @@ def _create_agent_config_dir(session_id: str, oauth_token: str) -> str:
         json.dump(profiles, f)
 
     return config_dir
+
+
+def _collect_agent_session(config_dir: str):
+    """Move session data from isolated config dir to MAS standard sessions dir.
+
+    This makes MAS-spawned agent consumption trackable by token-manager's
+    sync_usage(), which scans ~/.f1crew/agents/*/sessions/.
+    """
+    src_meta = os.path.join(config_dir, "sessions", "sessions.json")
+    if not os.path.exists(src_meta):
+        return
+
+    os.makedirs(MAS_SESSIONS_DIR, exist_ok=True)
+
+    try:
+        src_data = json.load(open(src_meta))
+    except (json.JSONDecodeError, FileNotFoundError):
+        return
+
+    # Move JSONL files and update paths
+    for _key, info in src_data.items():
+        sf = info.get("sessionFile", "")
+        if sf and os.path.exists(sf):
+            dest_sf = os.path.join(MAS_SESSIONS_DIR, os.path.basename(sf))
+            shutil.move(sf, dest_sf)
+            info["sessionFile"] = dest_sf
+
+    # Merge into MAS sessions.json
+    dst_meta = os.path.join(MAS_SESSIONS_DIR, "sessions.json")
+    try:
+        dst_data = json.load(open(dst_meta))
+    except (json.JSONDecodeError, FileNotFoundError):
+        dst_data = {}
+
+    dst_data.update(src_data)
+    with open(dst_meta, "w") as f:
+        json.dump(dst_data, f)
 
 
 def _cleanup_agent_config_dir(session_id: str):
@@ -176,7 +215,7 @@ def run_agent(
     config_dir = None
     try:
         # 2. Create isolated config dir
-        config_dir = _create_agent_config_dir(session_id, oauth_token)
+        config_dir = _create_agent_config_dir(session_id, oauth_token, token_name)
 
         # 3. Call Claude CLI
         claude_model = cfg.get("claude_model", "claude-sonnet-4-5-20250929")
@@ -228,6 +267,8 @@ def run_agent(
             "error": error_msg,
         }
     finally:
+        if config_dir:
+            _collect_agent_session(config_dir)
         _cleanup_agent_config_dir(session_id)
 
 
@@ -282,7 +323,7 @@ def run_synthesis(request_id: str, prompt: str) -> dict:
 
     config_dir = None
     try:
-        config_dir = _create_agent_config_dir(session_id, oauth_token)
+        config_dir = _create_agent_config_dir(session_id, oauth_token, token_info["name"])
         result = call_claude_cli(prompt, config_dir, model=synth_model)
 
         if result.get("error"):
@@ -298,4 +339,6 @@ def run_synthesis(request_id: str, prompt: str) -> dict:
     except Exception as e:
         return {"text": "", "tokens_used": 0, "error": str(e)}
     finally:
+        if config_dir:
+            _collect_agent_session(config_dir)
         _cleanup_agent_config_dir(session_id)
