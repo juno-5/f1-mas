@@ -1,0 +1,89 @@
+{
+  "defaults": {
+    "model": {
+      "primary": "anthropic/claude-sonnet-4-6"
+    },
+    "memorySearch": {
+      "enabled": true,
+      "sources": ["memory"],
+      "extraPaths": ["~/.f1crew/shared-memory"],
+      "provider": "openai",
+      "remote": {
+        "baseUrl": "http://localhost:11434/v1",
+        "batch": { "enabled": false }
+      },
+      "model": "nomic-embed-text",
+      "sync": {
+        "onSessionStart": false,
+        "onSearch": true
+      }
+    },
+    "compaction": {
+      "mode": "safeguard"
+    },
+    "maxConcurrent": 4,
+    "subagents": {
+      "maxConcurrent": 4
+    },
+    "thinkingDefault": "off"
+  },
+  "list": [
+    {
+      "id": "zero",
+      "default": true,
+      "name": "Zero",
+      "agentDir": "~/.f1crew/agents/zero/agent",
+      "model": "anthropic/claude-sonnet-4-6",
+      "subagents": { "allowAgents": ["*"] }
+    },
+    {
+      "id": "dev-master",
+      "name": "Dev Master",
+      "agentDir": "~/.f1crew/agents/dev-master/agent",
+      "model": "anthropic/claude-sonnet-4-6",
+      "subagents": { "allowAgents": ["*"] }
+    },
+    {
+      "id": "mkt-master",
+      "name": "Marketing Master",
+      "agentDir": "~/.f1crew/agents/mkt-master/agent",
+      "model": "anthropic/claude-sonnet-4-6",
+      "subagents": { "allowAgents": ["*"] }
+    },
+    {
+      "id": "art-master",
+      "name": "Art Master",
+      "agentDir": "~/.f1crew/agents/art-master/agent",
+      "model": "anthropic/claude-sonnet-4-6",
+      "subagents": { "allowAgents": ["*"] }
+    },
+    {
+      "id": "commerce-master",
+      "name": "Commerce Master",
+      "agentDir": "~/.f1crew/agents/commerce-master/agent",
+      "model": "anthropic/claude-sonnet-4-6",
+      "subagents": { "allowAgents": ["*"] }
+    },
+    {
+      "id": "sales-master",
+      "name": "Sales Master",
+      "agentDir": "~/.f1crew/agents/sales-master/agent",
+      "model": "anthropic/claude-sonnet-4-6",
+      "subagents": { "allowAgents": ["*"] }
+    },
+    {
+      "id": "uiux-master",
+      "name": "UIUX Master",
+      "agentDir": "~/.f1crew/agents/uiux-master/agent",
+      "model": "anthropic/claude-sonnet-4-6",
+      "subagents": { "allowAgents": ["*"] }
+    },
+    {
+      "id": "cx-master",
+      "name": "CX Master",
+      "agentDir": "~/.f1crew/agents/cx-master/agent",
+      "model": "anthropic/claude-sonnet-4-6",
+      "subagents": { "allowAgents": ["*"] }
+    }
+  ]
+}
