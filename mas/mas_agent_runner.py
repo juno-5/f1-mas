@@ -223,6 +223,17 @@ def _run_agents_batch(
             "max_tokens": 4096,
         })
 
+    def _fail_all(error_msg: str) -> list[dict]:
+        """Mark all agents as failed and return error results."""
+        print(f"[agent-runner] Batch failed: {error_msg}", flush=True)
+        return [
+            (state.update_agent(request_id, a["agent_id"],
+                                status="failed", error=error_msg, model=model),
+             {"text": "", "tokens_used": 0, "model": model,
+              "duration_ms": 0, "error": error_msg})[1]
+            for a in agents
+        ]
+
     start = time.time()
     resp = None
     for attempt in range(2):  # 1 retry on transient errors
@@ -238,36 +249,12 @@ def _run_agents_batch(
                 print(f"[agent-runner] Batch connect error, retrying in 5s...", flush=True)
                 time.sleep(5)
                 continue
-            error_msg = f"xapi unreachable at {xapi_url} (after retry)"
-            print(f"[agent-runner] Batch call failed: {error_msg}", flush=True)
-            results = []
-            for a in agents:
-                state.update_agent(request_id, a["agent_id"],
-                                   status="failed", error=error_msg, model=model)
-                results.append({"text": "", "tokens_used": 0, "model": model,
-                                "duration_ms": 0, "error": error_msg})
-            return results
+            return _fail_all(f"xapi unreachable at {xapi_url} (after retry)")
         except Exception as e:
-            error_msg = str(e)
-            print(f"[agent-runner] Batch call failed: {error_msg}", flush=True)
-            results = []
-            for a in agents:
-                state.update_agent(request_id, a["agent_id"],
-                                   status="failed", error=error_msg, model=model)
-                results.append({"text": "", "tokens_used": 0, "model": model,
-                                "duration_ms": 0, "error": error_msg})
-            return results
+            return _fail_all(str(e))
 
     if resp.status_code != 200:
-        error_msg = f"xapi batch {resp.status_code}: {resp.text[:300]}"
-        print(f"[agent-runner] Batch HTTP error: {error_msg}", flush=True)
-        results = []
-        for a in agents:
-            state.update_agent(request_id, a["agent_id"],
-                               status="failed", error=error_msg, model=model)
-            results.append({"text": "", "tokens_used": 0, "model": model,
-                            "duration_ms": 0, "error": error_msg})
-        return results
+        return _fail_all(f"xapi batch {resp.status_code}: {resp.text[:300]}")
 
     batch_data = resp.json()
     batch_results = batch_data.get("results", [])
