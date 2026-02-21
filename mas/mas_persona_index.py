@@ -1,4 +1,4 @@
-"""MAS Persona Index — in-memory index of 158 personas with lazy character loading."""
+"""MAS Persona Index — in-memory index of 178 personas with lazy character loading."""
 
 import os
 import re
@@ -33,7 +33,7 @@ FUNCTION_PRIORITY = {
     "image_gen": ["F1-20", "F1-13"],
     "video_gen": ["F1-21", "04"],
     "audio_gen": ["F1-22", "03"],
-    "frontend_ui": ["FC-04", "F1-02"],
+    "frontend_ui": ["FC-04", "F1-02", "UX-05", "UX-04"],
     "engineering_mgmt": ["FC-10", "FC-01"],
     # Marketing functions (KR first, then US)
     "commerce_strategy": ["COM-KR-01", "COM-KR-02", "COM-US-01", "COM-US-02"],
@@ -42,6 +42,29 @@ FUNCTION_PRIORITY = {
     "tiktok_shortform": ["TIK-KR-01", "TIK-KR-02", "TIK-US-01", "TIK-US-02"],
     "brand_strategy": ["BRD-KR-01", "BRD-KR-02", "BRD-US-01", "BRD-US-02"],
     "visual_design": ["DES-KR-01", "DES-KR-02", "DES-US-01", "DES-US-02"],
+    # Commerce team functions
+    "ecommerce_platform": ["CMM-03", "CMM-01"],
+    "conversion_optimization": ["CMM-02", "CMM-01"],
+    "marketplace_strategy": ["CMM-04", "CMM-01"],
+    "loyalty_retention": ["CMM-05", "CMM-01"],
+    # Sales team functions
+    "enterprise_sales": ["SLS-01", "SLS-05"],
+    "sales_methodology": ["SLS-02", "SLS-01"],
+    "plg_sales": ["SLS-03", "SLS-01"],
+    "account_management": ["SLS-04", "SLS-01"],
+    "sales_engineering": ["SLS-05", "SLS-01"],
+    # UIUX team functions
+    "design_strategy": ["UX-01", "UX-02"],
+    "interaction_design": ["UX-02", "UX-01"],
+    "user_research": ["UX-03", "UX-01"],
+    "design_system": ["UX-04", "UX-01"],
+    "ux_engineering": ["UX-05", "UX-04"],
+    # CX team functions
+    "cx_strategy": ["CX-01", "CX-02"],
+    "customer_success": ["CX-02", "CX-01"],
+    "cx_analytics": ["CX-03", "CX-01"],
+    "omnichannel_cx": ["CX-04", "CX-01"],
+    "cx_operations": ["CX-05", "CX-01"],
     # Creative functions
     "lighting_photography": ["01", "F1-20"],
     "color_palette": ["02", "DES-KR-01"],
@@ -59,6 +82,7 @@ DOMAIN_KEYWORDS = {
         r"성능|performance|최적화|optimize|ML|머신러닝|machine.?learn",
         r"시스템|system|서버|server|네트워크|network|컨테이너|container|클라우드|cloud",
         r"AI|인공지능|모델학습|training|파이프라인|pipeline|데이터|data",
+        r"python|파이썬|java|rust|golang|typescript|스레드|thread|프로세스|process|동시성|concurren",
     ],
     "marketers": [
         r"마케팅|marketing|캠페인|campaign|광고|advertising|퍼포먼스|performance.?marketing",
@@ -76,7 +100,27 @@ DOMAIN_KEYWORDS = {
     "creatives": [
         r"조명|lighting|라이팅|컬러|color|팔레트|palette|사운드|sound",
         r"음악|music|음향|audio|모션|motion|영상|video|시네마|cinema",
-        r"향|scent|감각|sensory|오감|five.?sense|아트디렉션|art.?direction",
+        r"향수|향기|scent|감각|sensory|오감|five.?sense|아트디렉션|art.?direction",
+    ],
+    "commerce": [
+        r"커머스|commerce|이커머스|e.?commerce|쇼핑몰|shop|결제|payment",
+        r"전환율|conversion|CRO|마켓플레이스|marketplace|리텐션|retention",
+        r"개인화|personalization|로열티|loyalty|가격|pricing",
+    ],
+    "sales": [
+        r"세일즈|sales|영업|B2B|엔터프라이즈|enterprise|딜|deal",
+        r"파이프라인|pipeline|수주|계약|contract|PLG|revenue",
+        r"어카운트|account|고객.?관리|client.?management",
+    ],
+    "uiux": [
+        r"UI|UX|사용자.?경험|user.?experience|인터페이스|interface",
+        r"와이어프레임|wireframe|프로토타입|prototype|디자인.?시스템|design.?system",
+        r"접근성|accessibility|사용성|usability|인터랙션|interaction",
+    ],
+    "cx": [
+        r"고객.?경험|customer.?experience|CX|CS|고객.?서비스|customer.?service",
+        r"VoC|고객.?의견|NPS|만족도|satisfaction|서포트|support",
+        r"옴니채널|omnichannel|컨택센터|contact.?center",
     ],
 }
 
@@ -109,6 +153,8 @@ class PersonaIndex:
         self._by_tag: dict[str, list[str]] = {}
         self._char_cache: dict[str, str] = {}
         self._char_cache_ts: dict[str, float] = {}
+        self._extract_cache: dict[str, str] = {}  # cached extract_character_sections results
+        self._extract_cache_ts: dict[str, float] = {}
         self._lock = threading.Lock()
         self._registry_mtime = 0.0
         self._loaded = False
@@ -135,6 +181,12 @@ class PersonaIndex:
         entries.extend(self._parse_marketers(content))
         entries.extend(self._parse_models(content))
         entries.extend(self._parse_creatives(content))
+        # New teams (same table format: ID|Name|Callsign|Role|Location|File|Tags)
+        for section, category in [
+            ("Commerce", "commerce"), ("Sales", "sales"),
+            ("UIUX", "uiux"), ("CX", "cx"),
+        ]:
+            entries.extend(self._parse_generic_team(content, section, category))
 
         with self._lock:
             self._by_id.clear()
@@ -333,6 +385,38 @@ class PersonaIndex:
 
         return entries
 
+    def _parse_generic_team(self, content, section_header, category):
+        """Parse a team section with format: ID|Name|Callsign|Role|Location|File|Tags."""
+        entries = []
+        section = self._extract_section(content, section_header)
+        if not section:
+            return entries
+
+        locale_map = {
+            "korea": "korea", "japan": "japan", "usa": "usa",
+            "global": "global", "germany": "europe", "france": "europe",
+        }
+
+        for row in self._parse_table_rows(section):
+            if len(row) >= 6:
+                pid = row[0].strip()
+                name = row[1].strip()
+                callsign = row[2].strip()
+                role = row[3].strip()
+                location = row[4].strip().lower()
+                fpath = row[5].strip().strip("`")
+                tags_str = row[6] if len(row) > 6 else ""
+                tags = [t.strip() for t in tags_str.split(",") if t.strip()]
+                locale = locale_map.get(location, "global")
+
+                entries.append(PersonaEntry(
+                    id=pid, name=name, callsign=callsign,
+                    role=role, category=category, locale=locale,
+                    tags=tags, file_path=fpath,
+                ))
+
+        return entries
+
     # ── Public API ──
 
     def get(self, persona_id: str) -> PersonaEntry | None:
@@ -444,13 +528,28 @@ class PersonaIndex:
         return content
 
     def extract_character_sections(self, persona_id: str) -> str:
-        """Load character file and extract only key sections (~200 lines)."""
+        """Load character file and extract only key sections (~200 lines).
+
+        Results are cached in memory (same TTL as raw character files)
+        to avoid repeated regex processing on every agent invocation.
+        """
+        ttl = cfg.get("persona_cache_ttl", 300)
+        now = time.time()
+
+        with self._lock:
+            if persona_id in self._extract_cache:
+                if now - self._extract_cache_ts.get(persona_id, 0) < ttl:
+                    return self._extract_cache[persona_id]
+
         full_content = self.load_character(persona_id)
         if not full_content:
             return ""
 
         sections_to_keep = cfg.get("character_extract_sections", [])
         if not sections_to_keep:
+            with self._lock:
+                self._extract_cache[persona_id] = full_content
+                self._extract_cache_ts[persona_id] = now
             return full_content
 
         lines = full_content.split("\n")
@@ -481,7 +580,13 @@ class PersonaIndex:
         if len(result_lines) > 250:
             result_lines = result_lines[:250]
             result_lines.append("\n[... truncated for token efficiency ...]")
-        return "\n".join(result_lines)
+        extracted = "\n".join(result_lines)
+
+        with self._lock:
+            self._extract_cache[persona_id] = extracted
+            self._extract_cache_ts[persona_id] = now
+
+        return extracted
 
     def to_summary_list(self) -> list[dict]:
         """Return all personas as dicts for API response."""

@@ -171,8 +171,13 @@ def _execute_multi_perspective(
         _slack_agent_progress(request_id, ai["callsign"],
                               "completed" if not r.get("error") else "failed")
 
-    # Check for total failure
+    # Progressive synthesis: synthesize with whatever succeeded
     successful = [(ai, r) for ai, r in zip(agents_info, results) if not r.get("error")]
+    failed = [(ai, r) for ai, r in zip(agents_info, results) if r.get("error")]
+    if failed:
+        _log(f"[{request_id}] {len(failed)}/{len(agents_info)} agents failed, "
+             f"synthesizing with {len(successful)} successful")
+
     if not successful:
         return {"synthesis": "", "agent_outputs": results,
                 "error": "all agents failed"}
@@ -185,7 +190,7 @@ def _execute_multi_perspective(
             "agent_outputs": results, "error": None,
         }
 
-    # Synthesize
+    # Synthesize with available results (don't wait for slow agents)
     state.update_request(request_id, status="synthesizing")
     synth_prompt = build_synthesis_prompt(
         query,
@@ -274,7 +279,13 @@ def _execute_full_team(
         _slack_agent_progress(request_id, ai["callsign"],
                               "completed" if not r.get("error") else "failed")
 
+    # Progressive synthesis: synthesize with whatever succeeded
     successful = [(ai, r) for ai, r in zip(agents_info, results) if not r.get("error")]
+    failed_team = [(ai, r) for ai, r in zip(agents_info, results) if r.get("error")]
+    if failed_team:
+        _log(f"[{request_id}] Full Team: {len(failed_team)}/{len(agents_info)} agents failed, "
+             f"synthesizing with {len(successful)} successful")
+
     if not successful:
         return {"synthesis": "", "agent_outputs": results,
                 "error": "all agents failed"}
@@ -286,7 +297,7 @@ def _execute_full_team(
             "agent_outputs": results, "error": None,
         }
 
-    # Synthesize all outputs
+    # Synthesize with available results
     state.update_request(request_id, status="synthesizing")
     synth_prompt = build_synthesis_prompt(
         query,

@@ -1,18 +1,13 @@
-"""MAS Agent Runner — ThreadPoolExecutor + Claude Code CLI via FAS consumer token.
+"""MAS Agent Runner — ThreadPoolExecutor + xapi inference API.
 
-Uses the FAS token system: token-manager writes auth-profiles.json for MAS,
-agent_runner reads it to get the current OAuth token. Each agent gets its own
-isolated config dir with a copy of the token to avoid auth-profiles race conditions.
+Uses xapi /inference/chat endpoint which proxies through FAS Gateway (port 18789).
+Token management, usage tracking, and rate limiting handled automatically by FAS Gateway.
 """
 
-import json
-import os
-import shutil
-import subprocess
 import time
 from concurrent.futures import ThreadPoolExecutor, Future
 
-from f1common.paths import HOME, F1CREW_ROOT, agent_auth_profiles, agent_sessions_dir
+import httpx
 
 from . import mas_config as cfg
 from . import mas_state as state
@@ -20,9 +15,35 @@ from .mas_constitution import filter_output
 
 _pool: ThreadPoolExecutor | None = None
 
-MAS_WORK_DIR = os.path.join(HOME, ".f1crew", "mas-agents")
-MAS_AUTH_FILE = str(agent_auth_profiles("mas"))
-MAS_SESSIONS_DIR = str(agent_sessions_dir("mas"))
+# Shared httpx client — connection pooling for xapi calls
+_http: httpx.Client | None = None
+
+
+def _get_http() -> httpx.Client:
+    """Return shared httpx.Client with connection pooling (keep-alive reuse)."""
+    global _http
+    if _http is None or _http.is_closed:
+        _http = httpx.Client(
+            timeout=httpx.Timeout(120.0, connect=10.0),
+            limits=httpx.Limits(max_connections=10, max_keepalive_connections=5),
+        )
+    return _http
+
+
+# Model short name → full model ID
+_MODEL_MAP = {
+    "sonnet": "claude-sonnet-4-6",
+    "opus": "claude-opus-4-6",
+    "haiku": "claude-haiku-4-5-20251001",
+}
+
+_RATE_LIMIT_PATTERNS = [
+    "hit your limit",
+    "rate limit",
+    "too many requests",
+    "resets ",         # "resets 5am (UTC)"
+    "Not logged in",   # token revoked/expired
+]
 
 
 def _get_pool() -> ThreadPoolExecutor:
@@ -35,153 +56,72 @@ def _get_pool() -> ThreadPoolExecutor:
     return _pool
 
 
-def read_consumer_token() -> dict | None:
-    """Read the current OAuth token from FAS-managed auth-profiles.json.
-
-    Returns {"token": str, "name": str} or None if unavailable.
-    The token-manager writes this file via update_agent_auth() on rotation.
-    """
-    try:
-        with open(MAS_AUTH_FILE, "r") as f:
-            data = json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError) as e:
-        print(f"[agent-runner] Cannot read auth-profiles: {e}", flush=True)
-        return None
-
-    # order is {"anthropic": ["anthropic:xxx"]} — get the first profile key
-    order = data.get("order", {})
-    if isinstance(order, dict):
-        profile_keys = order.get("anthropic", [])
-    elif isinstance(order, list):
-        profile_keys = order
-    else:
-        profile_keys = []
-
-    if not profile_keys:
-        print("[agent-runner] No profile in auth-profiles order", flush=True)
-        return None
-
-    profile_key = profile_keys[0]
-    profile = data.get("profiles", {}).get(profile_key, {})
-    token = profile.get("token", "")
-
-    if not token:
-        print(f"[agent-runner] Empty token for profile {profile_key}", flush=True)
-        return None
-
-    # Extract short name from profile key (e.g. "anthropic:kernel" → "kernel")
-    name = profile_key.split(":", 1)[-1] if ":" in profile_key else profile_key
-    return {"token": token, "name": name}
+def _is_rate_limit_error(error_msg: str) -> bool:
+    """Detect if an error indicates token rate-limiting or expiry."""
+    lower = error_msg.lower()
+    return any(p.lower() in lower for p in _RATE_LIMIT_PATTERNS)
 
 
-def _create_agent_config_dir(session_id: str, oauth_token: str, token_name: str) -> str:
-    """Create an isolated ~/.claude-like config dir for one agent.
+def call_xapi_inference(prompt: str, model: str = None, timeout: int = None, user: str = "mas:agent") -> dict:
+    """Call LLM via xapi /inference/chat (replaces claude -p subprocess).
 
-    Returns the config dir path. The caller must clean it up.
-    """
-    config_dir = os.path.join(MAS_WORK_DIR, session_id)
-    os.makedirs(config_dir, exist_ok=True)
-
-    # Use actual token profile name so authProfileOverride maps correctly
-    profile_name = f"anthropic:{token_name}"
-    profiles = {
-        "profiles": {
-            profile_name: {
-                "type": "token",
-                "provider": "anthropic",
-                "token": oauth_token,
-            }
-        },
-        "order": {"anthropic": [profile_name]},
-    }
-    with open(os.path.join(config_dir, "auth-profiles.json"), "w") as f:
-        json.dump(profiles, f)
-
-    return config_dir
-
-
-def _collect_agent_session(config_dir: str):
-    """Move session data from isolated config dir to MAS standard sessions dir.
-
-    This makes MAS-spawned agent consumption trackable by token-manager's
-    sync_usage(), which scans ~/.f1crew/agents/*/sessions/.
-    """
-    src_meta = os.path.join(config_dir, "sessions", "sessions.json")
-    if not os.path.exists(src_meta):
-        return
-
-    os.makedirs(MAS_SESSIONS_DIR, exist_ok=True)
-
-    try:
-        src_data = json.load(open(src_meta))
-    except (json.JSONDecodeError, FileNotFoundError):
-        return
-
-    # Move JSONL files and update paths
-    for _key, info in src_data.items():
-        sf = info.get("sessionFile", "")
-        if sf and os.path.exists(sf):
-            dest_sf = os.path.join(MAS_SESSIONS_DIR, os.path.basename(sf))
-            shutil.move(sf, dest_sf)
-            info["sessionFile"] = dest_sf
-
-    # Merge into MAS sessions.json
-    dst_meta = os.path.join(MAS_SESSIONS_DIR, "sessions.json")
-    try:
-        dst_data = json.load(open(dst_meta))
-    except (json.JSONDecodeError, FileNotFoundError):
-        dst_data = {}
-
-    dst_data.update(src_data)
-    with open(dst_meta, "w") as f:
-        json.dump(dst_data, f)
-
-
-def _cleanup_agent_config_dir(session_id: str):
-    """Remove agent's isolated config dir."""
-    config_dir = os.path.join(MAS_WORK_DIR, session_id)
-    try:
-        shutil.rmtree(config_dir, ignore_errors=True)
-    except Exception:
-        pass
-
-
-def call_claude_cli(prompt: str, config_dir: str, model: str = None) -> dict:
-    """Call Claude via `claude -p` CLI with isolated config dir.
-
-    Returns {"text": str, "model": str, "error": str|None}.
+    Returns {"text": str, "model": str, "error": str|None,
+             "usage": {"input": int, "output": int, "cacheRead": int, "cacheWrite": int},
+             "cost_usd": float}.
     """
     if model is None:
-        model = cfg.get("claude_model", "claude-sonnet-4-5-20250929")
+        model = cfg.get("claude_model", "sonnet")
+    full_model = _MODEL_MAP.get(model, model)
 
-    timeout = cfg.get("agent_timeout_seconds", 120)
+    if timeout is None:
+        timeout = cfg.get("agent_timeout_seconds", 120)
 
-    cmd = ["claude", "-p", prompt, "--model", model, "--output-format", "text"]
-
-    env = {**os.environ}
-    env["CLAUDE_CONFIG_DIR"] = config_dir
-    env["CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC"] = "1"
+    xapi_url = cfg.get("xapi_url", "http://localhost:7750")
+    empty_usage = {"input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0}
 
     try:
-        result = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
+        resp = _get_http().post(
+            f"{xapi_url}/inference/chat",
+            json={
+                "model": full_model,
+                "messages": [{"role": "user", "content": prompt}],
+                "user": user,
+                "max_tokens": 4096,
+            },
             timeout=timeout,
-            env=env,
         )
 
-        if result.returncode != 0:
-            error = result.stderr.strip() or f"claude CLI exit code {result.returncode}"
-            return {"text": "", "model": model, "error": error}
+        if resp.status_code != 200:
+            error = resp.text[:300]
+            return {"text": "", "model": full_model, "error": f"xapi {resp.status_code}: {error}",
+                    "usage": empty_usage, "cost_usd": 0.0}
 
-        text = result.stdout.strip()
-        return {"text": text, "model": model, "error": None}
+        data = resp.json()
+        raw_usage = data.get("usage", {})
+        usage = {
+            "input": raw_usage.get("input_tokens", raw_usage.get("prompt_tokens", 0)),
+            "output": raw_usage.get("output_tokens", raw_usage.get("completion_tokens", 0)),
+            "cacheRead": raw_usage.get("cache_read_input_tokens", 0),
+            "cacheWrite": raw_usage.get("cache_creation_input_tokens", 0),
+        }
 
-    except subprocess.TimeoutExpired:
-        return {"text": "", "model": model, "error": f"timeout after {timeout}s"}
-    except FileNotFoundError:
-        return {"text": "", "model": model, "error": "claude CLI not found"}
+        return {
+            "text": data.get("content", ""),
+            "model": data.get("model", full_model),
+            "error": None,
+            "usage": usage,
+            "cost_usd": data.get("cost_usd", 0.0),
+        }
+
+    except httpx.TimeoutException:
+        return {"text": "", "model": full_model, "error": f"timeout after {timeout}s",
+                "usage": empty_usage, "cost_usd": 0.0}
+    except httpx.ConnectError:
+        return {"text": "", "model": full_model, "error": f"xapi unreachable at {xapi_url}",
+                "usage": empty_usage, "cost_usd": 0.0}
+    except Exception as e:
+        return {"text": "", "model": full_model, "error": str(e),
+                "usage": empty_usage, "cost_usd": 0.0}
 
 
 def run_agent(
@@ -191,7 +131,7 @@ def run_agent(
     persona_id: str,
     callsign: str,
 ) -> dict:
-    """Execute a single agent: read consumer token → isolated config → claude CLI → cleanup.
+    """Execute a single agent via xapi inference.
 
     Returns {"text": str, "tokens_used": int, "model": str, "duration_ms": int}.
     """
@@ -199,77 +139,162 @@ def run_agent(
     state.update_agent(request_id, agent_id,
                        status="running", started_at=start)
 
-    session_id = f"{request_id}-{agent_id}"
+    model = cfg.get("claude_model", "sonnet")
 
-    # 1. Read token from FAS-managed auth-profiles
-    token_info = read_consumer_token()
-    if not token_info:
-        state.update_agent(request_id, agent_id,
-                           status="failed", error="no token available")
-        return {"text": "", "tokens_used": 0, "model": "", "duration_ms": 0,
-                "error": "no token available"}
+    print(f"[agent-runner] {callsign} calling xapi inference...", flush=True)
+    result = call_xapi_inference(prompt, model=model, user=f"mas:{callsign}")
 
-    oauth_token = token_info["token"]
-    token_name = token_info["name"]
+    duration_ms = int((time.time() - start) * 1000)
 
-    config_dir = None
-    try:
-        # 2. Create isolated config dir
-        config_dir = _create_agent_config_dir(session_id, oauth_token, token_name)
+    if result.get("error"):
+        error_msg = result["error"]
+        print(f"[agent-runner] {callsign} error: {error_msg}", flush=True)
 
-        # 3. Call Claude CLI
-        claude_model = cfg.get("claude_model", "claude-sonnet-4-5-20250929")
-        model = f"anthropic/{claude_model}"
-
-        print(f"[agent-runner] {callsign} ({token_name}) calling claude...", flush=True)
-        result = call_claude_cli(prompt, config_dir, model=claude_model)
-
-        if result.get("error"):
-            print(f"[agent-runner] {callsign} error: {result['error']}", flush=True)
-            state.update_agent(request_id, agent_id,
-                               status="failed", error=result["error"])
-            return {
-                "text": "",
-                "tokens_used": 0,
-                "model": model,
-                "duration_ms": int((time.time() - start) * 1000),
-                "error": result["error"],
-            }
-
-        text = filter_output(result["text"])
-        duration_ms = int((time.time() - start) * 1000)
-
-        print(f"[agent-runner] {callsign} completed ({duration_ms}ms, {len(text)} chars)", flush=True)
+        if _is_rate_limit_error(error_msg):
+            print(f"[agent-runner] Rate limit detected for {callsign}", flush=True)
 
         state.update_agent(request_id, agent_id,
-                           status="completed",
-                           output=text,
-                           tokens_used=0,
-                           model=model)
-
-        return {
-            "text": text,
-            "tokens_used": 0,
-            "model": model,
-            "duration_ms": duration_ms,
-        }
-
-    except Exception as e:
-        duration_ms = int((time.time() - start) * 1000)
-        error_msg = str(e)
-        state.update_agent(request_id, agent_id,
-                           status="failed", error=error_msg)
+                           status="failed", error=error_msg, model=model)
         return {
             "text": "",
             "tokens_used": 0,
-            "model": "",
+            "model": model,
             "duration_ms": duration_ms,
             "error": error_msg,
         }
-    finally:
-        if config_dir:
-            _collect_agent_session(config_dir)
-        _cleanup_agent_config_dir(session_id)
+
+    text = filter_output(result["text"])
+    usage = result.get("usage", {})
+    tokens_used = sum(usage.values())
+    cost_usd = result.get("cost_usd", 0.0)
+
+    print(f"[agent-runner] {callsign} completed ({duration_ms}ms, {len(text)} chars, "
+          f"{tokens_used} tokens, ${cost_usd:.4f})", flush=True)
+
+    state.update_agent(request_id, agent_id,
+                       status="completed",
+                       output=text,
+                       tokens_used=tokens_used,
+                       model=model,
+                       cost_usd=cost_usd)
+
+    return {
+        "text": text,
+        "tokens_used": tokens_used,
+        "model": model,
+        "duration_ms": duration_ms,
+        "usage": usage,
+        "cost_usd": cost_usd,
+    }
+
+
+def _run_agents_batch(
+    request_id: str,
+    agents: list[dict],
+) -> list[dict]:
+    """Run agents via xapi /inference/batch — single HTTP call, xapi handles parallelism."""
+    model = cfg.get("claude_model", "sonnet")
+    full_model = _MODEL_MAP.get(model, model)
+    xapi_url = cfg.get("xapi_url", "http://localhost:7750")
+    timeout = cfg.get("agent_timeout_seconds", 120)
+    empty_usage = {"input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0}
+
+    # Mark all agents as running
+    for a in agents:
+        state.update_agent(request_id, a["agent_id"],
+                           status="running", started_at=time.time())
+        print(f"[agent-runner] {a['callsign']} calling xapi batch...", flush=True)
+
+    # Build batch request
+    batch_requests = []
+    for a in agents:
+        batch_requests.append({
+            "model": full_model,
+            "messages": [{"role": "user", "content": a["prompt"]}],
+            "user": f"mas:{a['callsign']}",
+            "max_tokens": 4096,
+        })
+
+    start = time.time()
+    try:
+        resp = _get_http().post(
+            f"{xapi_url}/inference/batch",
+            json={"requests": batch_requests},
+            timeout=timeout + 30,  # extra margin for batch overhead
+        )
+    except (httpx.TimeoutException, httpx.ConnectError, Exception) as e:
+        # Batch failed — mark all as failed
+        error_msg = str(e)
+        results = []
+        for a in agents:
+            state.update_agent(request_id, a["agent_id"],
+                               status="failed", error=error_msg, model=model)
+            results.append({"text": "", "tokens_used": 0, "model": model,
+                            "duration_ms": 0, "error": error_msg})
+        return results
+
+    if resp.status_code != 200:
+        error_msg = f"xapi batch {resp.status_code}: {resp.text[:300]}"
+        results = []
+        for a in agents:
+            state.update_agent(request_id, a["agent_id"],
+                               status="failed", error=error_msg, model=model)
+            results.append({"text": "", "tokens_used": 0, "model": model,
+                            "duration_ms": 0, "error": error_msg})
+        return results
+
+    batch_data = resp.json()
+    batch_results = batch_data.get("results", [])
+    total_ms = int((time.time() - start) * 1000)
+
+    results = []
+    for i, a in enumerate(agents):
+        item = batch_results[i] if i < len(batch_results) else {}
+        error = item.get("error")
+        duration_ms = int(item.get("duration_ms", 0))
+
+        if error:
+            print(f"[agent-runner] {a['callsign']} error: {error}", flush=True)
+            if _is_rate_limit_error(error):
+                print(f"[agent-runner] Rate limit detected for {a['callsign']}", flush=True)
+            state.update_agent(request_id, a["agent_id"],
+                               status="failed", error=error, model=model)
+            results.append({"text": "", "tokens_used": 0, "model": model,
+                            "duration_ms": duration_ms, "error": error})
+            continue
+
+        text = filter_output(item.get("content", ""))
+        raw_usage = item.get("usage", {})
+        usage = {
+            "input": raw_usage.get("input_tokens", raw_usage.get("prompt_tokens", 0)),
+            "output": raw_usage.get("output_tokens", raw_usage.get("completion_tokens", 0)),
+            "cacheRead": raw_usage.get("cache_read_input_tokens", 0),
+            "cacheWrite": raw_usage.get("cache_creation_input_tokens", 0),
+        }
+        tokens_used = sum(usage.values())
+        cost_usd = item.get("cost_usd", 0.0)
+
+        print(f"[agent-runner] {a['callsign']} completed ({duration_ms}ms, {len(text)} chars, "
+              f"{tokens_used} tokens, ${cost_usd:.4f})", flush=True)
+
+        state.update_agent(request_id, a["agent_id"],
+                           status="completed",
+                           output=text,
+                           tokens_used=tokens_used,
+                           model=model,
+                           cost_usd=cost_usd)
+
+        results.append({
+            "text": text,
+            "tokens_used": tokens_used,
+            "model": model,
+            "duration_ms": duration_ms,
+            "usage": usage,
+            "cost_usd": cost_usd,
+        })
+
+    print(f"[agent-runner] Batch completed: {len(agents)} agents in {total_ms}ms", flush=True)
+    return results
 
 
 def run_agents_parallel(
@@ -278,9 +303,20 @@ def run_agents_parallel(
 ) -> list[dict]:
     """Run multiple agents in parallel.
 
+    Prefers xapi /inference/batch (single HTTP call, async parallelism).
+    Falls back to ThreadPoolExecutor if batch endpoint unavailable.
+
     agents: [{"agent_id": str, "prompt": str, "persona_id": str, "callsign": str}, ...]
     Returns list of results from run_agent.
     """
+    # Try batch endpoint first (single HTTP call → xapi asyncio.gather)
+    if cfg.get("use_batch_inference", True):
+        try:
+            return _run_agents_batch(request_id, agents)
+        except Exception as e:
+            print(f"[agent-runner] Batch failed, falling back to ThreadPool: {e}", flush=True)
+
+    # Fallback: ThreadPoolExecutor (individual calls)
     pool = _get_pool()
     futures: list[tuple[dict, Future]] = []
 
@@ -310,35 +346,51 @@ def run_agents_parallel(
 
 
 def run_synthesis(request_id: str, prompt: str) -> dict:
-    """Run synthesis using vanilla Claude CLI (no persona)."""
+    """Run synthesis via xapi inference (no persona).
+
+    Registers as a pseudo-agent in state so cost/tokens are tracked.
+    """
     start = time.time()
-    session_id = f"{request_id}-synth"
 
-    token_info = read_consumer_token()
-    if not token_info:
-        return {"text": "", "tokens_used": 0, "error": "no token for synthesis"}
+    # Register synthesis as a tracked agent
+    agent_id = state.add_agent(request_id, "_synthesis", "MAS-Synth", "Synthesis")
+    state.update_agent(request_id, agent_id, status="running", started_at=start)
 
-    oauth_token = token_info["token"]
-    synth_model = cfg.get("synthesis_model", cfg.get("claude_model"))
+    synth_model = cfg.get("synthesis_model", cfg.get("claude_model", "sonnet"))
+    synth_timeout = cfg.get("synthesis_timeout_seconds", 300)
 
-    config_dir = None
-    try:
-        config_dir = _create_agent_config_dir(session_id, oauth_token, token_info["name"])
-        result = call_claude_cli(prompt, config_dir, model=synth_model)
+    print(f"[agent-runner] MAS-Synth synthesizing (timeout={synth_timeout}s)...", flush=True)
+    result = call_xapi_inference(prompt, model=synth_model, timeout=synth_timeout, user="mas:synthesis")
 
-        if result.get("error"):
-            return {"text": "", "tokens_used": 0, "error": result["error"]}
+    duration_ms = int((time.time() - start) * 1000)
 
-        text = filter_output(result["text"])
-        return {
-            "text": text,
-            "tokens_used": 0,
-            "model": synth_model,
-            "duration_ms": int((time.time() - start) * 1000),
-        }
-    except Exception as e:
-        return {"text": "", "tokens_used": 0, "error": str(e)}
-    finally:
-        if config_dir:
-            _collect_agent_session(config_dir)
-        _cleanup_agent_config_dir(session_id)
+    if result.get("error"):
+        print(f"[agent-runner] MAS-Synth error: {result['error']}", flush=True)
+        state.update_agent(request_id, agent_id,
+                           status="failed", error=result["error"],
+                           model=synth_model)
+        return {"text": "", "tokens_used": 0, "error": result["error"]}
+
+    text = filter_output(result["text"])
+    usage = result.get("usage", {})
+    tokens_used = sum(usage.values())
+    cost_usd = result.get("cost_usd", 0.0)
+
+    print(f"[agent-runner] MAS-Synth completed ({duration_ms}ms, {len(text)} chars, "
+          f"{tokens_used} tokens, ${cost_usd:.4f})", flush=True)
+
+    state.update_agent(request_id, agent_id,
+                       status="completed",
+                       output="",  # don't duplicate synthesis text
+                       tokens_used=tokens_used,
+                       model=synth_model,
+                       cost_usd=cost_usd)
+
+    return {
+        "text": text,
+        "tokens_used": tokens_used,
+        "model": synth_model,
+        "duration_ms": duration_ms,
+        "usage": usage,
+        "cost_usd": cost_usd,
+    }
