@@ -88,7 +88,7 @@ def execute_pattern(
     if pattern == PATTERN_SINGLE:
         return _execute_single(request_id, query, personas[0], index)
     elif pattern == PATTERN_MULTI:
-        return _execute_multi_perspective(request_id, query, personas, index)
+        return _execute_parallel(request_id, query, personas, index, pattern_name="Multi-Perspective")
     elif pattern == PATTERN_RELAY:
         return _execute_relay(request_id, query, personas, index)
     elif pattern == PATTERN_FULL_TEAM:
@@ -143,11 +143,15 @@ def _execute_single(request_id: str, query: str, persona: PersonaEntry, index: P
     return {"synthesis": synthesis, "agent_outputs": [result], "error": None}
 
 
-def _execute_multi_perspective(
-    request_id: str, query: str, personas: list[PersonaEntry], index: PersonaIndex
+def _execute_parallel(
+    request_id: str, query: str, personas: list[PersonaEntry], index: PersonaIndex,
+    pattern_name: str = "Parallel",
 ) -> dict:
-    """Multi-Perspective: 2-3 agents in parallel → synthesize."""
-    _log(f"[{request_id}] Multi-Perspective: {[p.callsign for p in personas]}")
+    """Parallel execution: register → run parallel → synthesize.
+
+    Used by both multi_perspective and full_team patterns.
+    """
+    _log(f"[{request_id}] {pattern_name}: {[p.callsign for p in personas]}")
 
     # Register agents
     agents_info = []
@@ -256,69 +260,8 @@ def _execute_relay(
 def _execute_full_team(
     request_id: str, query: str, personas: list[PersonaEntry], index: PersonaIndex
 ) -> dict:
-    """Full Team: parallel execution + synthesis + optional relay."""
-    _log(f"[{request_id}] Full Team: {[p.callsign for p in personas]}")
-
-    # Run all in parallel first
-    agents_info = []
-    for p in personas:
-        agent_id = state.add_agent(request_id, p.id, p.callsign, p.role)
-        prompt = _build_agent_prompt(p, query, index)
-        agents_info.append({
-            "agent_id": agent_id,
-            "prompt": prompt,
-            "persona_id": p.id,
-            "callsign": p.callsign,
-            "role": p.role,
-        })
-        _slack_agent_progress(request_id, p.callsign, "running")
-
-    results = run_agents_parallel(request_id, agents_info)
-
-    for ai, r in zip(agents_info, results):
-        _slack_agent_progress(request_id, ai["callsign"],
-                              "completed" if not r.get("error") else "failed")
-
-    # Progressive synthesis: synthesize with whatever succeeded
-    successful = [(ai, r) for ai, r in zip(agents_info, results) if not r.get("error")]
-    failed_team = [(ai, r) for ai, r in zip(agents_info, results) if r.get("error")]
-    if failed_team:
-        _log(f"[{request_id}] Full Team: {len(failed_team)}/{len(agents_info)} agents failed, "
-             f"synthesizing with {len(successful)} successful")
-
-    if not successful:
-        return {"synthesis": "", "agent_outputs": results,
-                "error": "all agents failed"}
-
-    if len(successful) == 1:
-        ai, r = successful[0]
-        return {
-            "synthesis": f"## {ai['callsign']} ({ai['role']})\n\n{r['text']}",
-            "agent_outputs": results, "error": None,
-        }
-
-    # Synthesize with available results
-    state.update_request(request_id, status="synthesizing")
-    synth_prompt = build_synthesis_prompt(
-        query,
-        [{"callsign": ai["callsign"], "role": ai["role"], "output": r["text"]}
-         for ai, r in successful],
-    )
-
-    synth_result = run_synthesis(request_id, synth_prompt)
-
-    if synth_result.get("error"):
-        parts = [f"### {ai['callsign']} ({ai['role']})\n{r['text']}"
-                 for ai, r in successful]
-        return {
-            "synthesis": "\n\n---\n\n".join(parts),
-            "agent_outputs": results, "error": None,
-        }
-
-    return {
-        "synthesis": synth_result["text"],
-        "agent_outputs": results, "error": None,
-    }
+    """Full Team: parallel execution + synthesis."""
+    return _execute_parallel(request_id, query, personas, index, pattern_name="Full Team")
 
 
 def _slack_agent_progress(request_id: str, callsign: str, status: str):
