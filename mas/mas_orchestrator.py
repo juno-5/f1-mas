@@ -248,8 +248,8 @@ class Orchestrator:
 
         # Function detection (regex 80%)
         functions = []
-        for func_key, pattern in _FUNCTION_PATTERNS.items():
-            if pattern.search(query):
+        for func_key, func_re in _FUNCTION_PATTERNS.items():
+            if func_re.search(query):
                 functions.append(func_key)
 
         # Locale detection
