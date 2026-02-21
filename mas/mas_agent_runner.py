@@ -79,49 +79,57 @@ def call_xapi_inference(prompt: str, model: str = None, timeout: int = None, use
     xapi_url = cfg.get("xapi_url", "http://localhost:7750")
     empty_usage = {"input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0}
 
-    try:
-        resp = _get_http().post(
-            f"{xapi_url}/inference/chat",
-            json={
-                "model": full_model,
-                "messages": [{"role": "user", "content": prompt}],
-                "user": user,
-                "max_tokens": 4096,
-            },
-            timeout=timeout,
-        )
+    last_error = ""
+    for attempt in range(2):  # 1 retry on transient errors
+        try:
+            resp = _get_http().post(
+                f"{xapi_url}/inference/chat",
+                json={
+                    "model": full_model,
+                    "messages": [{"role": "user", "content": prompt}],
+                    "user": user,
+                    "max_tokens": 4096,
+                },
+                timeout=timeout,
+            )
 
-        if resp.status_code != 200:
-            error = resp.text[:300]
-            return {"text": "", "model": full_model, "error": f"xapi {resp.status_code}: {error}",
+            if resp.status_code != 200:
+                error = resp.text[:300]
+                return {"text": "", "model": full_model, "error": f"xapi {resp.status_code}: {error}",
+                        "usage": empty_usage, "cost_usd": 0.0}
+
+            data = resp.json()
+            raw_usage = data.get("usage", {})
+            usage = {
+                "input": raw_usage.get("input_tokens", raw_usage.get("prompt_tokens", 0)),
+                "output": raw_usage.get("output_tokens", raw_usage.get("completion_tokens", 0)),
+                "cacheRead": raw_usage.get("cache_read_input_tokens", 0),
+                "cacheWrite": raw_usage.get("cache_creation_input_tokens", 0),
+            }
+
+            return {
+                "text": data.get("content", ""),
+                "model": data.get("model", full_model),
+                "error": None,
+                "usage": usage,
+                "cost_usd": data.get("cost_usd", 0.0),
+            }
+
+        except httpx.TimeoutException:
+            return {"text": "", "model": full_model, "error": f"timeout after {timeout}s",
                     "usage": empty_usage, "cost_usd": 0.0}
-
-        data = resp.json()
-        raw_usage = data.get("usage", {})
-        usage = {
-            "input": raw_usage.get("input_tokens", raw_usage.get("prompt_tokens", 0)),
-            "output": raw_usage.get("output_tokens", raw_usage.get("completion_tokens", 0)),
-            "cacheRead": raw_usage.get("cache_read_input_tokens", 0),
-            "cacheWrite": raw_usage.get("cache_creation_input_tokens", 0),
-        }
-
-        return {
-            "text": data.get("content", ""),
-            "model": data.get("model", full_model),
-            "error": None,
-            "usage": usage,
-            "cost_usd": data.get("cost_usd", 0.0),
-        }
-
-    except httpx.TimeoutException:
-        return {"text": "", "model": full_model, "error": f"timeout after {timeout}s",
-                "usage": empty_usage, "cost_usd": 0.0}
-    except httpx.ConnectError:
-        return {"text": "", "model": full_model, "error": f"xapi unreachable at {xapi_url}",
-                "usage": empty_usage, "cost_usd": 0.0}
-    except Exception as e:
-        return {"text": "", "model": full_model, "error": str(e),
-                "usage": empty_usage, "cost_usd": 0.0}
+        except (httpx.ConnectError, httpx.RemoteProtocolError) as e:
+            last_error = str(e)
+            if attempt == 0:
+                time.sleep(5)  # wait for xapi restart
+                continue
+            return {"text": "", "model": full_model, "error": f"xapi unreachable at {xapi_url} (after retry)",
+                    "usage": empty_usage, "cost_usd": 0.0}
+        except Exception as e:
+            return {"text": "", "model": full_model, "error": str(e),
+                    "usage": empty_usage, "cost_usd": 0.0}
+    return {"text": "", "model": full_model, "error": last_error,
+            "usage": empty_usage, "cost_usd": 0.0}
 
 
 def run_agent(
@@ -216,23 +224,39 @@ def _run_agents_batch(
         })
 
     start = time.time()
-    try:
-        resp = _get_http().post(
-            f"{xapi_url}/inference/batch",
-            json={"requests": batch_requests},
-            timeout=timeout + 30,  # extra margin for batch overhead
-        )
-    except (httpx.TimeoutException, httpx.ConnectError, Exception) as e:
-        # Batch failed — mark all as failed
-        error_msg = str(e)
-        print(f"[agent-runner] Batch call failed: {error_msg}", flush=True)
-        results = []
-        for a in agents:
-            state.update_agent(request_id, a["agent_id"],
-                               status="failed", error=error_msg, model=model)
-            results.append({"text": "", "tokens_used": 0, "model": model,
-                            "duration_ms": 0, "error": error_msg})
-        return results
+    resp = None
+    for attempt in range(2):  # 1 retry on transient errors
+        try:
+            resp = _get_http().post(
+                f"{xapi_url}/inference/batch",
+                json={"requests": batch_requests},
+                timeout=timeout + 30,  # extra margin for batch overhead
+            )
+            break
+        except (httpx.ConnectError, httpx.RemoteProtocolError):
+            if attempt == 0:
+                print(f"[agent-runner] Batch connect error, retrying in 5s...", flush=True)
+                time.sleep(5)
+                continue
+            error_msg = f"xapi unreachable at {xapi_url} (after retry)"
+            print(f"[agent-runner] Batch call failed: {error_msg}", flush=True)
+            results = []
+            for a in agents:
+                state.update_agent(request_id, a["agent_id"],
+                                   status="failed", error=error_msg, model=model)
+                results.append({"text": "", "tokens_used": 0, "model": model,
+                                "duration_ms": 0, "error": error_msg})
+            return results
+        except Exception as e:
+            error_msg = str(e)
+            print(f"[agent-runner] Batch call failed: {error_msg}", flush=True)
+            results = []
+            for a in agents:
+                state.update_agent(request_id, a["agent_id"],
+                                   status="failed", error=error_msg, model=model)
+                results.append({"text": "", "tokens_used": 0, "model": model,
+                                "duration_ms": 0, "error": error_msg})
+            return results
 
     if resp.status_code != 200:
         error_msg = f"xapi batch {resp.status_code}: {resp.text[:300]}"

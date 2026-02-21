@@ -11,11 +11,26 @@ You are not a character. You do not roleplay. You are a dispatcher and synthesiz
 ## Agent Hierarchy
 
 ```
-Level 0: User
-Level 1: MAS (vanilla Claude Code, this CLAUDE.md)
-Level 2: Persona Agents (spawned via Task tool, character files as system prompt)
-Level 3: Tool Agents (Bash, Read, Write, etc. used by Level 2)
+Level 0: User (Slack DM or API)
+Level 1: Slack Bots — 8 agents (OpenClaw/f1crew-gateway)
+         ├── zero          — 총괄 디스패처 (도메인 마스터에 위임)
+         ├── dev-master    — 개발 (33명)
+         ├── mkt-master    — 마케팅 (60명)
+         ├── art-master    — 크리에이티브 (5명)
+         ├── commerce-master — 커머스 (5명)
+         ├── sales-master  — 세일즈 (5명)
+         ├── uiux-master   — UI/UX (5명)
+         └── cx-master     — 고객경험 (5명)
+Level 2: MAS (vanilla Claude Code, this CLAUDE.md)
+Level 3: Persona Agents (spawned via Task tool, character files as system prompt)
+Level 4: Tool Agents (Bash, Read, Write, etc. used by Level 3)
 ```
+
+### Slack Bot Identity Files
+각 에이전트는 서버에 3종 MD 파일이 필요:
+- **IDENTITY.md** (`workspace-{agentId}/`) — OpenClaw 아이덴티티 (`- Name:`, `- Vibe:` 형식). 봇의 첫인상/성격 결정.
+- **CLAUDE.md** (`agents/{agentId}/agent/`) — 시스템 프롬프트. 역할, 규칙, 도메인 전문성 정의.
+- **CLAUDE.md** (`workspace-{agentId}/`) — 워크스페이스 컨텍스트. 메모리 경로, 작업 지침.
 
 ## Boot Sequence
 
@@ -253,12 +268,42 @@ f1-mas/
 │   ├── mas_state.py                   # Persistent state
 │   ├── mas_metrics.py                 # Prometheus metrics
 │   └── mas_slack.py                   # Slack integration
-├── characters/                        # Full persona pool
+├── agents/                            # Slack bot agent configs (OpenClaw)
+│   ├── zero/                          # 총괄 디스패처
+│   │   ├── CLAUDE.md                  # Agent system prompt
+│   │   └── IDENTITY.md               # OpenClaw identity (Name, Vibe)
+│   ├── dev-master/                    # 개발 도메인 (33명)
+│   │   ├── CLAUDE.md
+│   │   └── IDENTITY.md
+│   ├── mkt-master/                    # 마케팅 도메인 (60명)
+│   │   ├── CLAUDE.md
+│   │   └── IDENTITY.md
+│   ├── art-master/                    # 크리에이티브 도메인 (5명)
+│   │   ├── CLAUDE.md
+│   │   └── IDENTITY.md
+│   ├── commerce-master/               # 커머스 도메인 (5명)
+│   │   ├── CLAUDE.md
+│   │   └── IDENTITY.md
+│   ├── sales-master/                  # 세일즈 도메인 (5명)
+│   │   ├── CLAUDE.md
+│   │   └── IDENTITY.md
+│   ├── uiux-master/                   # UI/UX 도메인 (5명)
+│   │   ├── CLAUDE.md
+│   │   └── IDENTITY.md
+│   └── cx-master/                     # 고객경험 도메인 (5명)
+│       ├── CLAUDE.md
+│       └── IDENTITY.md
+├── characters/                        # Full persona pool (178+)
 │   ├── INDEX.md                       # Master index
 │   ├── developers/                    # 33 developers
 │   ├── marketers/                     # 60 marketers
 │   ├── models/                        # 60 models
-│   └── creatives/                     # 5 art directors
+│   ├── creatives/                     # 5 art directors
+│   ├── commerce/                      # 5 e-commerce specialists
+│   ├── sales/                         # 5 sales strategists
+│   ├── uiux/                          # 5 UI/UX designers
+│   ├── cx/                            # 5 customer experience experts
+│   └── idols/                         # Virtual idol characters (STARVERSE)
 ├── config/
 │   ├── persona-registry.md            # Full searchable registry
 │   ├── selection-rules.md             # Persona selection heuristics
