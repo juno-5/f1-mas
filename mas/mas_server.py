@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 MAS (Master Agent System) Server — Port 7720
-Orchestrates 158 expert personas for multi-agent task execution.
+Orchestrates 178 expert personas for multi-agent task execution.
 
 Endpoints:
   GET  /health              — Health check
@@ -11,7 +11,9 @@ Endpoints:
   GET  /personas/select     — Dry-run persona selection
   GET  /personas/<id>/character — Get persona character content
   POST /request             — Submit a task request
+  POST /cancel              — Cancel an active request
   GET  /request/<id>        — Get request status
+  GET  /requests            — List all requests
 """
 
 import http.server
@@ -96,6 +98,8 @@ class MASHandler(http.server.BaseHTTPRequestHandler):
         elif path.startswith("/personas/") and path.endswith("/character"):
             persona_id = path.split("/personas/")[1].rsplit("/character")[0]
             self._handle_persona_character(persona_id)
+        elif path == "/requests":
+            self._handle_list_requests()
         elif path.startswith("/request/"):
             req_id = path.split("/request/")[1]
             self._handle_get_request(req_id)
@@ -107,6 +111,8 @@ class MASHandler(http.server.BaseHTTPRequestHandler):
 
         if path == "/request":
             self._handle_submit_request()
+        elif path == "/cancel":
+            self._handle_cancel()
         else:
             self._send_json(404, {"error": "not found"})
 
@@ -274,6 +280,65 @@ class MASHandler(http.server.BaseHTTPRequestHandler):
             "message": "Request accepted, processing async",
         })
 
+    def _handle_cancel(self):
+        """Cancel an active request."""
+        body = self._read_body()
+        request_id = body.get("request_id", "").strip()
+        if not request_id:
+            self._send_json(400, {"error": "missing 'request_id' field"})
+            return
+
+        cancelled = state.cancel_request(request_id)
+        if cancelled:
+            log(f"[CANCEL] {request_id}")
+            state.record_event("cancel", f"Request {request_id} cancelled", request_id)
+            self._send_json(200, {
+                "request_id": request_id,
+                "cancelled": True,
+                "message": "Request cancelled",
+            })
+        else:
+            req = state.get_request(request_id)
+            if not req:
+                self._send_json(404, {
+                    "request_id": request_id,
+                    "cancelled": False,
+                    "message": "Request not found",
+                })
+            else:
+                self._send_json(409, {
+                    "request_id": request_id,
+                    "cancelled": False,
+                    "message": f"Cannot cancel: status is {req.status}",
+                })
+
+    def _handle_list_requests(self):
+        """List all active and recent requests."""
+        from dataclasses import asdict
+        all_reqs = state.get_all_requests()
+        active = sum(1 for r in all_reqs.values()
+                     if r.status in ("pending", "analyzing", "assembling",
+                                     "running", "synthesizing"))
+        summaries = []
+        for r in sorted(all_reqs.values(), key=lambda x: x.created_at, reverse=True):
+            summaries.append({
+                "request_id": r.request_id,
+                "status": r.status,
+                "user_query": r.user_query,
+                "pattern": r.pattern,
+                "domain": r.domain,
+                "agent_count": len(r.agents),
+                "total_cost_usd": r.total_cost_usd,
+                "total_tokens_used": r.total_tokens_used,
+                "duration_ms": r.duration_ms,
+                "created_at": r.created_at,
+            })
+        self._send_json(200, {
+            "total": len(all_reqs),
+            "active": active,
+            "requests": summaries,
+        })
+
     def _handle_get_request(self, request_id):
         """Get request status and results."""
         from dataclasses import asdict
@@ -315,8 +380,10 @@ def main():
     def shutdown_handler(signum, frame):
         log("Shutting down...")
         state.save_state()
-        server.shutdown()
-        sys.exit(0)
+        # server.shutdown() from signal handler deadlocks:
+        # it waits for serve_forever() which is blocked on this same thread.
+        # Run in a separate thread so serve_forever() can exit its loop.
+        threading.Thread(target=server.shutdown, daemon=True).start()
 
     signal.signal(signal.SIGTERM, shutdown_handler)
     signal.signal(signal.SIGINT, shutdown_handler)

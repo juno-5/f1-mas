@@ -17,8 +17,9 @@ _DEFAULTS = {
     "anthropic_api_key": "",         # direct API key (sk-ant-api-*)
     "anthropic_api_key_file": "",    # or read from file
     "claude_api_base": "https://api.anthropic.com",
-    "claude_model": "claude-sonnet-4-5-20250929",
-    "synthesis_model": "claude-sonnet-4-5-20250929",
+    "xapi_url": "http://localhost:7750",
+    "claude_model": "sonnet",
+    "synthesis_model": "sonnet",
     "max_agents": 5,
     "agent_timeout_seconds": 120,
     "thread_pool_workers": 5,

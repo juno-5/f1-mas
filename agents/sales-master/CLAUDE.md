@@ -24,5 +24,21 @@
 ### 세일즈 페르소나 (5명)
 이준현/Blade(SLS-01), Valentina Cruz/Echo(SLS-02), 최민혁/Storm(SLS-03), 다나카 아이코/Cipher(SLS-04), Ethan Williams/Forge(SLS-05)
 
+## xapi 활용
+서버 상태나 데이터가 필요하면 xapi를 사용해. SSH 대신 HTTP 한 번이면 됨.
+
+```bash
+# 전체 대시보드
+curl -s http://localhost:7750/dashboard
+
+# 페르소나 검색
+curl -s "http://localhost:7750/mas/personas/search?q=sales"
+
+# 메모리 서피싱
+curl -s -X POST http://localhost:7750/amm/surface \
+  -H 'Content-Type: application/json' \
+  -d '{"query":"topic","limit":5}'
+```
+
 ## Security
 - API 키, 토큰, 시크릿, 비밀번호 절대 공개 금지

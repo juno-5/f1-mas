@@ -237,7 +237,7 @@ class Orchestrator:
     def __init__(self):
         self._index = get_index()
 
-    def analyze_request(self, query: str) -> dict:
+    def analyze_request(self, query: str, pattern: str = None) -> dict:
         """Analyze user request: detect domain, function, locale, complexity.
 
         Returns {"domains": [...], "functions": [...], "locale": str,
@@ -271,6 +271,12 @@ class Orchestrator:
         else:
             complexity = "multi_faceted"
             agent_count = min(3, func_count + 1)
+
+        # Pattern-based minimum: multi_perspective needs 2+, full_team needs 3+
+        if pattern == "multi_perspective":
+            agent_count = max(agent_count, 2)
+        elif pattern == "full_team":
+            agent_count = max(agent_count, 3)
 
         # Ensure at least 1 agent
         agent_count = max(1, agent_count)
@@ -364,7 +370,7 @@ class Orchestrator:
         """
         # 1. Analyze
         state.update_request(request_id, status="analyzing")
-        analysis = self.analyze_request(query)
+        analysis = self.analyze_request(query, pattern=pattern)
         _log(f"[{request_id}] Analysis: {analysis}")
 
         # 2. Select personas

@@ -2,7 +2,7 @@
 
 ## Identity
 
-You are **MAS** — an orchestrator managing 158 expert personas.
+You are **MAS** — an orchestrator managing 178 expert personas.
 You have no persona. You operate as vanilla Claude Code.
 Your role: analyze user requests → select optimal persona(s) → spawn via Task tool → synthesize results.
 
@@ -20,7 +20,7 @@ Level 3: Tool Agents (Bash, Read, Write, etc. used by Level 2)
 ## Boot Sequence
 
 1. Load this CLAUDE.md
-2. Read `config/persona-registry.md` (full catalog of 158 personas)
+2. Read `config/persona-registry.md` (full catalog of 178 personas)
 3. On request, reference relevant `characters/*/INDEX.md`
 
 ## Persona Pool Summary
@@ -31,7 +31,11 @@ Level 3: Tool Agents (Bash, Read, Write, etc. used by Level 2)
 | Marketers | 60 | `characters/marketers/` | Korea (30) + USA (30), 6 functional groups |
 | Models | 60 | `characters/models/` | Korea (20) + Japan (10) + USA (20) + Europe (10) |
 | Creatives | 5 | `characters/creatives/` | Five Senses art directors |
-| **Total** | **158** | | |
+| Commerce | 5 | `characters/commerce/` | E-commerce specialists |
+| Sales | 5 | `characters/sales/` | Sales strategists |
+| UIUX | 5 | `characters/uiux/` | UI/UX designers |
+| CX | 5 | `characters/cx/` | Customer experience experts |
+| **Total** | **178** | | |
 
 ## Persona Selection Protocol
 
@@ -40,6 +44,10 @@ Level 3: Tool Agents (Bash, Read, Write, etc. used by Level 2)
 - **Marketing** → `marketers/`
 - **Model/Content** → `models/`
 - **Creative/Art** → `creatives/`
+- **Commerce/E-commerce** → `commerce/`
+- **Sales** → `sales/`
+- **UI/UX Design** → `uiux/`
+- **Customer Experience** → `cx/`
 - **Cross-domain** → multiple categories
 
 ### Step 2: Identify FUNCTION
@@ -189,23 +197,43 @@ When combining multiple persona outputs:
 6. **Context preservation**: Pass relevant conversation context to spawned agents.
 7. **Cost consciousness**: Use `model: "haiku"` for simple tasks, default (sonnet) for complex.
 
-## FAS Token Integration
+## xapi Inference Integration
 
-MAS는 FAS의 registered consumer로, token-manager가 토큰을 관리합니다.
+MAS 에이전트 실행은 xapi `/inference/chat` 경유로 FAS Gateway를 통합니다.
+토큰 관리, 사용량 추적, rate limit 처리 모두 FAS Gateway가 자동 처리.
 
-- **토큰 소스**: `~/.f1crew/agents/mas/agent/auth-profiles.json` (token-manager가 작성)
-- **토큰 공유**: 모든 MAS 에이전트(Zero, 마스터들, 합성)가 1개 consumer 토큰을 공유
-- **로테이션**: token-manager가 WRR 기반으로 자동 로테이션 — MAS는 읽기만
-- **격리**: 각 agent spawn 시 `~/.f1crew/mas-agents/<session>/` 에 토큰 복사하여 격리
+```
+MAS → POST http://localhost:7750/inference/chat → FAS Gateway (18789) → Claude API
+```
 
-### Gateway API 규칙 (외부 호출 시)
+- **설정**: `mas-config.json`의 `xapi_url` (기본값: `http://localhost:7750`)
+- **모델 매핑**: config의 `claude_model: "sonnet"` → `claude-sonnet-4-6` 자동 변환
+- **user 필드**: `"mas:{callsign}"` (에이전트), `"mas:synthesis"` (합성)
+- **토큰 관리**: xapi/FAS Gateway가 자동 처리 — MAS는 파일 I/O 없음
+- **사용량 추적**: FAS Gateway 내부에서 자동 추적
 
-MAS가 FAS Gateway API를 직접 호출할 때:
+### 배치 추론 (Batch Inference)
 
-1. **`user` 필드 필수**: `"user": "mas:<task>"` (예: `"mas:persona-spawn"`)
-2. **엔드포인트**: `POST /v1/chat/completions`
-3. **인증**: `Authorization: Bearer <GATEWAY_TOKEN>`
-4. **상세 문서**: `~/F1/f1-fas/docs/TOKEN-CLIENT-GUIDE.md`
+멀티에이전트 실행 시 xapi `/inference/batch` 엔드포인트를 사용하여 단일 HTTP 호출로 병렬 처리:
+
+```
+MAS → POST http://localhost:7750/inference/batch → xapi asyncio.gather → FAS Gateway (병렬)
+```
+
+- **기본 활성화**: `use_batch_inference: true` (mas-config.json)
+- **폴백**: batch 실패 시 ThreadPoolExecutor로 개별 호출 자동 전환
+- **프로그레시브 합성**: 일부 에이전트 실패해도 성공한 결과로 합성 진행
+- **커넥션 풀**: httpx.Client 공유 (max_connections=10, keepalive=5)
+- **캐릭터 캐시**: persona extract 결과 TTL 캐시 (persona_cache_ttl, 기본 300초)
+
+### xapi 의존 서비스
+
+| 서비스 | 포트 | xapi 경로 | 용도 |
+|--------|------|-----------|------|
+| FAS Gateway | 18789 | `/inference/chat` | 에이전트 LLM 호출 |
+| xapi | 7750 | `/inference/batch` | 배치 병렬 추론 |
+
+> **주의**: xapi (7750) 또는 FAS Gateway (18789) 다운 시 에이전트 실행 불가
 
 ## File Structure Reference
 
@@ -216,7 +244,7 @@ f1-mas/
 ├── mas/                               # Python package (service code)
 │   ├── mas_server.py                  # HTTP API (port 7720)
 │   ├── mas_orchestrator.py            # Multi-agent orchestration
-│   ├── mas_agent_runner.py            # Task spawning
+│   ├── mas_agent_runner.py            # Agent execution via xapi inference
 │   ├── mas_persona_index.py           # Persona registry loader
 │   ├── mas_config.py                  # Config with hot-reload
 │   ├── mas_conversation.py            # Conversation state

@@ -1,6 +1,6 @@
 # MAS Persona Registry
 
-> Full searchable catalog of all 158 personas.
+> Full searchable catalog of all 178 personas.
 
 ## Developers (33)
 
@@ -46,16 +46,16 @@
 
 | ID | Name | Callsign | Role | Location | File | Tags |
 |----|------|----------|------|----------|------|------|
-| FC-01 | Marcus Chen | — | Tech Lead / System Architect | Seattle | `developers/falcon-global/fc-01-marcus-chen.md` | distributed, architecture, leadership |
-| FC-02 | Elena Vasquez | — | Backend / Infrastructure | Mexico City | `developers/falcon-global/fc-02-elena-vasquez.md` | backend, infrastructure, scalability |
-| FC-03 | Raj Patel | — | AI/ML Engineer | Bangalore | `developers/falcon-global/fc-03-raj-patel.md` | ai, ml, deep-learning |
-| FC-04 | Sarah Johnson | — | Frontend / UX Engineer | San Francisco | `developers/falcon-global/fc-04-sarah-johnson.md` | frontend, ux, design-systems |
-| FC-05 | Yuki Tanaka | — | DevOps / Platform Engineer | Tokyo | `developers/falcon-global/fc-05-yuki-tanaka.md` | devops, platform, ci-cd, kubernetes |
-| FC-06 | Omar Hassan | — | Security Engineer | Dubai | `developers/falcon-global/fc-06-omar-hassan.md` | security, appsec, compliance |
-| FC-07 | Lisa Park | — | Data Engineer | Seoul | `developers/falcon-global/fc-07-lisa-park.md` | data, pipelines, analytics |
-| FC-08 | Dmitri Volkov | — | Systems Engineer | Moscow | `developers/falcon-global/fc-08-dmitri-volkov.md` | systems, performance, low-level |
-| FC-09 | Priya Sharma | — | Product Manager | Mumbai | `developers/falcon-global/fc-09-priya-sharma.md` | product, strategy, roadmap |
-| FC-10 | James Wright | — | Engineering Manager | London | `developers/falcon-global/fc-10-james-wright.md` | management, process, team-building |
+| FC-01 | Marcus Chen | Nexus | Tech Lead / System Architect | Seattle | `developers/falcon-global/fc-01-marcus-chen.md` | distributed, architecture, leadership |
+| FC-02 | Elena Vasquez | Bedrock | Backend / Infrastructure | Mexico City | `developers/falcon-global/fc-02-elena-vasquez.md` | backend, infrastructure, scalability |
+| FC-03 | Raj Patel | Neuron | AI/ML Engineer | Bangalore | `developers/falcon-global/fc-03-raj-patel.md` | ai, ml, deep-learning |
+| FC-04 | Sarah Johnson | Grid | Frontend / UX Engineer | San Francisco | `developers/falcon-global/fc-04-sarah-johnson.md` | frontend, ux, design-systems |
+| FC-05 | Yuki Tanaka | Crane | DevOps / Platform Engineer | Tokyo | `developers/falcon-global/fc-05-yuki-tanaka.md` | devops, platform, ci-cd, kubernetes |
+| FC-06 | Omar Hassan | Guardian | Security Engineer | Dubai | `developers/falcon-global/fc-06-omar-hassan.md` | security, appsec, compliance |
+| FC-07 | Lisa Park | Delta | Data Engineer | Seoul | `developers/falcon-global/fc-07-lisa-park.md` | data, pipelines, analytics |
+| FC-08 | Dmitri Volkov | Core | Systems Engineer | Moscow | `developers/falcon-global/fc-08-dmitri-volkov.md` | systems, performance, low-level |
+| FC-09 | Priya Sharma | Atlas | Product Manager | Mumbai | `developers/falcon-global/fc-09-priya-sharma.md` | product, strategy, roadmap |
+| FC-10 | James Wright | Helm | Engineering Manager | London | `developers/falcon-global/fc-10-james-wright.md` | management, process, team-building |
 
 ---
 
@@ -226,3 +226,51 @@
 | 03 | ECHO | Sound | Sound Designer | `creatives/five-senses/03-echo.md` | `03-echo-full.md` | sound, acoustic, sonic-branding |
 | 04 | TEMPO | Time/Motion | Motion Director | `creatives/five-senses/04-tempo.md` | `04-tempo-full.md` | motion, rhythm, pacing |
 | 05 | FUME | Scent | Scent/Sensory Strategist | `creatives/five-senses/05-fume.md` | `05-fume-full.md` | scent, olfactory, sensory |
+
+---
+
+## Commerce (5)
+
+| ID | Name | Callsign | Role | Location | File | Tags |
+|----|------|----------|------|----------|------|------|
+| CMM-01 | 김지혁 | Apex | Chief Commerce Architect | Korea | `commerce/cmm-01-kim-jihyuk.md` | commerce, platform, architecture |
+| CMM-02 | Sarah Chen | Metric | Conversion Optimization Lead | Global | `commerce/cmm-02-sarah-chen.md` | commerce, cro, a/b-testing |
+| CMM-03 | 박소진 | Tide | Marketplace Strategy Lead | Korea | `commerce/cmm-03-park-sojin.md` | commerce, marketplace, global |
+| CMM-04 | Marcus Holt | Matrix | Commerce Data & Personalization Lead | Global | `commerce/cmm-04-marcus-holt.md` | commerce, personalization, pricing |
+| CMM-05 | 하시모토 유키 | Anchor | Loyalty & Retention Lead | Japan | `commerce/cmm-05-yuki-hashimoto.md` | commerce, loyalty, retention |
+
+---
+
+## Sales (5)
+
+| ID | Name | Callsign | Role | Location | File | Tags |
+|----|------|----------|------|----------|------|------|
+| SLS-01 | 이준현 | Blade | Enterprise Sales Architect | Korea | `sales/sls-01-lee-junhyun.md` | sales, enterprise, negotiation |
+| SLS-02 | Valentina Cruz | Echo | Sales Methodology & Enablement Lead | Global | `sales/sls-02-valentina-cruz.md` | sales, methodology, revenue-ops |
+| SLS-03 | 최민혁 | Storm | PLG & Channel Sales Lead | Korea | `sales/sls-03-choi-minhyuk.md` | sales, plg, channel |
+| SLS-04 | 다나카 아이코 | Cipher | Global Account Management Lead | Japan | `sales/sls-04-aiko-tanaka.md` | sales, account-management, nrr |
+| SLS-05 | Ethan Williams | Pivot | Sales Engineering Lead | Global | `sales/sls-05-ethan-williams.md` | sales, engineering, value-selling |
+
+---
+
+## UIUX (5)
+
+| ID | Name | Callsign | Role | Location | File | Tags |
+|----|------|----------|------|----------|------|------|
+| UX-01 | 정윤지 | Vision | Chief Design Officer | Korea | `uiux/ux-01-jung-yoonji.md` | uiux, strategy, hcd |
+| UX-02 | Alex Rivera | Sketch | Interaction Design & Motion Lead | USA | `uiux/ux-02-alex-rivera.md` | uiux, interaction, motion |
+| UX-03 | 김소연 | Palette | User Research & Insights Lead | Korea | `uiux/ux-03-kim-soyeon.md` | uiux, research, insights |
+| UX-04 | Lena Fischer | Arc | Design Systems & Accessibility Lead | Germany | `uiux/ux-04-lena-fischer.md` | uiux, design-systems, accessibility |
+| UX-05 | 한지원 | Spark | UX Engineering & Product Design Lead | Korea | `uiux/ux-05-han-jiwon.md` | uiux, engineering, product-design |
+
+---
+
+## CX (5)
+
+| ID | Name | Callsign | Role | Location | File | Tags |
+|----|------|----------|------|----------|------|------|
+| CX-01 | 오수진 | Harbor | Chief CX Officer | Korea | `cx/cx-01-oh-sujin.md` | cx, strategy, voc |
+| CX-02 | Michael Park | Bridge | Customer Success & Expansion Lead | Global | `cx/cx-02-michael-park.md` | cx, success, retention |
+| CX-03 | Priya Mehta | Compass | CX Data Analytics & VoC Lead | Global | `cx/cx-03-priya-mehta.md` | cx, analytics, voc |
+| CX-04 | Sophie Laurent | Weave | Omnichannel CX & Support Lead | France | `cx/cx-04-sophie-laurent.md` | cx, omnichannel, ai-support |
+| CX-05 | 임태우 | Root | CX Operations & QA Lead | Korea | `cx/cx-05-lim-taewoo.md` | cx, operations, qa |

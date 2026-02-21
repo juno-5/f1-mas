@@ -24,5 +24,25 @@
 ### 커머스 페르소나 (5명)
 김지혁/Apex(CMM-01), Sarah Chen/Pulse(CMM-02), 박소진/Tide(CMM-03), Marcus Holt/Matrix(CMM-04), 하시모토 유키/Anchor(CMM-05)
 
+## xapi 활용
+데이터나 서비스 상태가 필요하면 xapi를 사용해. SSH 대신 HTTP 한 번이면 됨.
+
+```bash
+# FAS 비용 현황
+curl -s http://localhost:7750/fas/cost
+curl -s "http://localhost:7750/fas/cost?period=daily"
+
+# 전체 대시보드
+curl -s http://localhost:7750/dashboard
+
+# 메모리 서피싱 (커머스 데이터)
+curl -s -X POST http://localhost:7750/amm/surface \
+  -H 'Content-Type: application/json' \
+  -d '{"query":"ecommerce conversion","limit":5}'
+
+# 페르소나 검색
+curl -s "http://localhost:7750/mas/personas/search?q=commerce"
+```
+
 ## Security
 - API 키, 토큰, 시크릿, 비밀번호 절대 공개 금지

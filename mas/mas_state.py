@@ -23,6 +23,7 @@ class RequestStatus(str, Enum):
     COMPLETED = "completed"
     FAILED = "failed"
     BLOCKED = "blocked"
+    CANCELLED = "cancelled"
 
 
 class AgentStatus(str, Enum):
@@ -46,6 +47,7 @@ class AgentState:
     error: str = ""
     tokens_used: int = 0
     model: str = ""
+    cost_usd: float = 0.0
 
 
 @dataclass
@@ -64,6 +66,8 @@ class RequestState:
     selected_personas: list[str] = field(default_factory=list)
     slack_thread_ts: str = ""
     error: str = ""
+    total_cost_usd: float = 0.0
+    total_tokens_used: int = 0
 
 
 _state_lock = threading.Lock()
@@ -83,19 +87,33 @@ def _state_file():
     return cfg.get("state_file", os.path.expanduser("~/.f1crew/shared/mas-state.json"))
 
 
+_TERMINAL_STATUSES = ("completed", "failed", "blocked", "cancelled")
+_ACTIVE_STATUSES = ("pending", "analyzing", "assembling", "running", "synthesizing")
+_MAX_HISTORY = 50
+
+
 def _save():
-    """Atomic JSON write via f1common."""
+    """Atomic JSON write via f1common. Persists counters + timeline + recent history."""
     path = _state_file()
     try:
+        # Build history from completed requests (includes output + synthesis)
+        history = []
+        for r in sorted(_requests.values(), key=lambda x: x.created_at, reverse=True):
+            if r.status in _TERMINAL_STATUSES:
+                history.append(asdict(r))
+                if len(history) >= _MAX_HISTORY:
+                    break
+
         data = {
-            "version": 1,
+            "version": 2,
             "saved_at": time.time(),
             "counters": _counters,
             "timeline": _timeline[-200:],
             "active_requests": {
                 rid: asdict(r) for rid, r in _requests.items()
-                if r.status in ("pending", "analyzing", "assembling", "running", "synthesizing")
+                if r.status in _ACTIVE_STATUSES
             },
+            "history": history,
         }
         save_json_atomic(path, data)
     except OSError:
@@ -103,7 +121,7 @@ def _save():
 
 
 def _load():
-    """Load state from file (counters + timeline only; active requests reset on boot)."""
+    """Load state from file (counters + timeline + completed request history)."""
     global _counters, _timeline
     path = _state_file()
     try:
@@ -111,6 +129,19 @@ def _load():
             data = json.load(f)
         _counters.update(data.get("counters", {}))
         _timeline = data.get("timeline", [])[-200:]
+
+        # Restore completed request history (v2+)
+        for h in data.get("history", []):
+            rid = h.get("request_id", "")
+            if rid and rid not in _requests:
+                agents = []
+                for a in h.get("agents", []):
+                    agents.append(AgentState(**{k: v for k, v in a.items()
+                                                if k in AgentState.__dataclass_fields__}))
+                req_fields = {k: v for k, v in h.items()
+                              if k in RequestState.__dataclass_fields__ and k != "agents"}
+                req = RequestState(**req_fields, agents=agents)
+                _requests[rid] = req
     except (FileNotFoundError, json.JSONDecodeError):
         pass
 
@@ -156,6 +187,15 @@ def update_request(request_id: str, **kwargs):
             _counters["failed_requests"] += 1
         elif kwargs.get("status") == RequestStatus.BLOCKED:
             _counters["blocked_requests"] += 1
+        elif kwargs.get("status") == RequestStatus.CANCELLED:
+            req.completed_at = time.time()
+            req.duration_ms = int((req.completed_at - req.created_at) * 1000)
+
+        # Auto-compute total_cost_usd and total_tokens_used from agents
+        if kwargs.get("status") in (RequestStatus.COMPLETED, RequestStatus.FAILED,
+                                    RequestStatus.CANCELLED):
+            req.total_cost_usd = sum(a.cost_usd for a in req.agents)
+            req.total_tokens_used = sum(a.tokens_used for a in req.agents)
 
 
 def add_agent(request_id: str, persona_id: str, callsign: str, role: str) -> str:
@@ -191,7 +231,36 @@ def update_agent(request_id: str, agent_id: str, **kwargs):
                     agent.completed_at = time.time()
                     agent.duration_ms = int((agent.completed_at - agent.started_at) * 1000)
                     _counters["total_tokens_used"] += agent.tokens_used
+                elif kwargs.get("status") == AgentStatus.FAILED:
+                    agent.completed_at = time.time()
+                    if agent.started_at:
+                        agent.duration_ms = int((agent.completed_at - agent.started_at) * 1000)
                 break
+
+
+def cancel_request(request_id: str) -> bool:
+    """Cancel an active request. Returns True if cancelled, False if not cancellable."""
+    with _state_lock:
+        req = _requests.get(request_id)
+        if not req:
+            return False
+        if req.status in _TERMINAL_STATUSES:
+            return False
+        req.status = RequestStatus.CANCELLED
+        req.completed_at = time.time()
+        req.duration_ms = int((req.completed_at - req.created_at) * 1000)
+        req.error = "cancelled by user"
+        req.total_cost_usd = sum(a.cost_usd for a in req.agents)
+        req.total_tokens_used = sum(a.tokens_used for a in req.agents)
+        # Mark running agents as failed
+        for agent in req.agents:
+            if agent.status in (AgentStatus.PENDING, AgentStatus.RUNNING):
+                agent.status = AgentStatus.FAILED
+                agent.error = "cancelled"
+                agent.completed_at = time.time()
+                if agent.started_at:
+                    agent.duration_ms = int((agent.completed_at - agent.started_at) * 1000)
+    return True
 
 
 def get_request(request_id: str) -> RequestState | None:

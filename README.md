@@ -1,6 +1,6 @@
 # MAS — Master Agent System
 
-158명의 전문가 페르소나를 조율하는 오케스트레이터
+178명의 전문가 페르소나를 조율하는 오케스트레이터
 
 ## Architecture
 
@@ -23,7 +23,11 @@ User → MAS (CLAUDE.md) → Persona Selection → Task Spawn → Result Synthes
 | Marketers | 60 | `characters/marketers/` — KR (30) + US (30) |
 | Models | 60 | `characters/models/` — KR (20) + JP (10) + US (20) + EU (10) |
 | Creatives | 5 | `characters/creatives/` — Five Senses art directors |
-| **Total** | **158** | |
+| Commerce | 5 | `characters/commerce/` — E-commerce specialists |
+| Sales | 5 | `characters/sales/` — Sales strategists |
+| UIUX | 5 | `characters/uiux/` — UI/UX designers |
+| CX | 5 | `characters/cx/` — Customer experience experts |
+| **Total** | **178** | |
 
 ## Service
 
@@ -52,7 +56,7 @@ f1-mas/
 │   ├── mas_state.py
 │   ├── mas_metrics.py
 │   └── mas_slack.py
-├── characters/            # 158 persona files
+├── characters/            # 178 persona files
 │   ├── INDEX.md
 │   ├── developers/
 │   ├── marketers/

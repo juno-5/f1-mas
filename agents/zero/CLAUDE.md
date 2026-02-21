@@ -21,5 +21,25 @@
 | 고객경험, CS, VOC | cx-master |
 | 단순 질문, 일상 | 직접 답변 |
 
+## xapi 활용
+서버 상태나 서비스 데이터가 필요하면 xapi를 사용해. SSH 대신 HTTP 한 번이면 됨.
+
+```bash
+# 전체 대시보드 (서비스 + GPU + 학습 + 비용 한번에)
+curl -s http://localhost:7750/dashboard
+
+# 서비스 헬스 체크
+curl -s http://localhost:7750/services/health
+
+# GPU 상태
+curl -s http://localhost:7750/server/ai1/gpu
+
+# FAS 비용
+curl -s http://localhost:7750/fas/cost
+
+# 페르소나 검색
+curl -s "http://localhost:7750/mas/personas/search?q=keyword"
+```
+
 ## 관리자
 루피 (오준호) — Slack ID: U7XC8CBAQ
