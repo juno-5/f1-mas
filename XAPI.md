@@ -8,6 +8,24 @@ xapi 게이트웨이(`https://xapi.so`)를 통해 MAS 관련 서비스에 접근
 pip install -e ~/F1/xapi
 ```
 
+## 인증
+
+외부 접근(`https://xapi.so`)은 API 키 필수. ai1 localhost는 인증 불필요.
+
+```python
+from xapi.client import XAPIClient
+x = XAPIClient()                          # XAPI_KEY 환경변수 자동 사용
+x = XAPIClient(api_key="your-key")        # 직접 전달
+```
+
+```bash
+# 외부
+curl -s -H "X-API-Key: $XAPI_KEY" https://xapi.so/mas/status
+
+# ai1 로컬 (인증 불필요)
+curl -s http://localhost:7750/mas/status
+```
+
 ## MAS 엔드포인트 (11개)
 
 ```python
