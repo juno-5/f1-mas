@@ -21,7 +21,7 @@ _FUNCTION_PATTERNS = {
         re.IGNORECASE,
     ),
     "security_audit": re.compile(
-        r"보안|security|취약점|vulnerability|해킹|hacking|침투|pentest|audit",
+        r"보안|security|취약점|vulnerability|침투.*테스트|pentest|audit|사이버.*해킹|해킹.*(?:시도|공격|방어|탐지|차단)",
         re.IGNORECASE,
     ),
     "performance": re.compile(
@@ -93,7 +93,7 @@ _FUNCTION_PATTERNS = {
         re.IGNORECASE,
     ),
     "brand_strategy": re.compile(
-        r"브랜딩|branding|브랜드.*전략|brand.*strateg|네이밍|naming|BI|CI",
+        r"브랜딩|branding|브랜드.*전략|brand.*strateg|네이밍|naming|\bBI\b|\bCI\b",
         re.IGNORECASE,
     ),
     "visual_design": re.compile(
@@ -114,6 +114,115 @@ _FUNCTION_PATTERNS = {
     ),
     "motion_video": re.compile(
         r"모션|motion|영상.*편집|video.*edit|애니메이션|animation",
+        re.IGNORECASE,
+    ),
+    # Commerce team functions
+    "ecommerce_platform": re.compile(
+        r"이커머스.*플랫폼|ecommerce.*platform|재고|inventory|물류|logistics|배송|delivery|추천.*알고리즘|recommendation",
+        re.IGNORECASE,
+    ),
+    "conversion_optimization": re.compile(
+        r"전환율.*최적화|conversion.*optim|\bCRO\b|A/B.*테스트|a.?b.*test|장바구니.*이탈|cart.*abandon|체크아웃|checkout",
+        re.IGNORECASE,
+    ),
+    "marketplace_strategy": re.compile(
+        r"마켓플레이스|marketplace|셀러.*생태계|seller.*ecosystem|글로벌.*커머스|cross.?border",
+        re.IGNORECASE,
+    ),
+    "loyalty_retention": re.compile(
+        r"로열티|loyalty|구독.*커머스|subscription|\bLTV\b|생애.*가치|lifetime.*value|리피트|repeat",
+        re.IGNORECASE,
+    ),
+    # Sales team functions
+    "enterprise_sales": re.compile(
+        r"엔터프라이즈.*세일즈|enterprise.*sales|대형.*계약|MEDDIC|CHALLENGER|딜|deal.*클로징|closing",
+        re.IGNORECASE,
+    ),
+    "sales_methodology": re.compile(
+        r"세일즈.*코칭|sales.*coach|revenue.*intelligence|세일즈.*방법론|sales.*method|enablement",
+        re.IGNORECASE,
+    ),
+    "plg_sales": re.compile(
+        r"\bPLG\b|product.?led.*growth|SaaS.*세일즈|saas.*sales|채널.*파트너|channel.*partner",
+        re.IGNORECASE,
+    ),
+    "account_management": re.compile(
+        r"계정.*관리|account.*manage|\bNRR\b|갱신|renewal|업셀|upsell|cross.?sell",
+        re.IGNORECASE,
+    ),
+    "sales_engineering": re.compile(
+        r"기술.*세일즈|sales.*engineer|\bPOC\b|데모|demo|value.*assess|솔루션.*아키텍|solution.*architect",
+        re.IGNORECASE,
+    ),
+    # UIUX team functions
+    "design_strategy": re.compile(
+        r"디자인.*전략|design.*strateg|\bCDO\b|\bHCD\b|디자인.*원칙|design.*principle|design.*direction",
+        re.IGNORECASE,
+    ),
+    "interaction_design": re.compile(
+        r"인터랙션|interaction.*design|모션.*디자인|motion.*design|마이크로.*인터랙션|micro.?interaction|제스처|gesture",
+        re.IGNORECASE,
+    ),
+    "user_research": re.compile(
+        r"사용자.*리서치|user.*research|사용성.*테스트|usability|유저.*인터뷰|user.*interview|접근성|accessibility|a11y",
+        re.IGNORECASE,
+    ),
+    "design_system": re.compile(
+        r"디자인.*시스템|design.*system|컴포넌트.*라이브러리|component.*library|Storybook|디자인.*토큰|design.*token",
+        re.IGNORECASE,
+    ),
+    "ux_engineering": re.compile(
+        r"UX.*엔지니어|ux.*engineer|프로토타입|prototype|Framer|핸드오프|handoff|디자인.*개발|design.*develop",
+        re.IGNORECASE,
+    ),
+    # CX team functions
+    "cx_strategy": re.compile(
+        r"CX.*전략|cx.*strateg|고객.*경험.*전략|customer.*experience.*strateg|\bVOC\b|\bNPS\b|\bCSAT\b|\bCES\b",
+        re.IGNORECASE,
+    ),
+    "customer_success": re.compile(
+        r"고객.*성공|customer.*success|온보딩|onboarding|이탈.*방지|churn.*prevent|CS.*플레이북",
+        re.IGNORECASE,
+    ),
+    "cx_analytics": re.compile(
+        r"고객.*분석|customer.*analytics|감성.*분석|sentiment|이탈.*예측|churn.*predict|VoC.*분석",
+        re.IGNORECASE,
+    ),
+    "omnichannel_cx": re.compile(
+        r"옴니채널|omnichannel|AI.*고객지원|ai.*support|챗봇|chatbot|콜센터|call.*center",
+        re.IGNORECASE,
+    ),
+    "cx_operations": re.compile(
+        r"CS.*운영|cs.*operation|\bQA\b.*\bQC\b|품질.*관리|quality.*manage|\bSLA\b|서비스.*레벨",
+        re.IGNORECASE,
+    ),
+    # --- Missing function patterns (auto-zero cycle #3) ---
+    "cloud_container": re.compile(
+        r"도커|docker|쿠버네티스|kubernetes|k8s|컨테이너|container|클라우드|cloud|AWS|GCP|Azure|파드|pod|헬름|helm",
+        re.IGNORECASE,
+    ),
+    "networking": re.compile(
+        r"네트워크|network|TCP|UDP|DNS|라우팅|routing|프로토콜|protocol|소켓|socket|HTTP|gRPC|websocket|로드.*밸런|load.*balanc",
+        re.IGNORECASE,
+    ),
+    "vision_multimodal": re.compile(
+        r"비전|vision|이미지.*분석|image.*analy|객체.*인식|object.*detect|멀티모달|multimodal|OCR|세그멘테이션|segmentation|YOLO|CNN",
+        re.IGNORECASE,
+    ),
+    "ai_compiler": re.compile(
+        r"컴파일러|compiler|런타임|runtime|LLVM|코드.*생성|code.*gen|인터프리터|interpreter|JIT|바이트코드|bytecode|AST|파서|parser",
+        re.IGNORECASE,
+    ),
+    "formal_verification": re.compile(
+        r"형식.*검증|formal.*verif|타입.*이론|type.*theory|정형.*명세|정적.*분석|static.*analy|증명|proof.*assist|Coq|Lean|Isabelle",
+        re.IGNORECASE,
+    ),
+    "quantum": re.compile(
+        r"양자|quantum|큐빗|qubit|양자.*게이트|quantum.*gate|양자.*회로|quantum.*circuit|Qiskit|얽힘|entangle",
+        re.IGNORECASE,
+    ),
+    "engineering_mgmt": re.compile(
+        r"엔지니어링.*관리|eng.*manage|코드.*리뷰|code.*review|스프린트|sprint|애자일|agile|스크럼|scrum|기술.*리더|tech.*lead|1on1",
         re.IGNORECASE,
     ),
 }
@@ -181,6 +290,10 @@ class Orchestrator:
             "marketers": "brand_strategy",
             "models": "lighting_photography",
             "creatives": "color_palette",
+            "commerce": "ecommerce_platform",
+            "sales": "enterprise_sales",
+            "uiux": "design_strategy",
+            "cx": "cx_strategy",
         }
         return defaults.get(domain, "system_architecture")
 
