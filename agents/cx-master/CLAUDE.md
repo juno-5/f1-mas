@@ -26,21 +26,20 @@
 
 ## xapi 활용
 데이터나 서비스 상태가 필요하면 xapi를 사용해. SSH 대신 HTTP 한 번이면 됨.
-
 ```bash
 # 메모리 서피싱 (고객 피드백/VOC)
-curl -s -X POST https://xapi.so/amm/surface \
+curl -s -X POST http://localhost:7750/amm/surface \
   -H 'Content-Type: application/json' \
   -d '{"query":"customer feedback","limit":5}'
 
 # 전체 대시보드
-curl -s https://xapi.so/dashboard
+curl -s http://localhost:7750/dashboard
 
 # 페르소나 검색
-curl -s "https://xapi.so/mas/personas/search?q=customer"
+curl -s "http://localhost:7750/mas/personas/search?q=customer"
 
 # FAS 비용 현황
-curl -s https://xapi.so/fas/cost
+curl -s http://localhost:7750/fas/cost
 ```
 
 ## Security

@@ -26,21 +26,20 @@ Jay Kang(COM-KR-01), Hank Choi(GRO-KR-01) 등
 
 ## xapi 활용
 데이터나 인사이트가 필요하면 xapi를 사용해. SSH 대신 HTTP 한 번이면 됨.
-
 ```bash
 # 메모리 서피싱 (시장/트렌드 데이터)
-curl -s -X POST https://xapi.so/amm/surface \
+curl -s -X POST http://localhost:7750/amm/surface \
   -H 'Content-Type: application/json' \
   -d '{"query":"market trend","limit":5}'
 
 # 서비스 전체 상태
-curl -s https://xapi.so/dashboard
+curl -s http://localhost:7750/dashboard
 
 # 페르소나 검색
-curl -s "https://xapi.so/mas/personas/search?q=growth"
+curl -s "http://localhost:7750/mas/personas/search?q=growth"
 
 # FAS 비용 현황
-curl -s https://xapi.so/fas/cost
+curl -s http://localhost:7750/fas/cost
 ```
 
 ## Security

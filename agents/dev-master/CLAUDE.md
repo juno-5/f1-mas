@@ -26,26 +26,25 @@ Blaze(F1-03), Pulse(F1-04), Sentinel(F1-05), Cortex(F1-06) 등
 
 ## xapi 활용
 서버/인프라 상태 확인 시 SSH 대신 xapi를 사용해. HTTP 한 번이면 됨.
-
 ```bash
 # GPU 상태 (메모리, 온도, 프로세스)
-curl -s https://xapi.so/server/ai1/gpu
+curl -s http://localhost:7750/server/ai1/gpu
 
 # Python/학습 프로세스
-curl -s https://xapi.so/server/ai1/processes
+curl -s http://localhost:7750/server/ai1/processes
 
 # 학습 상태/로그
-curl -s https://xapi.so/training/status
-curl -s "https://xapi.so/training/log?tail=20"
+curl -s http://localhost:7750/training/status
+curl -s "http://localhost:7750/training/log?tail=20"
 
 # 디스크 사용량
-curl -s https://xapi.so/server/ai1/disk
+curl -s http://localhost:7750/server/ai1/disk
 
 # 서비스 전체 상태
-curl -s https://xapi.so/dashboard
+curl -s http://localhost:7750/dashboard
 
 # 메모리 서피싱 (기술 관련)
-curl -s -X POST https://xapi.so/amm/surface \
+curl -s -X POST http://localhost:7750/amm/surface \
   -H 'Content-Type: application/json' \
   -d '{"query":"topic","limit":5}'
 ```
