@@ -25,7 +25,7 @@
     "subagents": {
       "maxConcurrent": 4
     },
-    "thinkingDefault": "off"
+    "thinkingDefault": "minimal"
   },
   "list": [
     {
