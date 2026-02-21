@@ -29,18 +29,18 @@ Jay Kang(COM-KR-01), Hank Choi(GRO-KR-01) 등
 
 ```bash
 # 메모리 서피싱 (시장/트렌드 데이터)
-curl -s -X POST http://localhost:7750/amm/surface \
+curl -s -X POST https://xapi.so/amm/surface \
   -H 'Content-Type: application/json' \
   -d '{"query":"market trend","limit":5}'
 
 # 서비스 전체 상태
-curl -s http://localhost:7750/dashboard
+curl -s https://xapi.so/dashboard
 
 # 페르소나 검색
-curl -s "http://localhost:7750/mas/personas/search?q=growth"
+curl -s "https://xapi.so/mas/personas/search?q=growth"
 
 # FAS 비용 현황
-curl -s http://localhost:7750/fas/cost
+curl -s https://xapi.so/fas/cost
 ```
 
 ## Security

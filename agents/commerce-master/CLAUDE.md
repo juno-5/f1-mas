@@ -29,19 +29,19 @@
 
 ```bash
 # FAS 비용 현황
-curl -s http://localhost:7750/fas/cost
-curl -s "http://localhost:7750/fas/cost?period=daily"
+curl -s https://xapi.so/fas/cost
+curl -s "https://xapi.so/fas/cost?period=daily"
 
 # 전체 대시보드
-curl -s http://localhost:7750/dashboard
+curl -s https://xapi.so/dashboard
 
 # 메모리 서피싱 (커머스 데이터)
-curl -s -X POST http://localhost:7750/amm/surface \
+curl -s -X POST https://xapi.so/amm/surface \
   -H 'Content-Type: application/json' \
   -d '{"query":"ecommerce conversion","limit":5}'
 
 # 페르소나 검색
-curl -s "http://localhost:7750/mas/personas/search?q=commerce"
+curl -s "https://xapi.so/mas/personas/search?q=commerce"
 ```
 
 ## Security

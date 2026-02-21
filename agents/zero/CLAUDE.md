@@ -26,19 +26,19 @@
 
 ```bash
 # 전체 대시보드 (서비스 + GPU + 학습 + 비용 한번에)
-curl -s http://localhost:7750/dashboard
+curl -s https://xapi.so/dashboard
 
 # 서비스 헬스 체크
-curl -s http://localhost:7750/services/health
+curl -s https://xapi.so/services/health
 
 # GPU 상태
-curl -s http://localhost:7750/server/ai1/gpu
+curl -s https://xapi.so/server/ai1/gpu
 
 # FAS 비용
-curl -s http://localhost:7750/fas/cost
+curl -s https://xapi.so/fas/cost
 
 # 페르소나 검색
-curl -s "http://localhost:7750/mas/personas/search?q=keyword"
+curl -s "https://xapi.so/mas/personas/search?q=keyword"
 ```
 
 ## 관리자

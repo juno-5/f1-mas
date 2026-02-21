@@ -28,13 +28,13 @@ LUMEN, CHROMA, ECHO, TEMPO, FUME
 
 ```bash
 # 전체 대시보드
-curl -s http://localhost:7750/dashboard
+curl -s https://xapi.so/dashboard
 
 # 페르소나 검색
-curl -s "http://localhost:7750/mas/personas/search?q=design"
+curl -s "https://xapi.so/mas/personas/search?q=design"
 
 # 메모리 서피싱
-curl -s -X POST http://localhost:7750/amm/surface \
+curl -s -X POST https://xapi.so/amm/surface \
   -H 'Content-Type: application/json' \
   -d '{"query":"topic","limit":5}'
 ```

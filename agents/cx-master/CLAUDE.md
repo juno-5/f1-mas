@@ -29,18 +29,18 @@
 
 ```bash
 # 메모리 서피싱 (고객 피드백/VOC)
-curl -s -X POST http://localhost:7750/amm/surface \
+curl -s -X POST https://xapi.so/amm/surface \
   -H 'Content-Type: application/json' \
   -d '{"query":"customer feedback","limit":5}'
 
 # 전체 대시보드
-curl -s http://localhost:7750/dashboard
+curl -s https://xapi.so/dashboard
 
 # 페르소나 검색
-curl -s "http://localhost:7750/mas/personas/search?q=customer"
+curl -s "https://xapi.so/mas/personas/search?q=customer"
 
 # FAS 비용 현황
-curl -s http://localhost:7750/fas/cost
+curl -s https://xapi.so/fas/cost
 ```
 
 ## Security
