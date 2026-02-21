@@ -225,6 +225,7 @@ def _run_agents_batch(
     except (httpx.TimeoutException, httpx.ConnectError, Exception) as e:
         # Batch failed — mark all as failed
         error_msg = str(e)
+        print(f"[agent-runner] Batch call failed: {error_msg}", flush=True)
         results = []
         for a in agents:
             state.update_agent(request_id, a["agent_id"],
@@ -235,6 +236,7 @@ def _run_agents_batch(
 
     if resp.status_code != 200:
         error_msg = f"xapi batch {resp.status_code}: {resp.text[:300]}"
+        print(f"[agent-runner] Batch HTTP error: {error_msg}", flush=True)
         results = []
         for a in agents:
             state.update_agent(request_id, a["agent_id"],
