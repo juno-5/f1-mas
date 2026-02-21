@@ -1,7 +1,5 @@
 {
   "port": 7720,
-  "token_manager_url": "http://localhost:7700",
-  "model_router_url": "http://localhost:7710",
   "anthropic_api_key": "",
   "anthropic_api_key_file": "/home/mayacrew/.f1crew/shared/anthropic-api-key",
   "claude_api_base": "https://api.anthropic.com",

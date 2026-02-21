@@ -12,8 +12,6 @@ CONFIG_FILE = f"{F1CREW}/shared/mas-config.json"
 
 _DEFAULTS = {
     "port": 7720,
-    "token_manager_url": "http://localhost:7700",  # health check only; token via auth-profiles.json
-    "model_router_url": "http://localhost:7710",
     "anthropic_api_key": "",         # direct API key (sk-ant-api-*)
     "anthropic_api_key_file": "",    # or read from file
     "claude_api_base": "https://api.anthropic.com",
