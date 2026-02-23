@@ -1,25 +1,117 @@
 # Auto×Zero Summary
 
-## 시작
-- 세션 1: 2026-02-22
+## 주요 발견 (Confirmed)
 
-## 주요 발견
+1. **Cycle #3 (2026-02-23)**: AMM memory fetch 호이스팅
+   - multi-agent 요청에서 AMM API 호출 N→1 최적화
+   - `mas_conversation.py` 수정, 커밋 `ed2a1f9`
 
-### Session 1 (Cycle #1-)
-- Auto 스킬 서비스 체크 오탐: systemd unit `token-manager` (실제) vs `token-manager-v5` (스크립트)
-- zsh `status` 예약어 → `st`로 변경 (3개 스킬 파일)
-- 전체 12개 서비스 active 확인
+2. **Cycle #4 (2026-02-23)**: MAS xapi 스타트업 헬스체크
+   - 배포 중 19.5% 실패율 원인: xapi 미가용 상태에서 요청 수락
+   - `_wait_for_xapi()` 추가 — xapi /health 폴링 후 서빙 시작
+   - `mas_server.py` 수정, 커밋 `3e06acf`
 
-## 기각된 가설
-- MAS 140회/24h 재시작 = 크래시 (실제: 배포 트리거, NRestarts=0)
-- MAS multi_perspective 과도 사용 (실제: 37.5%로 합리적, single 62.5%)
+3. **Cycle #6 (2026-02-23)**: MAS /requests 진단 필드 추가
+   - `/requests` list에 `error`, `selected_personas`, `failed_agents` 필드 추가
+   - `mas_server.py` 수정, 커밋 `8974a03`
 
-## 미해결 가설
-- (없음)
+4. **Cycle #8 (2026-02-23)**: MAS Prometheus 메트릭 강화
+   - p50/p95 percentile, per-pattern breakdown, cost counter 추가
+   - `mas_metrics.py` 수정, 커밋 `9f6830d`
+
+5. **Cycle #9 (2026-02-23)**: MAS 상태 복원 버그 수정
+   - save/load 비대칭: active_requests 저장은 하지만 로드 안 함
+   - 재시작 시 running 요청 유실 → failed로 복원 + 카운터 증가
+   - `mas_state.py` 수정, 커밋 `46be0c7`
+
+## 기각된 가설 (Rejected/Partial)
+
+1. **Cycle #1 (2026-02-23)**: xapi 0.0.0.0 바인딩 → 127.0.0.1 변경으로 보안 강화
+   - 판정: Partial — API 키 인증 이미 활성화. Tailscale 접근 때문에 0.0.0.0 필요. 방화벽 규칙이 더 적합.
 
 ## 변경 이력
-| 파일 | 설명 |
-|------|------|
-| ~/.claude/commands/auto-zero.md | token-manager-v5 → token-manager, status → st |
-| ~/.claude/commands/auto-gateway.md | 동일 |
-| ~/.claude/commands/zero.md | 동일 |
+
+1. `mas/mas_conversation.py` — AMM fetch 호이스팅 (ed2a1f9, 2026-02-23)
+2. `mas/mas_server.py` — xapi 스타트업 헬스체크 + tribe/squad API (3e06acf, 2026-02-23)
+3. `mas/mas_server.py` — /requests 진단 필드 추가 (8974a03, 2026-02-23)
+4. `mas/mas_metrics.py` — p50/p95 percentile + per-pattern 메트릭 (9f6830d, 2026-02-23)
+5. `mas/mas_state.py` — interrupted request 복원 버그 수정 (46be0c7, 2026-02-23)
+6. `mas/mas_agent_runner.py` — 502/503 재시도 추가 (f78a119, 2026-02-23)
+
+6. **Cycle #11 (2026-02-23)**: xapi 502/503 재시도 추가
+   - synthesis/batch에서 "Server disconnected" 502 에러 시 즉시 실패 반환
+   - 502/503 응답에 5초 대기 후 1회 재시도 로직 추가
+   - `mas/mas_agent_runner.py` 수정, 커밋 `f78a119`
+   - **배포 완료** (Cycle #12에서)
+
+7. **Cycle #12 (2026-02-23)**: MAS ↔ FAS 전체 연결 체인 검증
+   - MAS→xapi→Gateway→Token Manager→Claude API 전 구간 정상 확인
+   - Gateway→NAS: nasUrl+nasApiKey 설정됨, callNas()가 X-API-Key 헤더 전송 확인
+   - MAS→NAS: /nodes, /docs/search (인증 불필요) 정상
+   - NAS exec API key 인증 동작 확인 (578ms)
+   - Cycle #11 502/503 retry 서버 배포 완료
+
+8. **Cycle #13 (2026-02-23)**: Synthesis output cap + input truncation
+   - `call_xapi_inference()`: max_tokens 파라미터 추가
+   - `run_synthesis()`: `synthesis_max_tokens` config (default 2048)
+   - `build_synthesis_prompt()`: `synthesis_max_input_chars` config (default 4000) truncation
+   - `mas_agent_runner.py`, `mas_templates.py`, `mas_conversation.py` 수정, 커밋 `2a8737c`
+
+9. **Cycle #14 (2026-02-23)**: mas_performance.py 배포 누락 수정
+   - `mas_performance.py`, `mas_scoring.py` 서버 배포
+   - 모든 요청 완료 시 performance JSONL 기록 시작
+   - persona scoring 기반 데이터 수집 활성화
+
+10. **Cycle #15 (2026-02-23)**: xapi TimeoutStopSec 15→60
+    - xapi restart 시 `Failed with result 'timeout'` — 15s timeout으로 inference 요청 강제 종료
+    - `TimeoutStopSec=60`으로 변경, 서버 배포 + daemon-reload
+    - `xapi/systemd/xapi.service` 수정, 커밋 `425eae9`
+
+11. **Cycle #18 (2026-02-23)**: **Gateway 세션 누적 해소 + 캐시 추적** ⭐
+    - user 필드 `mas:{callsign}` → `mas:{request_id}:{callsign}` — 요청별 독립 세션
+    - **Before: 360K tokens/$0.647/55s → After: 34K tokens/$0.019/14s** (90%+ 절감)
+    - OpenAI format prompt_tokens_details cache 추적 추가
+    - `mas/mas_agent_runner.py` 수정, 커밋 `678899c`
+
+12. **Cycle #22 (2026-02-23)**: MAS 스타트업 전체 체인 검증 강화
+    - `_wait_for_xapi()`: `/health` → `/inference/capacity` (`ready`, `gateway_healthy`, `tokens_available_pct`)
+    - `mas/mas_server.py` 수정, 커밋 `d594e25`
+
+13. **Cycle #26 (2026-02-23)**: 페르소나 선택 정확도 개선 ⭐
+    - `frontend_ui` priority: F1-02(아키텍트) → F1-03(프론트엔드) 교체
+    - `system_architecture` 패턴: 단독 "설계" 제거 (오탐 방지)
+    - **Before**: "React 상태관리" → Forge, "UX 리서치" → Forge
+    - **After**: "React 상태관리" → Blaze, "UX 리서치" → Palette
+    - `org/functions.yaml` + `mas/mas_persona_index.py` 수정, 커밋 `8394197`
+
+14. **Cycle #27 (2026-02-23)**: **Gateway 시스템 프롬프트 오버헤드 감소** ⭐
+    - xapi가 MAS 요청 시 `X-OpenClaw-Session-Key: subagent:mas:{user}` 자동 주입
+    - Gateway "full" → "minimal" prompt mode: **15,904 → 10,480 tokens (-34%)**
+    - 비-MAS 요청은 영향 없음 (full mode 유지)
+    - E2E 단일 에이전트: 33,956 → 29,637 tokens (-13%)
+    - `xapi/xapi/routers/inference.py` 수정
+
+## 변경 이력
+
+7. `mas/mas_agent_runner.py` + `mas/mas_templates.py` + `mas/mas_conversation.py` — synthesis cap + truncation (2a8737c, 2026-02-23)
+8. `mas/mas_performance.py` + `mas/mas_scoring.py` — 서버 배포 (2026-02-23, 배포만)
+9. `xapi/systemd/xapi.service` — TimeoutStopSec 15→60 (425eae9, 2026-02-23)
+10. `mas/mas_agent_runner.py` — Gateway 세션 격리 + cache tracking (678899c, 2026-02-23)
+11. `mas/mas_agent_runner.py` + `systemd/mas.service` — partial result recovery + TimeoutStopSec 90 (436f908, 2026-02-23)
+12. `mas/mas_server.py` — MAS startup 전체 체인 검증 (d594e25, 2026-02-23)
+13. `scripts/cleanup-sessions.sh` — Gateway 세션 자동 정리 cron (d4b3021, 2026-02-23)
+14. `org/functions.yaml` + `mas/mas_persona_index.py` — 페르소나 선택 정확도 개선 (8394197, 2026-02-23)
+15. `xapi/xapi/routers/inference.py` — MAS 요청 시 subagent session key 주입 (2026-02-23)
+
+## 미해결 가설
+
+- ~~MAS 페르소나 선택 정확도 검증~~ → **해결** (Cycle #26: frontend_ui/system_architecture 패턴 + priority 개선)
+- xapi 시맨틱 캐시 hit/miss/error 3-state 반환
+- MAS→NAS 호출 시 API key 미전달 (현재 인증 불필요 endpoint만 사용하므로 문제 없으나, exec 필요시 수정 필요)
+- ~~Forge 178K 토큰/$0.64 비용~~ → **해결** (Cycle #18: 세션 누적이 원인, 90%+ 절감)
+- ~~Gateway 15K 토큰 시스템 프롬프트~~ → **부분 해결** (Cycle #27: subagent session key로 15.9K→10.5K 감소. 완전 해소는 `/inference/raw` + 토큰 매니저 통합 필요)
+- Gateway 오래된 세션 파일 정리 (sessions/ 디렉토리 비대, sessions.json 2MB)
+- ~~mas/mas/ orphan 서브디렉토리 cleanup~~ → **해결** (Cycle #24: 서버에서 삭제)
+- MAS 자발적 재시작 원인 분석 (SIGTERM → restart 패턴, 주기적 발생)
+- ~~Gateway 재시작 시 batch 실패 — MAS startup에 Gateway 가용성 확인 필요~~ → **해결** (Cycle #22: /inference/capacity 전체 체인 검증)
+- ~~Gateway 구세션 파일 정리 (109개, 5.1MB)~~ → **해결** (Cycle #23: 정리 스크립트 + 일일 cron)
