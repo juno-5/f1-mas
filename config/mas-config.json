@@ -21,6 +21,10 @@
     "p0_block": true,
     "p1_refuse": true
   },
+  "xapi_url": "http://localhost:7750",
+  "use_batch_inference": true,
+  "synthesis_timeout_seconds": 300,
+  "amm_memory_injection": true,
   "metrics_enabled": true,
   "hot_reload_interval": 30,
   "persona_cache_ttl": 300,
