@@ -111,6 +111,15 @@
     - **Before: 100% 실패 → After: 정상 완료** (윤소라 KF01 테스트 검증)
     - `mas/mas_agent_runner.py` 3곳 수정 커밋 `b123eb7` + `xapi/routers/inference.py` 커밋 `eaf9c2a`
 
+18. **Cycle #35 (2026-02-23)**: **Tool injection regex false positive 수정** ⭐
+    - 85.7% false positive rate (6/7 요청): `PC`→gRPC 내부 매칭, `실행`→실행 계획, `서비스`→마이크로서비스
+    - NAS: `\bPC\b` word boundary, 실행→compound, 배포 제거
+    - INFRA: 서비스→compound, `(?<!블)로그`, 배포→compound, 모니터→모니터링
+    - **Before: 비인프라 요청에 4~8 tools 오주입 → ThreadPool 강제**
+    - **After: No tools → batch inference 사용** (4 agents in 51.8s, 진정한 병렬)
+    - `mas/mas_tools.py` 수정, 커밋 `2d0c734`
+    - ⚠️ 배포 경로 발견: `~/.f1crew/scripts/mas/` (실행) ≠ `~/f1-mas/mas/` (소스 복사)
+
 ## 변경 이력
 
 7. `mas/mas_agent_runner.py` + `mas/mas_templates.py` + `mas/mas_conversation.py` — synthesis cap + truncation (2a8737c, 2026-02-23)
@@ -126,6 +135,7 @@
 17. `mas/mas_orchestrator.py` — 강제 persona_ids 실패 시 auto-select fallback (d274b6a, 2026-02-23)
 18. `mas/mas_agent_runner.py` — 비ASCII callsign→persona_id + retry 개선 (b123eb7, 2026-02-23)
 19. `xapi/xapi/routers/inference.py` — ASCII-safe session key header + Bedrock normalization (eaf9c2a, 2026-02-23)
+20. `mas/mas_tools.py` — tool injection regex false positive 수정 (2d0c734, 2026-02-23)
 
 ## 미해결 가설
 
