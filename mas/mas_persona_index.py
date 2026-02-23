@@ -1098,8 +1098,15 @@ class PersonaIndex:
         result_lines = extracted.split("\n")
         if len(result_lines) > 250:
             result_lines = result_lines[:250]
-            result_lines.append("\n[... truncated for token efficiency ...]")
-        extracted = "\n".join(result_lines)
+            extracted = "\n".join(result_lines)
+        # Enforce character limit (Korean text = ~5.65 tokens/char)
+        max_chars = cfg.get("character_extract_max_chars", 0)
+        if max_chars > 0 and len(extracted) > max_chars:
+            truncated = extracted[:max_chars]
+            last_section = truncated.rfind("\n## ")
+            if last_section > len(extracted) // 4:
+                truncated = truncated[:last_section]
+            extracted = truncated.rstrip() + "\n\n[... truncated for token efficiency ...]"
 
         with self._lock:
             self._extract_cache[persona_id] = extracted

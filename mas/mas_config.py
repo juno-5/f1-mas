@@ -46,6 +46,7 @@ _DEFAULTS = {
         "AI Interaction Notes",
         "Collaboration Dynamics",
     ],
+    "character_extract_max_chars": 4000,
     "log_level": "info",
     "nas_context_injection": True,
     "nas_url": "http://localhost:7730",
