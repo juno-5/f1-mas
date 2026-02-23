@@ -27,10 +27,9 @@ Level 4: Tool Agents (Bash, Read, Write, etc. used by Level 3)
 ```
 
 ### Slack Bot Identity Files
-각 에이전트는 서버에 3종 MD 파일이 필요:
-- **IDENTITY.md** (`workspace-{agentId}/`) — OpenClaw 아이덴티티 (`- Name:`, `- Vibe:` 형식). 봇의 첫인상/성격 결정.
-- **CLAUDE.md** (`agents/{agentId}/agent/`) — 시스템 프롬프트. 역할, 규칙, 도메인 전문성 정의.
-- **CLAUDE.md** (`workspace-{agentId}/`) — 워크스페이스 컨텍스트. 메모리 경로, 작업 지침.
+각 에이전트는 서버에 IDENTITY.md 파일 1개로 통합:
+- **IDENTITY.md** (`agents/{agentId}/agent/`) — 봇 아이덴티티 + 시스템 프롬프트 + 도메인 전문성 + xapi/NAS 활용법 통합.
+- 로컬 소스: `f1-mas/agents/{agentId}/IDENTITY.md`
 
 ## Boot Sequence
 

@@ -4,6 +4,42 @@
 
 ---
 
+## 2026-02-23: Gateway nodes 도구 → NAS 연동
+
+### 변경
+Gateway의 `nodes` 도구를 NAS (Node Agent System) HTTP API로 라우팅하도록 수정.
+기존 Chrome Extension 페어링 방식 대신, NAS exec SSH를 통해 원격 PC를 직접 제어.
+
+### 수정 파일 (f1crew-mayacrew)
+- `src/agents/tools/nodes-tool.ts` — NAS HTTP 라우팅 (status/describe/run)
+- `src/config/types.gateway.ts` — `GatewayNodesConfig`에 `nasUrl`, `nasApiKey` 추가
+- `src/config/zod-schema.ts` — Zod 스키마에 `nasUrl`, `nasApiKey` 추가
+- `src/config/schema.labels.ts`, `schema.help.ts` — 라벨/도움말 추가
+
+### 설정 (f1crew.json)
+```json
+"gateway": {
+  "nodes": {
+    "nasUrl": "http://localhost:7730",
+    "nasApiKey": "<NAS API key>"
+  }
+}
+```
+
+### 동작 방식
+1. `nasUrl`이 설정되면 `nodes` 도구가 NAS 모드로 전환
+2. `status` → `GET /nodes` (노드 목록)
+3. `describe` → `GET /nodes/{id}` (노드 상세)
+4. `run` → `POST /nodes/{id}/exec` (원격 명령 실행, SSH 경유)
+5. `nasUrl` 미설정 시 기존 게이트웨이 페어링 방식 유지 (하위 호환)
+
+### 테스트 결과
+8개 마스터 에이전트 모두 NAS 경유 노드 제어 성공:
+- zero, dev-master, mkt-master, art-master, commerce-master, sales-master, uiux-master, cx-master
+- 브라우저 열기, 앱 목록 조회, 디스크 사용량 확인 등 검증 완료
+
+---
+
 ## 2026-02-20: Zero 응답 속도 최적화
 
 ### 문제
@@ -89,7 +125,7 @@ f1-mas/
 ### 배포 규칙
 - `f1crew.json`을 통째로 SCP **금지** (Slack 토큰 유실)
 - `agents` 섹션만 in-place 머지
-- CLAUDE.md는 `~/.f1crew/agents/*/agent/CLAUDE.md`로 복사
+- IDENTITY.md는 `~/.f1crew/agents/*/agent/IDENTITY.md`로 복사
 
 ---
 
