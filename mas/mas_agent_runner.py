@@ -97,6 +97,10 @@ def call_xapi_inference(prompt: str, model: str = None, timeout: int = None, use
                 timeout=timeout,
             )
 
+            if resp.status_code in (502, 503) and attempt == 0:
+                print(f"[agent-runner] xapi {resp.status_code}, retrying in 5s...", flush=True)
+                time.sleep(5)
+                continue
             if resp.status_code != 200:
                 error = resp.text[:300]
                 return {"text": "", "model": full_model, "error": f"xapi {resp.status_code}: {error}",
@@ -136,6 +140,57 @@ def call_xapi_inference(prompt: str, model: str = None, timeout: int = None, use
             "usage": empty_usage, "cost_usd": 0.0}
 
 
+import re
+
+_TOOL_CALL_RE = re.compile(
+    r"<tool_call>\s*(\{.*?\})\s*</tool_call>",
+    re.DOTALL,
+)
+
+
+def _build_tool_instructions(tools: list[dict]) -> str:
+    """Build text-based tool instructions from OpenAI tool definitions."""
+    lines = [
+        "\n\n---",
+        "## Available Tools",
+        "You have access to the following tools. To use a tool, output EXACTLY this format:",
+        "",
+        "<tool_call>",
+        '{"name": "tool_name", "arguments": {"arg1": "value1"}}',
+        "</tool_call>",
+        "",
+        "You may call multiple tools. After each <tool_call>, stop and wait for the result.",
+        "The result will appear in a <tool_result> block. Then continue your response.",
+        "If you don't need any tools, respond normally WITHOUT any <tool_call> tags.",
+        "",
+    ]
+    for t in tools:
+        fn = t.get("function", {})
+        name = fn.get("name", "")
+        desc = fn.get("description", "")
+        params = fn.get("parameters", {}).get("properties", {})
+        required = fn.get("parameters", {}).get("required", [])
+
+        param_strs = []
+        for pname, pdef in params.items():
+            ptype = pdef.get("type", "string")
+            pdesc = pdef.get("description", "")
+            req = " (required)" if pname in required else ""
+            param_strs.append(f"    - {pname}: {ptype}{req} — {pdesc}")
+
+        lines.append(f"### {name}")
+        lines.append(f"{desc}")
+        if param_strs:
+            lines.append("  Parameters:")
+            lines.extend(param_strs)
+        else:
+            lines.append("  No parameters.")
+        lines.append("")
+
+    lines.append("---")
+    return "\n".join(lines)
+
+
 def call_xapi_with_tools(
     prompt: str,
     tools: list[dict],
@@ -144,10 +199,12 @@ def call_xapi_with_tools(
     user: str = "mas:agent",
     max_tool_rounds: int = 5,
 ) -> dict:
-    """Call LLM with tool-use loop via xapi.
+    """Call LLM with text-based tool-use loop (ReAct pattern).
 
-    When LLM returns tool_calls, executes them locally via mas_tools.execute_tool(),
-    feeds results back as role="tool" messages, and re-calls until final text.
+    Uses existing xapi/Gateway infrastructure. Tools are described as text in the
+    prompt. When the LLM outputs <tool_call> blocks, we parse them, execute the
+    tools locally, inject <tool_result> blocks, and re-call until the LLM gives
+    a final answer without tool calls.
 
     Returns same format as call_xapi_inference.
     """
@@ -155,111 +212,100 @@ def call_xapi_with_tools(
 
     if model is None:
         model = cfg.get("claude_model", "sonnet")
-    full_model = _MODEL_MAP.get(model, model)
 
     if timeout is None:
         timeout = cfg.get("agent_timeout_seconds", 120)
 
-    xapi_url = cfg.get("xapi_url", "http://localhost:7750")
+    # Inject tool descriptions into the prompt
+    tool_instructions = _build_tool_instructions(tools)
+    augmented_prompt = prompt + tool_instructions
 
-    messages = [{"role": "user", "content": prompt}]
     total_usage = {"input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0}
     total_cost = 0.0
-    final_text = ""
+    conversation = augmented_prompt
 
     for round_i in range(max_tool_rounds + 1):
-        try:
-            body = {
-                "model": full_model,
-                "messages": messages,
-                "user": user,
-                "max_tokens": 4096,
-                "tools": tools,
+        result = call_xapi_inference(conversation, model=model, timeout=timeout, user=user)
+
+        if result.get("error"):
+            result["usage"] = _merge_usage(total_usage, result.get("usage", {}))
+            result["cost_usd"] = total_cost + result.get("cost_usd", 0.0)
+            return result
+
+        # Accumulate usage
+        ru = result.get("usage", {})
+        total_usage["input"] += ru.get("input", 0)
+        total_usage["output"] += ru.get("output", 0)
+        total_usage["cacheRead"] += ru.get("cacheRead", 0)
+        total_usage["cacheWrite"] += ru.get("cacheWrite", 0)
+        total_cost += result.get("cost_usd", 0.0)
+
+        text = result.get("text", "")
+
+        # Parse tool calls from text
+        tool_calls = _TOOL_CALL_RE.findall(text)
+
+        if not tool_calls:
+            # No tool calls → final response
+            return {
+                "text": text,
+                "model": result.get("model", ""),
+                "error": None,
+                "usage": total_usage,
+                "cost_usd": total_cost,
             }
 
-            resp = _get_http().post(
-                f"{xapi_url}/inference/chat",
-                json=body,
-                timeout=timeout,
+        # Execute tool calls
+        print(f"[agent-runner] Tool round {round_i + 1}: "
+              f"{len(tool_calls)} call(s)", flush=True)
+
+        tool_results = []
+        for tc_json in tool_calls:
+            try:
+                tc = json.loads(tc_json)
+                tool_name = tc.get("name", "")
+                tool_args = tc.get("arguments", {})
+            except (json.JSONDecodeError, TypeError):
+                tool_results.append("<tool_result>\n{\"error\": \"Invalid tool call JSON\"}\n</tool_result>")
+                continue
+
+            print(f"[agent-runner]   -> {tool_name}"
+                  f"({json.dumps(tool_args, ensure_ascii=False)[:100]})",
+                  flush=True)
+            tool_result = exec_tool(tool_name, tool_args)
+            print(f"[agent-runner]   <- {len(tool_result)} chars", flush=True)
+
+            tool_results.append(
+                f"<tool_result name=\"{tool_name}\">\n{tool_result}\n</tool_result>"
             )
 
-            if resp.status_code != 200:
-                error = resp.text[:300]
-                return {"text": "", "model": full_model,
-                        "error": f"xapi {resp.status_code}: {error}",
-                        "usage": total_usage, "cost_usd": total_cost}
+        # Build continuation prompt: original + assistant response + tool results
+        # Strip tool_call blocks from assistant text for cleaner context
+        clean_text = _TOOL_CALL_RE.sub("", text).strip()
+        continuation = (
+            f"{conversation}\n\n"
+            f"## Assistant Response\n{clean_text}\n\n"
+            f"## Tool Results\n" + "\n\n".join(tool_results) + "\n\n"
+            f"Continue your response using the tool results above. "
+            f"Do NOT repeat the tool calls."
+        )
+        conversation = continuation
 
-            data = resp.json()
-
-            # Accumulate usage
-            raw_usage = data.get("usage", {})
-            total_usage["input"] += raw_usage.get("input_tokens", raw_usage.get("prompt_tokens", 0))
-            total_usage["output"] += raw_usage.get("output_tokens", raw_usage.get("completion_tokens", 0))
-            total_usage["cacheRead"] += raw_usage.get("cache_read_input_tokens", 0)
-            total_usage["cacheWrite"] += raw_usage.get("cache_creation_input_tokens", 0)
-            total_cost += data.get("cost_usd", 0.0)
-
-            content = data.get("content", "")
-            tool_calls = data.get("tool_calls")
-
-            # No tool calls → final response
-            if not tool_calls:
-                return {
-                    "text": content,
-                    "model": data.get("model", full_model),
-                    "error": None,
-                    "usage": total_usage,
-                    "cost_usd": total_cost,
-                }
-
-            # Tool calls → execute and loop
-            print(f"[agent-runner] Tool round {round_i + 1}: "
-                  f"{len(tool_calls)} call(s)", flush=True)
-
-            # Add assistant message with tool_calls to conversation
-            assistant_msg = {"role": "assistant", "tool_calls": tool_calls}
-            if content:
-                assistant_msg["content"] = content
-            messages.append(assistant_msg)
-
-            # Execute each tool call and append results
-            for tc in tool_calls:
-                fn = tc.get("function", {})
-                tool_name = fn.get("name", "")
-                tool_args_raw = fn.get("arguments", "{}")
-                tool_call_id = tc.get("id", "")
-
-                try:
-                    tool_args = json.loads(tool_args_raw) if isinstance(tool_args_raw, str) else tool_args_raw
-                except (json.JSONDecodeError, TypeError):
-                    tool_args = {}
-
-                print(f"[agent-runner]   -> {tool_name}"
-                      f"({json.dumps(tool_args, ensure_ascii=False)[:100]})",
-                      flush=True)
-                tool_result = exec_tool(tool_name, tool_args)
-                print(f"[agent-runner]   <- {len(tool_result)} chars", flush=True)
-
-                messages.append({
-                    "role": "tool",
-                    "content": tool_result,
-                    "tool_call_id": tool_call_id,
-                })
-
-            final_text = content  # keep last content in case we hit max rounds
-
-        except httpx.TimeoutException:
-            return {"text": "", "model": full_model,
-                    "error": f"timeout after {timeout}s (tool round {round_i})",
-                    "usage": total_usage, "cost_usd": total_cost}
-        except Exception as e:
-            return {"text": "", "model": full_model, "error": str(e),
-                    "usage": total_usage, "cost_usd": total_cost}
-
-    # Max rounds exceeded
-    return {"text": final_text, "model": full_model,
+    # Max rounds exceeded — return last text
+    clean_text = _TOOL_CALL_RE.sub("", text).strip() if 'text' in dir() else ""
+    return {"text": clean_text, "model": result.get("model", "") if 'result' in dir() else "",
             "error": f"max tool rounds ({max_tool_rounds}) exceeded",
             "usage": total_usage, "cost_usd": total_cost}
+
+
+def _merge_usage(total: dict, new: dict) -> dict:
+    """Merge usage dicts."""
+    return {
+        "input": total.get("input", 0) + new.get("input", 0),
+        "output": total.get("output", 0) + new.get("output", 0),
+        "cacheRead": total.get("cacheRead", 0) + new.get("cacheRead", 0),
+        "cacheWrite": total.get("cacheWrite", 0) + new.get("cacheWrite", 0),
+    }
 
 
 def run_agent(
@@ -396,6 +442,10 @@ def _run_agents_batch(
                 json={"requests": batch_requests},
                 timeout=timeout + 30,  # extra margin for batch overhead
             )
+            if resp.status_code in (502, 503) and attempt == 0:
+                print(f"[agent-runner] Batch xapi {resp.status_code}, retrying in 5s...", flush=True)
+                time.sleep(5)
+                continue
             break
         except (httpx.ConnectError, httpx.RemoteProtocolError):
             if attempt == 0:
