@@ -301,10 +301,14 @@ class Orchestrator:
             # Forced persona selection
             personas = [self._index.get(pid) for pid in persona_ids]
             personas = [p for p in personas if p is not None]
+            if not personas:
+                _log(f"[{request_id}] Forced persona_ids {persona_ids} all invalid, falling back to auto-select")
+                personas = self.select_personas(analysis)
         else:
             personas = self.select_personas(analysis)
 
         if not personas:
+            _log(f"[{request_id}] No personas found (analysis={analysis})")
             state.update_request(request_id, status="failed",
                                  error="no suitable personas found")
             return
