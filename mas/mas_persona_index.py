@@ -1,4 +1,4 @@
-"""MAS Persona Index — in-memory index of 178 personas with lazy character loading."""
+"""MAS Persona Index — in-memory index of 184 personas with lazy character loading."""
 
 import os
 import re
@@ -22,6 +22,7 @@ FUNCTION_PRIORITY = {
     "ai_compiler": ["F1-09"],
     "data_pipeline": ["F1-10", "FC-07"],
     "sre_monitoring": ["F1-11", "FC-05"],
+    "platform_engineering": ["F1-11", "FC-05", "F1-02", "FC-01"],
     "nlp_llm": ["F1-12", "F1-08"],
     "vision_multimodal": ["F1-13", "F1-20"],
     "database_storage": ["F1-14", "FC-02"],
@@ -33,7 +34,7 @@ FUNCTION_PRIORITY = {
     "image_gen": ["F1-20", "F1-13"],
     "video_gen": ["F1-21", "04"],
     "audio_gen": ["F1-22", "03"],
-    "frontend_ui": ["FC-04", "F1-02", "UX-05", "UX-04"],
+    "frontend_ui": ["FC-04", "F1-03", "F1-18", "UX-05"],
     "engineering_mgmt": ["FC-10", "FC-01"],
     # Marketing functions (KR first, then US)
     "commerce_strategy": ["COM-KR-01", "COM-KR-02", "COM-US-01", "COM-US-02"],
@@ -65,70 +66,20 @@ FUNCTION_PRIORITY = {
     "cx_analytics": ["CX-03", "CX-01"],
     "omnichannel_cx": ["CX-04", "CX-01"],
     "cx_operations": ["CX-05", "CX-01"],
-    # Creative functions
+    # Creative functions — Five Senses
     "lighting_photography": ["01", "F1-20"],
     "color_palette": ["02", "DES-KR-01"],
     "sound_music": ["03", "F1-22"],
     "motion_video": ["04", "F1-21"],
     "scent_sensory": ["05"],
+    # Creative functions — Art Master Squad
+    "ai_art_direction": ["AM-01", "AM-06"],
+    "ai_video_gen": ["AM-02", "AM-03", "AM-05"],
+    "ai_image_gen": ["AM-04", "AM-01"],
+    "ai_motion": ["AM-03", "AM-02"],
+    "ai_shortform": ["AM-05", "AM-03"],
+    "prompt_architecture": ["AM-06", "AM-01"],
 }
-
-# Domain → category mapping keywords
-DOMAIN_KEYWORDS = {
-    "developers": [
-        r"코드|code|아키텍처|architecture|버그|bug|리팩토링|refactor|debug|디버그",
-        r"구현|implement|설계|design|테스트|test|보안|security|배포|deploy",
-        r"인프라|infra|api|backend|frontend|데이터베이스|database|알고리즘|algorithm",
-        r"성능|performance|최적화|optimize|ML|머신러닝|machine.?learn",
-        r"시스템|system|서버|server|네트워크|network|컨테이너|container|클라우드|cloud",
-        r"AI|인공지능|모델학습|training|파이프라인|pipeline|데이터|data",
-        r"python|파이썬|java|rust|golang|typescript|스레드|thread|프로세스|process|동시성|concurren",
-    ],
-    "marketers": [
-        r"마케팅|marketing|캠페인|campaign|광고|advertising|퍼포먼스|performance.?marketing",
-        r"브랜딩|branding|브랜드|brand|카피|copy|전략|strategy",
-        r"그로스|growth|성장|UA|유저.?획득|acquisition|리텐션|retention",
-        r"아마존|amazon|tiktok|틱톡|커머스|commerce|이커머스|e.?commerce",
-        r"SNS|소셜|social|인플루언서|influencer|콘텐츠|content.?marketing",
-        r"CRO|전환율|conversion|AB테스트|디자인|design",
-    ],
-    "models": [
-        r"모델|model(?!.*router)|화보|lookbook|촬영|shooting|캐스팅|casting",
-        r"패션|fashion|뷰티|beauty|스타일링|styling|런웨이|runway",
-        r"화장품|cosmetic|헤어|hair|메이크업|makeup|룩북",
-    ],
-    "creatives": [
-        r"조명|lighting|라이팅|컬러|color|팔레트|palette|사운드|sound",
-        r"음악|music|음향|audio|모션|motion|영상|video|시네마|cinema",
-        r"향수|향기|scent|감각|sensory|오감|five.?sense|아트디렉션|art.?direction",
-    ],
-    "commerce": [
-        r"커머스|commerce|이커머스|e.?commerce|쇼핑몰|shop|결제|payment",
-        r"전환율|conversion|CRO|마켓플레이스|marketplace|리텐션|retention",
-        r"개인화|personalization|로열티|loyalty|가격|pricing",
-    ],
-    "sales": [
-        r"세일즈|sales|영업|B2B|엔터프라이즈|enterprise|딜|deal",
-        r"파이프라인|pipeline|수주|계약|contract|PLG|revenue",
-        r"어카운트|account|고객.?관리|client.?management",
-    ],
-    "uiux": [
-        r"UI|UX|사용자.?경험|user.?experience|인터페이스|interface",
-        r"와이어프레임|wireframe|프로토타입|prototype|디자인.?시스템|design.?system",
-        r"접근성|accessibility|사용성|usability|인터랙션|interaction",
-    ],
-    "cx": [
-        r"고객.?경험|customer.?experience|CX|CS|고객.?서비스|customer.?service",
-        r"VoC|고객.?의견|NPS|만족도|satisfaction|서포트|support",
-        r"옴니채널|omnichannel|컨택센터|contact.?center",
-    ],
-}
-
-_domain_compiled = {
-    cat: [re.compile(p, re.IGNORECASE) for p in patterns]
-    for cat, patterns in DOMAIN_KEYWORDS.items()
-}
-
 
 @dataclass
 class PersonaEntry:
@@ -141,6 +92,25 @@ class PersonaEntry:
     tags: list[str] = field(default_factory=list)
     file_path: str = ""  # relative path within characters/
     specialty: str = ""  # models only
+    tribe: str = ""      # tribe_id (e.g. "product", "growth")
+    squad: str = ""      # squad_id (e.g. "engineering", "growth_kr")
+
+
+@dataclass
+class SquadInfo:
+    squad_id: str          # "engineering", "growth_kr"
+    squad_name: str        # "Engineering Squad"
+    tribe_id: str          # "product"
+    member_ids: list[str] = field(default_factory=list)  # ordered, first = lead
+    lead_id: str = ""
+
+
+@dataclass
+class TribeInfo:
+    tribe_id: str          # "product"
+    tribe_name: str        # "Product Tribe"
+    squad_ids: list[str] = field(default_factory=list)
+    description: str = ""
 
 
 class PersonaIndex:
@@ -157,7 +127,25 @@ class PersonaIndex:
         self._extract_cache_ts: dict[str, float] = {}
         self._lock = threading.Lock()
         self._registry_mtime = 0.0
+        self._tribe_registry_mtime = 0.0
         self._loaded = False
+        # Tribe/Squad indices
+        self._tribes: dict[str, TribeInfo] = {}
+        self._squads: dict[str, SquadInfo] = {}
+        self._by_tribe: dict[str, list[str]] = {}   # tribe_id → [persona_ids]
+        self._by_squad: dict[str, list[str]] = {}   # squad_id → [persona_ids]
+        self._squad_patterns: dict[str, re.Pattern] | None = None  # lazy from org/squads.yaml
+        self._squad_meta: dict[str, dict] | None = None  # raw yaml metadata
+        self._squads_yaml_mtime: float = 0.0
+        self._tribe_patterns: dict[str, re.Pattern] | None = None  # lazy from org/tribes.yaml
+        self._tribe_meta: dict[str, dict] | None = None  # raw yaml metadata
+        self._tribes_yaml_mtime: float = 0.0
+        self._domain_compiled: dict[str, list[re.Pattern]] | None = None  # lazy from org/domains.yaml
+        self._domains_yaml_mtime: float = 0.0
+        self._function_compiled: dict[str, re.Pattern] | None = None
+        self._function_priority: dict[str, list[str]] | None = None
+        self._function_defaults: dict[str, str] | None = None
+        self._functions_yaml_mtime: float = 0.0
 
     def load(self):
         """Parse persona-registry.md and build indices."""
@@ -202,6 +190,164 @@ class PersonaIndex:
                     self._by_tag.setdefault(tag, []).append(e.id)
 
             self._loaded = True
+
+        # Load tribe/squad overlay
+        self.load_tribes()
+
+    def load_tribes(self):
+        """Parse tribe-registry.md and patch PersonaEntry tribe/squad fields."""
+        tribe_path = cfg.get("tribe_registry_path", "")
+        if not tribe_path or not os.path.isfile(tribe_path):
+            return
+
+        try:
+            mtime = os.path.getmtime(tribe_path)
+            if mtime == self._tribe_registry_mtime and self._tribes:
+                return
+            self._tribe_registry_mtime = mtime
+        except OSError:
+            return
+
+        with open(tribe_path, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        tribes: dict[str, TribeInfo] = {}
+        squads: dict[str, SquadInfo] = {}
+        by_tribe: dict[str, list[str]] = {}
+        by_squad: dict[str, list[str]] = {}
+
+        current_tribe_id = ""
+        current_tribe_name = ""
+        current_tribe_desc = ""
+        current_squad_id = ""
+        current_squad_name = ""
+        in_table = False
+        sep_seen = False
+
+        for line in content.split("\n"):
+            stripped = line.strip()
+
+            # ## Tribe heading
+            if stripped.startswith("## ") and not stripped.startswith("### "):
+                # Save previous tribe if any
+                # Parse new tribe
+                current_tribe_name = stripped[3:].strip()
+                current_tribe_id = self._normalize_id(current_tribe_name, "Tribe")
+                current_tribe_desc = ""
+                tribes[current_tribe_id] = TribeInfo(
+                    tribe_id=current_tribe_id,
+                    tribe_name=current_tribe_name,
+                )
+                by_tribe[current_tribe_id] = []
+                current_squad_id = ""
+                in_table = False
+                sep_seen = False
+                continue
+
+            # > description line after tribe heading
+            if stripped.startswith(">") and current_tribe_id and not current_squad_id:
+                current_tribe_desc = stripped[1:].strip()
+                tribes[current_tribe_id].description = current_tribe_desc
+                continue
+
+            # ### Squad heading
+            if stripped.startswith("### "):
+                current_squad_name = stripped[4:].strip()
+                current_squad_id = self._normalize_squad_id(
+                    current_squad_name, current_tribe_id
+                )
+                squads[current_squad_id] = SquadInfo(
+                    squad_id=current_squad_id,
+                    squad_name=current_squad_name,
+                    tribe_id=current_tribe_id,
+                )
+                by_squad[current_squad_id] = []
+                tribes[current_tribe_id].squad_ids.append(current_squad_id)
+                in_table = False
+                sep_seen = False
+                continue
+
+            # Table rows
+            if not current_squad_id:
+                continue
+
+            if not stripped.startswith("|"):
+                in_table = False
+                sep_seen = False
+                continue
+
+            if "---" in stripped:
+                sep_seen = True
+                in_table = True
+                continue
+
+            if not sep_seen:
+                continue  # header row
+
+            # Data row: | ID | Role in Squad |
+            cells = [c.strip() for c in stripped.strip("|").split("|")]
+            if len(cells) >= 1:
+                pid = cells[0].strip()
+                if not pid or pid.lower() == "id":
+                    continue
+
+                role_in_squad = cells[1].strip() if len(cells) > 1 else ""
+                is_lead = "Lead" in role_in_squad and by_squad[current_squad_id] == []
+
+                by_squad[current_squad_id].append(pid)
+                by_tribe[current_tribe_id].append(pid)
+
+                if is_lead or not squads[current_squad_id].member_ids:
+                    squads[current_squad_id].lead_id = pid if is_lead else squads[current_squad_id].lead_id
+                squads[current_squad_id].member_ids.append(pid)
+
+                # Set lead_id to first member if not explicitly set
+                if not squads[current_squad_id].lead_id:
+                    squads[current_squad_id].lead_id = squads[current_squad_id].member_ids[0]
+
+        # Patch PersonaEntry with tribe/squad
+        with self._lock:
+            self._tribes = tribes
+            self._squads = squads
+            self._by_tribe = by_tribe
+            self._by_squad = by_squad
+
+            for squad_id, member_ids in by_squad.items():
+                sq = squads[squad_id]
+                for pid in member_ids:
+                    entry = self._by_id.get(pid)
+                    if entry:
+                        entry.tribe = sq.tribe_id
+                        entry.squad = squad_id
+
+    @staticmethod
+    def _normalize_id(name: str, strip_suffix: str = "") -> str:
+        """Normalize a heading into an ID: 'Product Tribe' → 'product'."""
+        name = name.strip()
+        if strip_suffix and name.endswith(strip_suffix):
+            name = name[: -len(strip_suffix)].strip()
+        return re.sub(r"[^a-z0-9]+", "_", name.lower()).strip("_")
+
+    @staticmethod
+    def _normalize_squad_id(squad_name: str, tribe_id: str) -> str:
+        """Normalize squad heading into unique ID.
+
+        'Growth KR Squad' → 'growth_kr'
+        'Engineering Squad' → 'engineering'
+        'Korea Squad' (under model tribe) → 'model_korea'
+        """
+        name = squad_name.strip()
+        if name.endswith("Squad"):
+            name = name[:-5].strip()
+
+        raw = re.sub(r"[^a-z0-9]+", "_", name.lower()).strip("_")
+
+        # For generic names like 'Korea', 'Japan', 'USA', 'Europe' under model tribe,
+        # prefix with tribe to avoid collision
+        generic = {"korea", "japan", "usa", "europe"}
+        if raw in generic:
+            return f"{tribe_id}_{raw}"
+        return raw
 
     def _parse_table_rows(self, section_text):
         """Extract table rows from a markdown section (skip headers + separators).
@@ -363,20 +509,36 @@ class PersonaIndex:
         return entries
 
     def _parse_creatives(self, content):
-        """Parse creative personas."""
+        """Parse creative personas (Five Senses + Art Master Squad)."""
         entries = []
         creative_section = self._extract_section(content, "Creatives")
 
         for row in self._parse_table_rows(creative_section):
-            if len(row) >= 5:
-                pid = row[0].strip()
+            pid = row[0].strip() if row else ""
+            if not pid:
+                continue
+
+            # Art Master Squad: ID|Name|Callsign|Role|File|Tags
+            if pid.startswith("AM-") and len(row) >= 5:
+                name = row[1].strip()
+                callsign = row[2].strip()
+                role = row[3].strip()
+                fpath = row[4].strip().strip("`")
+                tags_str = row[5] if len(row) > 5 else ""
+                tags = [t.strip() for t in tags_str.split(",") if t.strip()]
+                entries.append(PersonaEntry(
+                    id=pid, name=name, callsign=callsign,
+                    role=role, category="creatives", locale="global",
+                    tags=tags, file_path=fpath, specialty="ai-art",
+                ))
+            # Five Senses: ID|Callsign|Sense|Role|Short|Full|Tags
+            elif len(row) >= 5:
                 callsign = row[1].strip()
                 sense = row[2].strip()
                 role = row[3].strip()
                 fpath = row[4].strip().strip("`")
                 tags_str = row[6] if len(row) > 6 else ""
                 tags = [t.strip() for t in tags_str.split(",") if t.strip()]
-
                 entries.append(PersonaEntry(
                     id=pid, name=callsign, callsign=callsign,
                     role=role, category="creatives", locale="global",
@@ -439,10 +601,54 @@ class PersonaIndex:
             return [self._by_id[i] for i in ids if i in self._by_id]
 
     def by_function(self, function_key: str) -> list[PersonaEntry]:
-        """Get personas by function priority key."""
-        ids = FUNCTION_PRIORITY.get(function_key, [])
+        """Get personas by function priority key (from org/functions.yaml)."""
+        self._load_functions_yaml()
+        prio = self._function_priority or FUNCTION_PRIORITY
+        ids = prio.get(function_key, [])
         with self._lock:
             return [self._by_id[i] for i in ids if i in self._by_id]
+
+    def by_tribe(self, tribe_id: str) -> list[PersonaEntry]:
+        """Get all personas in a tribe."""
+        with self._lock:
+            ids = self._by_tribe.get(tribe_id, [])
+            return [self._by_id[i] for i in ids if i in self._by_id]
+
+    def by_squad(self, squad_id: str) -> list[PersonaEntry]:
+        """Get all personas in a squad."""
+        with self._lock:
+            ids = self._by_squad.get(squad_id, [])
+            return [self._by_id[i] for i in ids if i in self._by_id]
+
+    def squad_lead(self, squad_id: str) -> PersonaEntry | None:
+        """Get the squad lead persona."""
+        with self._lock:
+            sq = self._squads.get(squad_id)
+            if sq and sq.lead_id:
+                return self._by_id.get(sq.lead_id)
+            return None
+
+    def get_tribe(self, tribe_id: str) -> TribeInfo | None:
+        with self._lock:
+            return self._tribes.get(tribe_id)
+
+    def get_squad(self, squad_id: str) -> SquadInfo | None:
+        with self._lock:
+            return self._squads.get(squad_id)
+
+    def all_tribes(self) -> list[TribeInfo]:
+        with self._lock:
+            return list(self._tribes.values())
+
+    def all_squads(self, tribe_id: str = None) -> list[SquadInfo]:
+        with self._lock:
+            if tribe_id:
+                tribe = self._tribes.get(tribe_id)
+                if not tribe:
+                    return []
+                return [self._squads[sid] for sid in tribe.squad_ids
+                        if sid in self._squads]
+            return list(self._squads.values())
 
     def all_entries(self) -> list[PersonaEntry]:
         with self._lock:
@@ -466,14 +672,54 @@ class PersonaIndex:
 
     def detect_domain(self, text: str) -> list[str]:
         """Detect domain categories from user text using regex."""
+        compiled = self._get_domain_compiled()
         matches = {}
-        for cat, patterns in _domain_compiled.items():
+        for cat, patterns in compiled.items():
             score = sum(1 for p in patterns if p.search(text))
             if score > 0:
                 matches[cat] = score
         if not matches:
             return ["developers"]  # default
         return sorted(matches, key=matches.get, reverse=True)
+
+    def _get_domain_compiled(self) -> dict[str, list[re.Pattern]]:
+        """Load and cache domain keyword patterns from org/domains.yaml."""
+        yaml_path = self._find_org_yaml("domains.yaml")
+        if yaml_path and os.path.isfile(yaml_path):
+            try:
+                mtime = os.path.getmtime(yaml_path)
+                if mtime != self._domains_yaml_mtime:
+                    self._domain_compiled = None
+                    self._domains_yaml_mtime = mtime
+            except OSError:
+                pass
+        if self._domain_compiled is not None:
+            return self._domain_compiled
+
+        compiled: dict[str, list[re.Pattern]] = {}
+        if yaml_path and os.path.isfile(yaml_path):
+            try:
+                import yaml
+                with open(yaml_path, "r", encoding="utf-8") as f:
+                    data = yaml.safe_load(f) or {}
+                for cat, meta in data.items():
+                    pats = meta.get("patterns", [])
+                    if pats:
+                        compiled[cat] = [re.compile(p, re.IGNORECASE) for p in pats]
+            except Exception:
+                pass
+
+        # Fallback: minimal domain set (org/domains.yaml should always exist)
+        if not compiled:
+            compiled = {
+                "developers": [re.compile(r"코드|code|아키텍처|architecture|설계|design|배포|deploy|인프라|infra", re.IGNORECASE)],
+                "marketers": [re.compile(r"마케팅|marketing|브랜드|brand|그로스|growth", re.IGNORECASE)],
+                "models": [re.compile(r"모델|model(?!.*router)|패션|fashion|촬영|shooting", re.IGNORECASE)],
+                "creatives": [re.compile(r"조명|lighting|컬러|color|사운드|sound|모션|motion", re.IGNORECASE)],
+            }
+
+        self._domain_compiled = compiled
+        return compiled
 
     def detect_locale(self, text: str) -> str:
         """Detect locale from text patterns."""
@@ -494,10 +740,248 @@ class PersonaIndex:
         for loc, pat in locale_kw.items():
             if re.search(pat, text, re.IGNORECASE):
                 return loc
-        return "korea"  # default for ambiguous
+        # Pure Latin/ASCII text (no CJK) → global; otherwise → korea
+        if not re.search(r"[\u3000-\u9FFF\uAC00-\uD7AF]", text):
+            return "global"
+        return "korea"
+
+    def detect_tribe(self, text: str) -> str | None:
+        """Detect tribe from text using keyword scoring (most matches wins)."""
+        patterns = self._get_tribe_patterns()
+        scores = {}
+        for tribe_id, pat in patterns.items():
+            hits = len(pat.findall(text))
+            if hits > 0:
+                scores[tribe_id] = hits
+        if not scores:
+            return None
+        return max(scores, key=scores.get)
+
+    def _get_tribe_patterns(self) -> dict[str, re.Pattern]:
+        """Load and cache tribe keyword patterns from org/tribes.yaml."""
+        yaml_path = self._find_org_yaml("tribes.yaml")
+        if yaml_path and os.path.isfile(yaml_path):
+            try:
+                mtime = os.path.getmtime(yaml_path)
+                if mtime != self._tribes_yaml_mtime:
+                    self._tribe_patterns = None
+                    self._tribe_meta = None
+                    self._tribes_yaml_mtime = mtime
+            except OSError:
+                pass
+        if self._tribe_patterns is not None:
+            return self._tribe_patterns
+
+        patterns = {}
+        meta_store: dict[str, dict] = {}
+        if yaml_path and os.path.isfile(yaml_path):
+            try:
+                import yaml
+                with open(yaml_path, "r", encoding="utf-8") as f:
+                    data = yaml.safe_load(f) or {}
+                for tribe_id, meta in data.items():
+                    meta_store[tribe_id] = meta
+                    parts = []
+                    for kw in meta.get("keywords", []):
+                        parts.append(re.escape(kw))
+                    for pat in meta.get("patterns", []):
+                        parts.append(pat)
+                    if parts:
+                        patterns[tribe_id] = re.compile(
+                            "|".join(parts), re.IGNORECASE,
+                        )
+            except Exception:
+                pass
+
+        # Fallback: minimal hardcoded set
+        if not patterns:
+            _fallback = {
+                "product": r"엔지니어링|engineering|코드|code|\bAI\b",
+                "growth": r"그로스|growth|틱톡|tiktok|아마존|amazon",
+                "revenue": r"커머스|commerce|세일즈|sales|\bCX\b",
+                "brand": r"브랜드|brand|디자인|design|크리에이티브|creative",
+                "model": r"패션|fashion|모델|model(?!.*router)",
+            }
+            patterns = {k: re.compile(v, re.IGNORECASE) for k, v in _fallback.items()}
+
+        self._tribe_patterns = patterns
+        self._tribe_meta = meta_store
+        return patterns
+
+    def detect_squad(self, text: str) -> str | None:
+        """Detect squad from text using keywords from org/squads.yaml."""
+        patterns = self._get_squad_patterns()
+        for squad_id, pat in patterns.items():
+            if pat.search(text):
+                return squad_id
+        return None
+
+    def _get_squad_patterns(self) -> dict[str, re.Pattern]:
+        """Load and cache squad keyword patterns from org/squads.yaml."""
+        yaml_path = self._find_org_yaml("squads.yaml")
+        # Check mtime for hot-reload invalidation
+        if yaml_path and os.path.isfile(yaml_path):
+            try:
+                mtime = os.path.getmtime(yaml_path)
+                if mtime != self._squads_yaml_mtime:
+                    self._squad_patterns = None
+                    self._squad_meta = None
+                    self._squads_yaml_mtime = mtime
+            except OSError:
+                pass
+        if self._squad_patterns is not None:
+            return self._squad_patterns
+
+        patterns = {}
+        meta_store: dict[str, dict] = {}
+        if yaml_path and os.path.isfile(yaml_path):
+            try:
+                import yaml
+                with open(yaml_path, "r", encoding="utf-8") as f:
+                    data = yaml.safe_load(f) or {}
+                for squad_id, meta in data.items():
+                    meta_store[squad_id] = meta
+                    kws = meta.get("keywords", [])
+                    if kws:
+                        escaped = [re.escape(k) for k in kws]
+                        patterns[squad_id] = re.compile(
+                            "|".join(escaped), re.IGNORECASE,
+                        )
+            except Exception:
+                pass
+
+        # Fallback: if no YAML or empty, use minimal hardcoded set
+        if not patterns:
+            _fallback = {
+                "engineering": r"\bengineering\b|엔지니어링\s*스쿼드",
+                "growth_kr": r"그로스.*KR|growth.*kr|한국.*그로스",
+                "growth_us": r"그로스.*US|growth.*us|미국.*그로스",
+                "commerce": r"\bcommerce\s*squad|커머스\s*스쿼드",
+                "sales": r"\bsales\s*squad|세일즈\s*스쿼드",
+                "cx": r"\bCX\s*squad|CX\s*스쿼드",
+            }
+            patterns = {k: re.compile(v, re.IGNORECASE) for k, v in _fallback.items()}
+
+        self._squad_patterns = patterns
+        self._squad_meta = meta_store
+        return patterns
+
+    def _find_org_yaml(self, filename: str) -> str:
+        """Find org/<filename> relative to config paths."""
+        reg_path = cfg.get("persona_registry_path", "")
+        if reg_path:
+            base = os.path.dirname(os.path.dirname(reg_path))
+            candidate = os.path.join(base, "org", filename)
+            if os.path.isfile(candidate):
+                return candidate
+        for base in [
+            os.path.expanduser("~/projects/mayacrew-f1crew/f1-mas"),
+            os.path.expanduser("~/F1/f1-mas"),
+        ]:
+            candidate = os.path.join(base, "org", filename)
+            if os.path.isfile(candidate):
+                return candidate
+        return ""
+
+    def get_tribe_meta(self, tribe_id: str) -> dict | None:
+        """Return tribe metadata (description, keywords) from org/tribes.yaml."""
+        self._get_tribe_patterns()  # ensure loaded
+        if self._tribe_meta and tribe_id in self._tribe_meta:
+            return self._tribe_meta[tribe_id]
+        return None
+
+    def get_squad_meta(self, squad_id: str) -> dict | None:
+        """Return squad metadata (expertise, tools) from org/squads.yaml."""
+        self._get_squad_patterns()  # ensure loaded
+        if self._squad_meta and squad_id in self._squad_meta:
+            return self._squad_meta[squad_id]
+        return None
+
+    def all_squad_meta(self) -> dict[str, dict]:
+        """Return all squad metadata keyed by squad_id."""
+        self._get_squad_patterns()  # ensure loaded
+        return dict(self._squad_meta) if self._squad_meta else {}
+
+    # ── Function YAML loading (org/functions.yaml) ──
+
+    def _load_functions_yaml(self):
+        """Load function patterns/priority/defaults from org/functions.yaml (mtime-cached)."""
+        yaml_path = self._find_org_yaml("functions.yaml")
+        if yaml_path and os.path.isfile(yaml_path):
+            try:
+                mtime = os.path.getmtime(yaml_path)
+                if mtime != self._functions_yaml_mtime:
+                    self._function_compiled = None
+                    self._function_priority = None
+                    self._function_defaults = None
+                    self._functions_yaml_mtime = mtime
+            except OSError:
+                pass
+        if self._function_compiled is not None:
+            return
+
+        compiled = {}
+        priority = {}
+        defaults = {}
+        if yaml_path and os.path.isfile(yaml_path):
+            try:
+                import yaml
+                with open(yaml_path, "r", encoding="utf-8") as f:
+                    data = yaml.safe_load(f) or {}
+                defaults_raw = data.pop("defaults", {})
+                for func_key, meta in data.items():
+                    pats = meta.get("patterns", [])
+                    if pats:
+                        compiled[func_key] = re.compile(
+                            "|".join(pats), re.IGNORECASE,
+                        )
+                    prio = meta.get("priority", [])
+                    if prio:
+                        priority[func_key] = prio
+                for domain, func in defaults_raw.items():
+                    defaults[domain] = func
+            except Exception:
+                pass
+
+        if not priority:
+            priority = dict(FUNCTION_PRIORITY)
+        if not defaults:
+            defaults = {
+                "developers": "system_architecture",
+                "marketers": "brand_strategy",
+                "models": "lighting_photography",
+                "creatives": "color_palette",
+                "commerce": "ecommerce_platform",
+                "sales": "enterprise_sales",
+                "uiux": "design_strategy",
+                "cx": "cx_strategy",
+            }
+
+        self._function_compiled = compiled  # {} if YAML unavailable
+        self._function_priority = priority
+        self._function_defaults = defaults
+
+    def detect_function(self, text: str) -> list[str]:
+        """Detect function keys from user text using regex from org/functions.yaml."""
+        self._load_functions_yaml()
+        if not self._function_compiled:
+            return []
+        return [k for k, pat in self._function_compiled.items() if pat.search(text)]
+
+    def default_function(self, domain: str) -> str:
+        """Get default function for a domain from org/functions.yaml."""
+        self._load_functions_yaml()
+        if self._function_defaults:
+            return self._function_defaults.get(domain, "system_architecture")
+        return "system_architecture"
 
     def load_character(self, persona_id: str) -> str:
-        """Lazy load a character file, cached with TTL."""
+        """Lazy load a character file, cached with TTL.
+
+        Supports anchor notation (e.g. ``commerce.md#1``) for combined files
+        where multiple personas share one markdown file separated by
+        ``## N.`` headings.
+        """
         entry = self.get(persona_id)
         if not entry or not entry.file_path:
             return ""
@@ -510,8 +994,18 @@ class PersonaIndex:
                 if now - self._char_cache_ts.get(persona_id, 0) < ttl:
                     return self._char_cache[persona_id]
 
+        # Handle #N anchor notation (combined character files)
+        file_path = entry.file_path
+        anchor = None
+        if "#" in file_path:
+            file_path, anchor_str = file_path.rsplit("#", 1)
+            try:
+                anchor = int(anchor_str)
+            except ValueError:
+                pass
+
         base_dir = cfg.get("characters_base_dir", "")
-        full_path = os.path.join(base_dir, entry.file_path)
+        full_path = os.path.join(base_dir, file_path)
         if not os.path.isfile(full_path):
             return ""
 
@@ -521,11 +1015,35 @@ class PersonaIndex:
         except OSError:
             return ""
 
+        # Extract specific persona section from combined file
+        if anchor is not None:
+            content = self._extract_anchor_section(content, anchor)
+
         with self._lock:
             self._char_cache[persona_id] = content
             self._char_cache_ts[persona_id] = now
 
         return content
+
+    @staticmethod
+    def _extract_anchor_section(content: str, n: int) -> str:
+        """Extract persona section N from a combined character file.
+
+        Combined files use ``## N. Name`` headings to separate personas.
+        """
+        lines = content.split("\n")
+        result = []
+        collecting = False
+        prefix = f"## {n}."
+        for line in lines:
+            if line.startswith(prefix):
+                collecting = True
+                result.append(line)
+            elif collecting and line.startswith("## ") and not line.startswith(prefix):
+                break
+            elif collecting:
+                result.append(line)
+        return "\n".join(result)
 
     def extract_character_sections(self, persona_id: str) -> str:
         """Load character file and extract only key sections (~200 lines).
@@ -546,7 +1064,8 @@ class PersonaIndex:
             return ""
 
         sections_to_keep = cfg.get("character_extract_sections", [])
-        if not sections_to_keep:
+        # Skip extraction for small files (< 10KB) or when no sections configured
+        if not sections_to_keep or len(full_content) < 10_000:
             with self._lock:
                 self._extract_cache[persona_id] = full_content
                 self._extract_cache_ts[persona_id] = now
@@ -600,6 +1119,8 @@ class PersonaIndex:
                     "category": e.category,
                     "locale": e.locale,
                     "tags": e.tags,
+                    "tribe": e.tribe,
+                    "squad": e.squad,
                 }
                 for e in self._by_id.values()
             ]

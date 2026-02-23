@@ -1,0 +1,438 @@
+# MAS Function Definitions — detect functions, map to personas, set domain defaults
+# Loaded by mas_orchestrator.py (patterns) and mas_persona_index.py (priority)
+#
+# 형식:
+#   function_name:
+#     patterns: [regex 패턴 — 쿼리에서 이 기능 탐지]
+#     priority: [persona ID 우선순위 — 첫 번째가 최우선]
+#
+# defaults: domain → fallback function (쿼리에서 function 미탐지 시)
+
+# ─── Developers ───────────────────────────────────────────
+
+system_architecture:
+  patterns:
+    - "아키텍처|architecture|시스템.*설계|서비스.*설계|인프라.*설계|design.*system|마이크로서비스|microservice"
+  priority: ["F1-02", "FC-01", "F1-07"]
+
+security_audit:
+  patterns:
+    - "보안|security|취약점|vulnerability|침투.*테스트|pentest|audit|사이버.*해킹|해킹.*(?:시도|공격|방어|탐지|차단)"
+  priority: ["F1-01", "F1-06", "FC-06"]
+
+performance:
+  patterns:
+    - "성능|performance|최적화|optimize|벤치마크|benchmark|프로파일|profil"
+  priority: ["F1-03", "FC-08"]
+
+algorithm:
+  patterns:
+    - "알고리즘|algorithm|자료.*구조|data.*struct|복잡도|complexity"
+  priority: ["F1-04"]
+
+debugging:
+  patterns:
+    - "디버그|debug|버그|bug|에러|error.*찾|root.*cause|원인.*분석"
+  priority: ["F1-05"]
+
+ml_training:
+  patterns:
+    - "ML|머신러닝|machine.*learn|학습|training|파인튜닝|fine.?tun|모델.*학습"
+  priority: ["F1-08", "FC-03"]
+
+ai_compiler:
+  patterns:
+    - "컴파일러|compiler|런타임|runtime|LLVM|코드.*생성|code.*gen|인터프리터|interpreter|JIT|바이트코드|bytecode|AST|파서|parser"
+  priority: ["F1-09"]
+
+data_pipeline:
+  patterns:
+    - "데이터.*파이프|data.*pipeline|ETL|데이터.*엔지니어|spark|배치.*처리"
+  priority: ["F1-10", "FC-07"]
+
+sre_monitoring:
+  patterns:
+    - "SRE|모니터링|monitoring|인시던트|incident|가용성|availability|장애"
+    # Cycle #71: sysadmin/서버 관리 키워드 추가
+    - "서버.*상태|서버.*확인|노드.*상태|노드.*확인|디스크.*사용|디스크.*확인|hostname|프로세스.*목록|프로세스.*확인|시스템.*관리|서버.*관리"
+  priority: ["F1-11", "FC-05"]
+
+platform_engineering:
+  patterns:
+    - "플랫폼.*엔지니어|platform.*engineer|개발자.*포털|developer.*portal|IDP|내부.*개발.*플랫폼|internal.*developer|DevOps|devops|CI.?CD|인프라.*자동화|infra.*automat|SRE.*플랫폼"
+  priority: ["F1-11", "FC-05", "F1-02", "FC-01"]
+
+nlp_llm:
+  patterns:
+    - "NLP|자연어|natural.*language|LLM|언어.*모델|language.*model|토크나이저|tokeniz"
+  priority: ["F1-12", "F1-08"]
+
+vision_multimodal:
+  patterns:
+    - "비전|vision|이미지.*분석|image.*analy|객체.*인식|object.*detect|멀티모달|multimodal|OCR|세그멘테이션|segmentation|YOLO|CNN"
+  priority: ["F1-13", "F1-20"]
+
+database_storage:
+  patterns:
+    - "데이터베이스|database|DB|SQL|스토리지|storage|쿼리|query"
+  priority: ["F1-14", "FC-02"]
+
+networking:
+  patterns:
+    - "네트워크|network|TCP|UDP|DNS|라우팅|routing|프로토콜|protocol|소켓|socket|HTTP|gRPC|websocket|로드.*밸런|load.*balanc"
+  priority: ["F1-15"]
+
+cloud_container:
+  patterns:
+    - "도커|docker|쿠버네티스|kubernetes|k8s|컨테이너|container|클라우드|cloud|AWS|GCP|Azure|파드|pod|헬름|helm"
+    # Cycle #71: 배포/deploy 키워드 추가 (bare "배포" 제외 — 마케팅 "배포" 오탐 방지)
+    - "deploy|배포.*자동화|배포.*파이프|배포.*스크립트|코드.*배포|서비스.*배포|서버.*배포|앱.*배포|rollout|롤백|rollback"
+  priority: ["F1-16", "FC-05"]
+
+formal_verification:
+  patterns:
+    - "형식.*검증|formal.*verif|타입.*이론|type.*theory|정형.*명세|정적.*분석|static.*analy|증명|proof.*assist|Coq|Lean|Isabelle"
+  priority: ["F1-17"]
+
+product_ux:
+  patterns:
+    - "제품.*기획|product.*plan|PM|프로덕트|product.*manage|로드맵|roadmap"
+  priority: ["F1-18", "FC-09", "FC-04"]
+
+quantum:
+  patterns:
+    - "양자|quantum|큐빗|qubit|양자.*게이트|quantum.*gate|양자.*회로|quantum.*circuit|Qiskit|얽힘|entangle"
+  priority: ["F1-19"]
+
+image_gen:
+  patterns:
+    - "이미지.*생성|image.*gen|diffusion|stable.*diff|DALL|미드저니|midjourney"
+  priority: ["F1-20", "F1-13"]
+
+video_gen:
+  patterns:
+    - "영상.*생성|video.*gen|영상.*제작|시네마|cinema|VFX"
+  priority: ["F1-21", "04"]
+
+audio_gen:
+  patterns:
+    - "음성.*생성|audio.*gen|TTS|voice.*clon|음악.*생성|music.*gen"
+  priority: ["F1-22", "03"]
+
+frontend_ui:
+  patterns:
+    - "프론트엔드|frontend|리액트|react|웹.*개발|web.*dev"
+    # Cycle #71: TypeScript/JS 프레임워크 키워드 추가
+    - "타입스크립트|typescript|자바스크립트|javascript|Vue|Angular|Next.?js|Svelte"
+  priority: ["FC-04", "F1-03", "F1-18", "UX-05"]
+
+engineering_mgmt:
+  patterns:
+    - "엔지니어링.*관리|eng.*manage|코드.*리뷰|code.*review|스프린트|sprint|애자일|agile|스크럼|scrum|기술.*리더|tech.*lead|1on1"
+  priority: ["FC-10", "FC-01"]
+
+# ─── Marketers ────────────────────────────────────────────
+
+commerce_strategy:
+  patterns:
+    - "커머스|commerce|이커머스|e.?commerce|매출|revenue|전환율|conversion|CRO"
+  priority: ["COM-KR-01", "COM-KR-02", "COM-US-01", "COM-US-02"]
+
+growth_hacking:
+  patterns:
+    - "그로스|growth|성장|UA|유저.*획득|acquisition|리텐션|retention|AARRR"
+  priority: ["GRO-KR-01", "GRO-KR-05", "GRO-US-01", "GRO-US-05"]
+
+amazon_ops:
+  patterns:
+    - "아마존|amazon|AWS.*마켓|FBA|셀러|seller|PPC"
+  priority: ["AMZ-KR-01", "AMZ-KR-02", "AMZ-US-01", "AMZ-US-02"]
+
+tiktok_shortform:
+  patterns:
+    - "틱톡|tiktok|숏폼|short.?form|릴스|reels|쇼츠|shorts"
+  priority: ["TIK-KR-01", "TIK-KR-02", "TIK-US-01", "TIK-US-02"]
+
+brand_strategy:
+  patterns:
+    - "브랜딩|branding|브랜드.*전략|brand.*strateg|네이밍|naming|\\bBI\\b|\\bCI\\b"
+  priority: ["BRD-KR-01", "BRD-KR-02", "BRD-US-01", "BRD-US-02"]
+
+visual_design:
+  patterns:
+    - "디자인|design|비주얼|visual|로고|logo|UI.*디자인|패키지.*디자인"
+  priority: ["DES-KR-01", "DES-KR-02", "DES-US-01", "DES-US-02"]
+
+# ─── Creatives ────────────────────────────────────────────
+
+lighting_photography:
+  patterns:
+    - "조명|lighting|라이팅|촬영|photography|화보|lookbook"
+  priority: ["01", "F1-20"]
+
+color_palette:
+  patterns:
+    - "컬러|color|팔레트|palette|색감|색상"
+  priority: ["02", "DES-KR-01"]
+
+sound_music:
+  patterns:
+    - "사운드|sound|음악|music|음향|acoustic|소닉|sonic"
+  priority: ["03", "F1-22"]
+
+motion_video:
+  patterns:
+    - "모션|motion|영상.*편집|video.*edit|애니메이션|animation"
+  priority: ["04", "F1-21"]
+
+scent_sensory:
+  patterns: []
+  priority: ["05"]
+
+# ─── Commerce Team ────────────────────────────────────────
+
+ecommerce_platform:
+  patterns:
+    - "이커머스.*플랫폼|ecommerce.*platform|재고|inventory|추천.*알고리즘|recommendation"
+  priority: ["CMM-03", "CMM-01", "CMM-08"]
+
+conversion_optimization:
+  patterns:
+    - "전환율.*최적화|conversion.*optim|\\bCRO\\b|A/B.*테스트|a.?b.*test|장바구니.*이탈|cart.*abandon"
+  priority: ["CMM-02", "CMM-01", "CMM-07"]
+
+marketplace_strategy:
+  patterns:
+    - "마켓플레이스|marketplace|셀러.*생태계|seller.*ecosystem"
+  priority: ["CMM-04", "CMM-01", "CMM-10"]
+
+loyalty_retention:
+  patterns:
+    - "로열티|loyalty|\\bLTV\\b|생애.*가치|lifetime.*value|리피트|repeat"
+  priority: ["CMM-05", "CMM-01", "CMM-09"]
+
+commerce_analytics:
+  patterns:
+    - "커머스.*분석|commerce.*analytics|코호트|cohort|퍼널|funnel.*분석|funnel.*analysis|GMV.*분석"
+  priority: ["CMM-06", "CMM-02", "CMM-01"]
+
+payment_checkout:
+  patterns:
+    - "결제|payment|체크아웃|checkout|PSP|카드.*승인|auth.*rate|PG.*연동|간편.*결제"
+  priority: ["CMM-07", "CMM-02", "CMM-01"]
+
+supply_chain:
+  patterns:
+    - "물류|logistics|공급망|supply.*chain|배송|delivery|풀필먼트|fulfillment|창고|warehouse|라스트마일|last.*mile"
+  priority: ["CMM-08", "CMM-01"]
+
+subscription_d2c:
+  patterns:
+    - "구독.*커머스|subscription.*commerce|D2C|direct.*to.*consumer|정기.*배송|정기.*구독|멤버십"
+  priority: ["CMM-09", "CMM-05", "CMM-01"]
+
+crossborder_commerce:
+  patterns:
+    - "크로스보더|cross.?border|글로벌.*커머스|global.*commerce|해외.*진출|통관|customs|관세|tariff|다통화|multi.?currency"
+  priority: ["CMM-10", "CMM-03", "CMM-01"]
+
+# ─── Sales Team ───────────────────────────────────────────
+
+enterprise_sales:
+  patterns:
+    - "엔터프라이즈.*세일즈|enterprise.*sales|대형.*계약|MEDDIC|CHALLENGER|딜|deal.*클로징|closing"
+  priority: ["SLS-01", "SLS-05", "SLS-10"]
+
+sales_methodology:
+  patterns:
+    - "세일즈.*코칭|sales.*coach|revenue.*intelligence|세일즈.*방법론|sales.*method|enablement"
+  priority: ["SLS-02", "SLS-01", "SLS-06"]
+
+plg_sales:
+  patterns:
+    - "\\bPLG\\b|product.?led.*growth|SaaS.*세일즈|saas.*sales|채널.*파트너|channel.*partner"
+  priority: ["SLS-03", "SLS-01", "SLS-07"]
+
+account_management:
+  patterns:
+    - "계정.*관리|account.*manage|\\bNRR\\b|갱신|renewal|업셀|upsell|cross.?sell"
+  priority: ["SLS-04", "SLS-01", "SLS-07"]
+
+sales_engineering:
+  patterns:
+    - "기술.*세일즈|sales.*engineer|\\bPOC\\b|데모|demo|value.*assess|솔루션.*아키텍|solution.*architect"
+  priority: ["SLS-05", "SLS-01", "SLS-10"]
+
+revenue_operations:
+  patterns:
+    - "RevOps|레브옵스|revenue.*operation|세일즈.*운영|CRM.*운영|파이프라인.*관리|pipeline.*manage|리드.*라우팅|lead.*rout"
+  priority: ["SLS-06", "SLS-02", "SLS-01"]
+
+partnership_alliances:
+  patterns:
+    - "파트너십|partnership|제휴|alliance|에코시스템|ecosystem|협력사|파트너.*관리|partner.*manage|리셀러|reseller"
+  priority: ["SLS-07", "SLS-03", "SLS-01"]
+
+inside_sales:
+  patterns:
+    - "인사이드.*세일즈|inside.*sales|SDR|BDR|콜드.*콜|cold.*call|아웃바운드|outbound|리드.*생성|lead.*gen"
+  priority: ["SLS-08", "SLS-06", "SLS-01"]
+
+sales_analytics:
+  patterns:
+    - "세일즈.*분석|sales.*analytics|매출.*예측|revenue.*forecast|파이프라인.*분석|pipeline.*analytics|win.*loss"
+  priority: ["SLS-09", "SLS-06", "SLS-01"]
+
+deal_negotiation:
+  patterns:
+    - "딜.*전략|deal.*strateg|협상|negotiat|계약.*조건|contract.*term|pricing.*전략|가격.*협상"
+  priority: ["SLS-10", "SLS-01", "SLS-05"]
+
+# ─── UIUX Team ────────────────────────────────────────────
+
+design_strategy:
+  patterns:
+    - "디자인.*전략|design.*strateg|\\bCDO\\b|\\bHCD\\b|디자인.*원칙|design.*principle|design.*direction"
+  priority: ["UX-01", "UX-02", "UX-09"]
+
+interaction_design:
+  patterns:
+    - "인터랙션|interaction.*design|모션.*디자인|motion.*design|마이크로.*인터랙션|micro.?interaction|제스처|gesture"
+  priority: ["UX-02", "UX-01", "UX-10"]
+
+user_research:
+  patterns:
+    - "사용자.*리서치|user.*research|사용성.*테스트|usability|유저.*인터뷰|user.*interview|접근성|accessibility|a11y"
+  priority: ["UX-03", "UX-01", "UX-07"]
+
+design_system:
+  patterns:
+    - "디자인.*시스템|design.*system|컴포넌트.*라이브러리|component.*library|Storybook|디자인.*토큰|design.*token"
+  priority: ["UX-04", "UX-01", "UX-05"]
+
+ux_engineering:
+  patterns:
+    - "UX.*엔지니어|ux.*engineer|프로토타입|prototype|Framer|핸드오프|handoff|디자인.*개발|design.*develop"
+  priority: ["UX-05", "UX-04", "UX-10"]
+
+information_architecture:
+  patterns:
+    - "정보.*설계|information.*architect|IA|네비게이션|navigation|사이트맵|sitemap|분류.*체계|taxonomy|카드.*소팅|card.*sort"
+  priority: ["UX-06", "UX-01", "UX-03"]
+
+content_design:
+  patterns:
+    - "UX.*라이팅|ux.*writing|콘텐츠.*디자인|content.*design|마이크로카피|microcopy|보이스.*톤|voice.*tone|에러.*메시지"
+  priority: ["UX-07", "UX-03", "UX-01"]
+
+data_visualization:
+  patterns:
+    - "데이터.*시각화|data.*visual|대시보드.*디자인|dashboard.*design|차트|chart|인포그래픽|infographic|D3"
+  priority: ["UX-08", "UX-04", "UX-01"]
+
+service_design:
+  patterns:
+    - "서비스.*디자인|service.*design|블루프린트|blueprint|서비스.*맵|service.*map|터치포인트|touchpoint|서비스.*여정"
+  priority: ["UX-09", "UX-01", "UX-03"]
+
+mobile_ux:
+  patterns:
+    - "모바일.*UX|mobile.*ux|앱.*디자인|app.*design|네이티브.*앱|native.*app|iOS|Android|반응형|responsive"
+  priority: ["UX-10", "UX-05", "UX-02"]
+
+# ─── CX Team ──────────────────────────────────────────────
+
+cx_strategy:
+  patterns:
+    - "CX.*전략|cx.*strateg|고객.*경험.*전략|customer.*experience.*strateg|\\bVOC\\b|\\bNPS\\b|\\bCSAT\\b|\\bCES\\b"
+  priority: ["CX-01", "CX-02", "CX-07"]
+
+customer_success:
+  patterns:
+    - "고객.*성공|customer.*success|온보딩|onboarding|이탈.*방지|churn.*prevent|CS.*플레이북"
+  priority: ["CX-02", "CX-01", "CX-10"]
+
+cx_analytics:
+  patterns:
+    - "고객.*분석|customer.*analytics|감성.*분석|sentiment|이탈.*예측|churn.*predict|VoC.*분석"
+  priority: ["CX-03", "CX-01", "CX-06"]
+
+omnichannel_cx:
+  patterns:
+    - "옴니채널|omnichannel|AI.*고객지원|ai.*support|챗봇|chatbot|콜센터|call.*center"
+  priority: ["CX-04", "CX-01", "CX-06"]
+
+cx_operations:
+  patterns:
+    - "CS.*운영|cs.*operation|\\bQA\\b.*\\bQC\\b|품질.*관리|quality.*manage|\\bSLA\\b|서비스.*레벨"
+  priority: ["CX-05", "CX-01", "CX-10"]
+
+cx_automation:
+  patterns:
+    - "CX.*자동화|cx.*automat|고객.*자동화|AI.*고객|ai.*customer|프로액티브.*서포트|proactive.*support|예측.*서비스"
+  priority: ["CX-06", "CX-04", "CX-01"]
+
+journey_design:
+  patterns:
+    - "고객.*여정|customer.*journey|터치포인트|touchpoint|여정.*맵|journey.*map|경험.*설계|experience.*design"
+  priority: ["CX-07", "CX-01", "CX-02"]
+
+community_engagement:
+  patterns:
+    - "커뮤니티|community|브랜드.*옹호|brand.*advocacy|UGC|사용자.*생성|앰배서더|ambassador|소셜.*리스닝|social.*listen"
+  priority: ["CX-08", "CX-01", "CX-07"]
+
+crisis_communication:
+  patterns:
+    - "위기.*커뮤니케이션|crisis.*commun|위기.*관리|crisis.*manage|이슈.*관리|issue.*manage|평판.*관리|reputation"
+  priority: ["CX-09", "CX-01", "CX-08"]
+
+cx_enablement:
+  patterns:
+    - "CX.*교육|cx.*training|CS.*교육|cs.*training|고객.*서비스.*교육|서비스.*코칭|service.*coach|게이미피케이션.*교육"
+  priority: ["CX-10", "CX-02", "CX-01"]
+
+# ─── Art Master Squad ─────────────────────────────────────
+
+ai_art_direction:
+  patterns:
+    - "AI.*아트.*디렉|ai.*art.*direct|AI.*크리에이티브.*디렉|ai.*creative.*direct|AI.*소재.*총괄"
+  priority: ["AM-01", "AM-06"]
+
+ai_video_gen:
+  patterns:
+    - "Veo|AI.*영상.*생성|ai.*video.*gen|AI.*영상.*제작|AI.*광고.*영상|브랜드.*필름.*AI"
+  priority: ["AM-02", "AM-03", "AM-05"]
+
+ai_image_gen:
+  patterns:
+    - "Nano.?Banana|AI.*이미지.*생성|ai.*image.*gen|AI.*제품.*사진|AI.*상업.*이미지"
+  priority: ["AM-04", "AM-01"]
+
+ai_motion:
+  patterns:
+    - "Kling|Higgsfield|AI.*모션|ai.*motion|img2video|이미지.*투.*비디오"
+  priority: ["AM-03", "AM-02"]
+
+ai_shortform:
+  patterns:
+    - "Seedance|AI.*숏폼|ai.*short.?form|AI.*바이럴|AI.*릴스|AI.*쇼츠"
+  priority: ["AM-05", "AM-03"]
+
+prompt_architecture:
+  patterns:
+    - "프롬프트.*엔지니어|prompt.*engineer|프롬프트.*아키텍|prompt.*architect|프롬프트.*최적화|prompt.*optim"
+  priority: ["AM-06", "AM-01"]
+
+# ─── Domain Defaults ──────────────────────────────────────
+# 쿼리에서 function 미탐지 시 domain별 fallback function
+
+defaults:
+  developers: system_architecture
+  marketers: brand_strategy
+  models: lighting_photography
+  creatives: color_palette
+  commerce: ecommerce_platform
+  sales: enterprise_sales
+  uiux: design_strategy
+  cx: cx_strategy
