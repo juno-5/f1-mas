@@ -286,7 +286,7 @@ def _build_agent_prompt(persona: PersonaEntry, query: str, index: PersonaIndex,
     if extra_context:
         full_query += f"\n\n## Previous Context\n{extra_context}"
 
-    return build_prompt(
+    result = build_prompt(
         template_id=template_id,
         character_content=char_content,
         callsign=persona.callsign,
@@ -294,6 +294,7 @@ def _build_agent_prompt(persona: PersonaEntry, query: str, index: PersonaIndex,
         user_request=full_query,
         sense=persona.specialty,
     )
+    return result
 
 
 def _execute_single(request_id: str, query: str, persona: PersonaEntry, index: PersonaIndex) -> dict:
