@@ -1,0 +1,89 @@
+# MAS Domain Keywords — detect_domain() auto-loading source
+# 쿼리를 8개 카테고리 중 하나로 분류하는 키워드/패턴 정의
+# 각 카테고리에 대해 patterns 리스트 사용 (regex 그대로)
+#
+# 형식:
+#   category:
+#     patterns: [regex 패턴 리스트 — 각각 | 으로 구분된 대안들]
+
+developers:
+  patterns:
+    - "코드|code|아키텍처|architecture|버그|bug|리팩토링|refactor|debug|디버그"
+    - "구현|implement|개발|보안|security|배포|deploy"
+    # "설계" 단독은 너무 광범위 (정보 설계, 서비스 디자인 등 오탐). 개발 맥락 한정 패턴은 아래에 별도 등록
+    - "인프라|infra|api|backend|frontend|데이터베이스|database|알고리즘|algorithm"
+    - "포털|portal|IDP|developer.*portal|개발자.*포털|DevOps|devops|CI.?CD|SRE|내부.*개발"
+    - "ML|머신러닝|machine.?learn"
+    - "서버|server|네트워크|network|컨테이너|container|클라우드|cloud"
+    - "AI(?!.*(이미지|영상|아트|소재|크리에이티브|art\\b|image|video))|인공지능|모델학습|training"
+    - "python|파이썬|java|rust|golang|typescript|스레드|thread|멀티프로세스|child.?process|동시성|concurren"
+    # 컨텍스트 한정 패턴 — 개발 맥락에서만 매칭
+    - "시스템.*설계|시스템.*아키텍처|system.*design|system.*architect|분산.*시스템|distributed.*system"
+    - "데이터.*엔지니어링|데이터.*파이프라인|data.*engineer|data.*pipeline|데이터.*처리|ETL"
+    - "설계.*패턴|design.*pattern|소프트웨어.*설계|software.*design"
+    - "성능.*최적화|성능.*튜닝|performance.*tun|performance.*optim|코드.*최적화|쿼리.*최적화"
+    - "테스트.*자동화|단위.*테스트|unit.*test|통합.*테스트|integration.*test|E2E.*테스트|부하.*테스트|load.*test"
+    - "플랫폼.*개발|플랫폼.*구축|platform.*develop|platform.*engineer|개발.*플랫폼"
+
+marketers:
+  patterns:
+    - "마케팅|marketing|캠페인|campaign|광고|advertising|퍼포먼스|performance.?marketing"
+    - "브랜딩|branding|브랜드|brand|카피|copy|마케팅.*전략|marketing.*strateg|브랜드.*전략|brand.*strateg"
+    - "그로스|growth|성장|\\bUA\\b|유저.?획득|acquisition|리텐션|retention"
+    - "아마존|amazon|tiktok|틱톡|커머스|commerce|이커머스|e.?commerce"
+    - "SNS|소셜|social|인플루언서|influencer|콘텐츠|content.?marketing"
+    - "\\bCRO\\b|전환율|conversion|AB테스트|그래픽.?디자인|광고.?디자인|배너.?디자인"
+
+models:
+  patterns:
+    - "모델|model(?!.*router)|화보|lookbook|촬영|shooting|캐스팅|casting"
+    - "패션|fashion|뷰티|beauty|스타일링|styling|런웨이|runway"
+    - "화장품|cosmetic|헤어|hair|메이크업|makeup|룩북"
+
+creatives:
+  patterns:
+    - "조명|lighting|라이팅|컬러|color|팔레트|palette|사운드|sound"
+    - "음악|music|음향|audio|모션|motion|영상|video|시네마|cinema"
+    - "향수|향기|scent|감각|sensory|오감|five.?sense|아트디렉션|art.?direction"
+    - "AI.*이미지|AI.*영상|AI.*아트|image.?gen|video.?gen|프롬프트.*엔지니어링|prompt.?engineer"
+    - "Veo|Kling|Nano.?Banana|Seedance|Higgsfield|AI.*소재|AI.*크리에이티브|숏폼.*제작"
+
+commerce:
+  patterns:
+    - "커머스|commerce|이커머스|e.?commerce|쇼핑몰|shop"
+    - "결제|payment|체크아웃|checkout|PG|간편.*결제"
+    - "전환율|conversion|\\bCRO\\b|마켓플레이스|marketplace|리텐션|retention"
+    - "개인화|personalization|로열티|loyalty|가격|pricing"
+    - "풀필먼트|fulfillment|물류|logistics|배송|shipping|구독|subscription"
+
+sales:
+  patterns:
+    - "세일즈|sales|영업|B2B|엔터프라이즈|enterprise|딜|deal"
+    - "파이프라인|pipeline|수주|계약|contract|PLG|revenue"
+    - "어카운트|account|고객.?관리|client.?management"
+
+uiux:
+  patterns:
+    - "UI|UX|사용자.?경험|user.?experience|인터페이스|interface"
+    - "와이어프레임|wireframe|프로토타입|prototype|디자인.?시스템|design.?system"
+    - "접근성|accessibility|사용성|usability|인터랙션|interaction"
+    # Cycle #67: 새 UIUX 전문분야 키워드 추가
+    - "정보.?설계|information.?architecture|\\bIA\\b|네비게이션|navigation|사이트.?맵|sitemap"
+    - "UX.?라이팅|UX.?writing|콘텐츠.?디자인|content.?design|마이크로카피|microcopy"
+    - "서비스.?디자인|service.?design|블루프린트|blueprint|터치포인트|touchpoint"
+    - "데이터.?시각화|data.?visual|대시보드.?디자인|dashboard.?design|차트|chart.?design"
+    - "모바일.?UX|mobile.?UX|앱.?디자인|app.?design|반응형|responsive|네이티브.?앱|native.?app"
+    - "사용자.?리서치|user.?research|퍼소나|persona.?design|여정.?맵|journey.?map"
+
+cx:
+  patterns:
+    - "고객.?경험|customer.?experience|CX|CS|고객.?서비스|customer.?service"
+    - "VoC|고객.?의견|NPS|만족도|satisfaction|서포트|support"
+    - "옴니채널|omnichannel|컨택센터|contact.?center"
+    - "고객.?불만|불만.?처리|고객.?응대|고객.?관리|고객.?여정|customer.?journey|complaint|이탈|churn"
+    # Cycle #67: 새 CX 전문분야 키워드 추가
+    - "위기.?커뮤니케이션|crisis.?communication|위기.?대응|crisis.?management|위기.?관리"
+    - "에스컬레이션|escalation|SLA|서비스.?레벨|service.?level|티켓|ticket"
+    - "CX.?자동화|CX.?automation|챗봇|chatbot|자동.?응답|auto.?reply|셀프.?서비스|self.?service"
+    - "커뮤니티|community|인게이지먼트|engagement|팬.?관리|fan.?management|로열티.?프로그램"
+    - "CX.?교육|CX.?training|인에이블먼트|enablement|온보딩|onboarding|교육.?프로그램"

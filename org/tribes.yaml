@@ -1,0 +1,102 @@
+# MAS Tribe Metadata — detect_tribe() auto-loading source
+# 각 tribe의 키워드/regex 패턴을 정의
+# detect_tribe()가 이 파일을 로드하여 scoring 기반 매칭 수행
+#
+# 형식:
+#   tribe_id:
+#     keywords: [단순 문자열 — re.escape 처리됨]
+#     patterns: [정규식 — 그대로 사용됨]
+#     description: "Tribe 설명"
+
+product:
+  description: "Engineering, AI/Data, Platform, GenAI, Global Engineering, Product Design"
+  keywords:
+    - 엔지니어링
+    - engineering
+    - 개발
+    - develop
+    - 코드
+    - code
+    - 아키텍처
+    - architect
+    - 데이터
+    - data
+    - 인프라
+    - infra
+    - 플랫폼
+    - platform
+  patterns:
+    - "\\bAI\\b"
+    - "\\bML\\b"
+    - "\\bUX\\b"
+    - "\\bUI\\b"
+    - "디자인.*시스템"
+
+growth:
+  description: "Growth KR/US, TikTok KR/US, Amazon KR/US"
+  keywords:
+    - 그로스
+    - growth
+    - 성장
+    - 유저 획득
+    - acquisition
+    - 리텐션
+    - retention
+    - 틱톡
+    - tiktok
+    - 아마존
+    - amazon
+    - 숏폼
+  patterns:
+    - "\\bUA\\b"
+    - "short.?form"
+
+revenue:
+  description: "Commerce, Sales, CX"
+  keywords:
+    - 커머스
+    - commerce
+    - 세일즈
+    - sales
+    - 고객 경험
+    - customer experience
+    - 매출
+    - revenue
+    - 전환율
+    - conversion
+  patterns:
+    - "\\bCX\\b"
+
+brand:
+  description: "Brand KR/US, Commerce Mkt KR/US, Design KR/US, Creative, Art Master"
+  keywords:
+    - 브랜딩
+    - branding
+    - 브랜드
+    - brand
+    - 디자인
+    - design
+    - 크리에이티브
+    - creative
+    - 마케팅
+    - marketing
+    - 캠페인
+    - campaign
+    - 콘텐츠
+    - content
+
+model:
+  description: "Korea, Japan, USA, Europe model squads"
+  keywords:
+    - 패션
+    - fashion
+    - 촬영
+    - shooting
+    - 화보
+    - lookbook
+    - 뷰티
+    - beauty
+    - 런웨이
+    - runway
+  patterns:
+    - "모델|model(?!.*router)"

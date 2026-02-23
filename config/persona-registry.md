@@ -1,6 +1,6 @@
 # MAS Persona Registry
 
-> Full searchable catalog of all 178 personas.
+> Full searchable catalog of all 204 personas.
 
 ## Developers (33)
 
@@ -217,7 +217,9 @@
 
 ---
 
-## Creatives (5)
+## Creatives (11)
+
+### Five Senses
 
 | ID | Callsign | Sense | Role | Short | Full | Tags |
 |----|----------|-------|------|-------|------|------|
@@ -227,9 +229,20 @@
 | 04 | TEMPO | Time/Motion | Motion Director | `creatives/five-senses/04-tempo.md` | `04-tempo-full.md` | motion, rhythm, pacing |
 | 05 | FUME | Scent | Scent/Sensory Strategist | `creatives/five-senses/05-fume.md` | `05-fume-full.md` | scent, olfactory, sensory |
 
+### Art Master Squad
+
+| ID | Name | Callsign | Role | File | Tags |
+|----|------|----------|------|------|------|
+| AM-01 | 권아름 (Kwon Areum) | NEXART | Chief AI Art Director — Squad Lead | `creatives/art-master/am-01-kwon-areum.md` | ai-art, video-gen, image-gen, director, all-tools |
+| AM-02 | 이다온 (Lee Daon) | VEO | Veo 3 Video Synthesis Specialist | `creatives/art-master/am-02-lee-daon.md` | veo3, video-gen, cinematography, google |
+| AM-03 | 차민준 (Cha Minjun) | KLING | Kling & Higgsfield Motion Specialist | `creatives/art-master/am-03-cha-minjun.md` | kling, higgsfield, motion, img2video |
+| AM-04 | 정소연 (Jung Soyeon) | BLOOM | Nano Banana Pro Image Specialist | `creatives/art-master/am-04-jung-soyeon.md` | nano-banana, image-gen, gemini, commercial |
+| AM-05 | 김지서 (Kim Jiseo) | SEED | Seedance & Multi-modal Specialist | `creatives/art-master/am-05-kim-jiseo.md` | seedance, shortform, viral, bytedance, multi-tool |
+| AM-06 | Morgan Hayes | ORACLE | Principal AI Creative Prompt Architect | `creatives/art-master/am-06-morgan-hayes.md` | prompt-engineering, multi-model, llm, global, stanford |
+
 ---
 
-## Commerce (5)
+## Commerce (10)
 
 | ID | Name | Callsign | Role | Location | File | Tags |
 |----|------|----------|------|----------|------|------|
@@ -238,10 +251,15 @@
 | CMM-03 | 박소진 | Tide | Marketplace Strategy Lead | Korea | `commerce/cmm-03-park-sojin.md` | commerce, marketplace, global |
 | CMM-04 | Marcus Holt | Matrix | Commerce Data & Personalization Lead | Global | `commerce/cmm-04-marcus-holt.md` | commerce, personalization, pricing |
 | CMM-05 | 하시모토 유키 | Anchor | Loyalty & Retention Lead | Japan | `commerce/cmm-05-yuki-hashimoto.md` | commerce, loyalty, retention |
+| CMM-06 | 윤서준 | Facet | Commerce Data & Analytics Lead | Korea | `commerce/cmm-06-yoon-seojun.md` | commerce, analytics, data |
+| CMM-07 | Rachel Evans | Gateway | Payment & Checkout Optimization Lead | Global | `commerce/cmm-07-rachel-evans.md` | commerce, payment, checkout |
+| CMM-08 | 나카무라 켄 | Chain | Supply Chain & Fulfillment Lead | Japan | `commerce/cmm-08-nakamura-ken.md` | commerce, supply-chain, logistics |
+| CMM-09 | 이하은 | Stream | D2C & Subscription Commerce Lead | Korea | `commerce/cmm-09-lee-haeun.md` | commerce, d2c, subscription |
+| CMM-10 | Diego Torres | Orbit | Cross-border Commerce Lead | Global | `commerce/cmm-10-diego-torres.md` | commerce, cross-border, global |
 
 ---
 
-## Sales (5)
+## Sales (10)
 
 | ID | Name | Callsign | Role | Location | File | Tags |
 |----|------|----------|------|----------|------|------|
@@ -250,10 +268,15 @@
 | SLS-03 | 최민혁 | Storm | PLG & Channel Sales Lead | Korea | `sales/sls-03-choi-minhyuk.md` | sales, plg, channel |
 | SLS-04 | 다나카 아이코 | Cipher | Global Account Management Lead | Japan | `sales/sls-04-aiko-tanaka.md` | sales, account-management, nrr |
 | SLS-05 | Ethan Williams | Pivot | Sales Engineering Lead | Global | `sales/sls-05-ethan-williams.md` | sales, engineering, value-selling |
+| SLS-06 | 박지영 | Signal | Revenue Operations Lead | Korea | `sales/sls-06-park-jiyoung.md` | sales, revops, operations |
+| SLS-07 | James Nakamura | Link | Partnership & Alliances Lead | Global | `sales/sls-07-james-nakamura.md` | sales, partnership, alliances |
+| SLS-08 | 김도현 | Arrow | Inside Sales & SDR Lead | Korea | `sales/sls-08-kim-dohyun.md` | sales, sdr, inside-sales |
+| SLS-09 | Nina Petrov | Lens | Sales Analytics & Forecasting Lead | Germany | `sales/sls-09-nina-petrov.md` | sales, analytics, forecasting |
+| SLS-10 | 황태민 | Titan | Deal Strategy & Negotiation Lead | Korea | `sales/sls-10-hwang-taemin.md` | sales, deal-strategy, negotiation |
 
 ---
 
-## UIUX (5)
+## UIUX (10)
 
 | ID | Name | Callsign | Role | Location | File | Tags |
 |----|------|----------|------|----------|------|------|
@@ -262,10 +285,15 @@
 | UX-03 | 김소연 | Palette | User Research & Insights Lead | Korea | `uiux/ux-03-kim-soyeon.md` | uiux, research, insights |
 | UX-04 | Lena Fischer | Arc | Design Systems & Accessibility Lead | Germany | `uiux/ux-04-lena-fischer.md` | uiux, design-systems, accessibility |
 | UX-05 | 한지원 | Spark | UX Engineering & Product Design Lead | Korea | `uiux/ux-05-han-jiwon.md` | uiux, engineering, product-design |
+| UX-06 | 최도연 | Map | Information Architecture Lead | Korea | `uiux/ux-06-choi-doyeon.md` | uiux, information-architecture, navigation |
+| UX-07 | Emma Taylor | Quill | Content Design & UX Writing Lead | USA | `uiux/ux-07-emma-taylor.md` | uiux, content-design, ux-writing |
+| UX-08 | 오현진 | Chart | Data Visualization & Dashboard Lead | Korea | `uiux/ux-08-oh-hyunjin.md` | uiux, data-visualization, dashboard |
+| UX-09 | 타나카 미카 | Thread | Service Design Lead | Japan | `uiux/ux-09-mika-tanaka.md` | uiux, service-design, journey |
+| UX-10 | 신재원 | Touch | Mobile & Native App UX Lead | Korea | `uiux/ux-10-shin-jaewon.md` | uiux, mobile, native-app |
 
 ---
 
-## CX (5)
+## CX (10)
 
 | ID | Name | Callsign | Role | Location | File | Tags |
 |----|------|----------|------|----------|------|------|
@@ -274,3 +302,8 @@
 | CX-03 | Priya Mehta | Compass | CX Data Analytics & VoC Lead | Global | `cx/cx-03-priya-mehta.md` | cx, analytics, voc |
 | CX-04 | Sophie Laurent | Weave | Omnichannel CX & Support Lead | France | `cx/cx-04-sophie-laurent.md` | cx, omnichannel, ai-support |
 | CX-05 | 임태우 | Root | CX Operations & QA Lead | Korea | `cx/cx-05-lim-taewoo.md` | cx, operations, qa |
+| CX-06 | 이준하 | Beacon | CX Automation & AI Lead | Korea | `cx/cx-06-lee-junha.md` | cx, automation, ai |
+| CX-07 | Chloe Morrison | Journey | Customer Journey Design Lead | UK | `cx/cx-07-chloe-morrison.md` | cx, journey, design |
+| CX-08 | 김태리 | Hive | Community & Engagement Lead | Korea | `cx/cx-08-kim-taeri.md` | cx, community, engagement |
+| CX-09 | David Park | Shield | Crisis Communication Lead | Global | `cx/cx-09-david-park.md` | cx, crisis, communication |
+| CX-10 | 유지원 | Coach | CX Enablement & Training Lead | Korea | `cx/cx-10-yoo-jiwon.md` | cx, enablement, training |

@@ -22,6 +22,7 @@ _DEFAULTS = {
     "characters_base_dir": "",    # auto-detected
     "selection_rules_path": "",   # auto-detected
     "task_templates_path": "",    # auto-detected
+    "tribe_registry_path": "",    # auto-detected
     "state_file": f"{F1CREW}/shared/mas-state.json",
     "slack": {
         "enabled": False,
@@ -46,6 +47,12 @@ _DEFAULTS = {
         "Collaboration Dynamics",
     ],
     "log_level": "info",
+    "nas_context_injection": True,
+    "nas_url": "http://localhost:7730",
+    "nas_doc_limit": 3,
+    "nas_timeout": 5.0,
+    "agent_tools_enabled": True,
+    "max_tool_rounds": 5,
 }
 
 _config = {}
@@ -57,6 +64,7 @@ def _find_mas_paths():
     """Auto-detect f1-mas directory paths."""
     candidates = [
         f"{HOME}/F1/f1-mas",
+        f"{HOME}/.f1crew/scripts/mas",
         f"{HOME}/projects/mayacrew-f1crew/f1-mas",
         f"{HOME}/.f1crew/f1-mas",
     ]
@@ -67,6 +75,7 @@ def _find_mas_paths():
                 "characters_base_dir": f"{base}/characters",
                 "selection_rules_path": f"{base}/config/selection-rules.md",
                 "task_templates_path": f"{base}/config/task-templates.md",
+                "tribe_registry_path": f"{base}/config/tribe-registry.md",
             }
     return {}
 
@@ -106,11 +115,10 @@ def load_config(force=False):
         merged = _deep_merge(_DEFAULTS, file_config)
 
         # Auto-detect paths if not explicitly set
-        if not merged.get("persona_registry_path"):
-            auto_paths = _find_mas_paths()
-            for k, v in auto_paths.items():
-                if not merged.get(k):
-                    merged[k] = v
+        auto_paths = _find_mas_paths()
+        for k, v in auto_paths.items():
+            if not merged.get(k):
+                merged[k] = v
 
         _config = merged
         return _config

@@ -135,12 +135,12 @@ engineering_mgmt:
 
 commerce_strategy:
   patterns:
-    - "커머스|commerce|이커머스|e.?commerce|매출|revenue|전환율|conversion|CRO"
+    - "커머스|commerce|이커머스|e.?commerce|매출|revenue|전환율|conversion|\\bCRO\\b"
   priority: ["COM-KR-01", "COM-KR-02", "COM-US-01", "COM-US-02"]
 
 growth_hacking:
   patterns:
-    - "그로스|growth|성장|UA|유저.*획득|acquisition|리텐션|retention|AARRR"
+    - "그로스|growth|성장|\\bUA\\b|유저.*획득|acquisition|리텐션|retention|AARRR"
   priority: ["GRO-KR-01", "GRO-KR-05", "GRO-US-01", "GRO-US-05"]
 
 amazon_ops:

@@ -446,8 +446,11 @@ f1-mas/
 │   ├── selection-rules.md             # Persona selection heuristics
 │   ├── task-templates.md              # Task prompt templates
 │   └── mas-config.json                # Runtime config (deployed to server)
+├── auto-archive/                      # Auto×Zero exploration records
+│   ├── auto-zero-summary.md           # Cumulative findings
+│   └── auto-zero-YYYY-MM-DD.md        # Daily cycle records
 ├── deploy/
 │   └── deploy-ai1.sh                  # Deploy to ai1 server
 └── systemd/
-    └── mas.service                    # Systemd user service
+    └── mas.service                    # Systemd user service (TimeoutStopSec=90)
 ```

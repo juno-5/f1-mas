@@ -45,37 +45,56 @@ f1-mas/
 ├── CLAUDE.md              # MAS brain (selection/spawn/synthesis protocol)
 ├── README.md              # This file
 ├── mas/                   # Python package
-│   ├── mas_server.py      # HTTP API (port 7720)
-│   ├── mas_orchestrator.py
-│   ├── mas_agent_runner.py
-│   ├── mas_persona_index.py
-│   ├── mas_config.py      # Config loader with hot-reload
-│   ├── mas_conversation.py
-│   ├── mas_templates.py
+│   ├── mas_server.py      # HTTP API (port 7720, startup chain validation)
+│   ├── mas_orchestrator.py # Multi-agent orchestration + function-priority selection
+│   ├── mas_agent_runner.py # Agent execution via xapi (per-request sessions)
+│   ├── mas_persona_index.py # Persona registry + function detection (regex)
+│   ├── mas_config.py      # Config loader with hot-reload (30s interval)
+│   ├── mas_conversation.py # Conversation state + AMM memory
+│   ├── mas_templates.py   # Task prompt templates + synthesis truncation
 │   ├── mas_constitution.py
-│   ├── mas_state.py
-│   ├── mas_metrics.py
+│   ├── mas_state.py       # Persistent state (interrupted request recovery)
+│   ├── mas_metrics.py     # Prometheus metrics (p50/p95, per-pattern)
+│   ├── mas_performance.py # Performance JSONL recording
+│   ├── mas_scoring.py     # Persona scoring (usage stats)
+│   ├── mas_insight_capture.py # Insight auto-capture from conversations
 │   └── mas_slack.py
+├── org/                   # Organization structure
+│   ├── functions.yaml     # Function detection patterns + persona priority
+│   ├── domains.yaml       # Domain definitions
+│   ├── tribes.yaml        # Tribe definitions (cross-domain teams)
+│   └── squads.yaml        # Squad definitions (functional teams)
+├── scripts/               # Operational scripts
+│   └── cleanup-sessions.sh # Gateway session cleanup (daily cron)
+├── agents/                # Slack bot agent configs (8 masters)
 ├── characters/            # 204 persona files
 │   ├── INDEX.md
-│   ├── developers/
-│   ├── marketers/
-│   ├── models/
-│   └── creatives/
+│   ├── developers/        # 33 (F1 Korea 23 + Falcon Global 10)
+│   ├── marketers/         # 60 (KR 30 + US 30)
+│   ├── models/            # 60 (KR 20 + JP 10 + US 20 + EU 10)
+│   ├── creatives/         # 11 (Five Senses 5 + Art Master 6)
+│   ├── commerce/          # 10 e-commerce specialists
+│   ├── sales/             # 10 sales strategists
+│   ├── uiux/              # 10 UI/UX designers
+│   └── cx/                # 10 customer experience experts
 ├── library/               # Team knowledge base (auto-populated)
 │   ├── INDEX.md           # Library master index
 │   ├── CAPTURE-PROTOCOL.md # Insight capture format
 │   ├── {team}/references.md  # External docs & links
 │   └── {team}/insights.md    # Auto-captured from conversations
+├── docs/                  # Additional documentation
+│   └── MAS-Tribe-Squad-Org.md # Tribe/Squad organization guide
 ├── config/
 │   ├── persona-registry.md   # Searchable registry
 │   ├── selection-rules.md    # Selection heuristics
 │   ├── task-templates.md     # Prompt templates
+│   ├── tribe-registry.md     # Tribe/Squad registry
+│   ├── nas-guide.md          # NAS integration guide
 │   └── mas-config.json       # Runtime config (deployed to server)
 ├── deploy/
 │   └── deploy-ai1.sh         # Deploy to ai1 server
 └── systemd/
-    └── mas.service            # Systemd user service
+    └── mas.service            # Systemd user service (TimeoutStopSec=90)
 ```
 
 ## Library — Team Knowledge Base
@@ -107,6 +126,8 @@ ssh mayacrew@100.88.145.15 'systemctl --user restart mas'
 | `characters/` | `~/projects/mayacrew-f1crew/f1-mas/characters/` |
 | `library/` | `~/projects/mayacrew-f1crew/f1-mas/library/` |
 | `config/*.md` | `~/projects/mayacrew-f1crew/f1-mas/config/` |
+| `org/*.yaml` | `~/.f1crew/scripts/mas/org/` |
+| `scripts/*.sh` | `~/.f1crew/scripts/mas/scripts/` |
 | `systemd/mas.service` | `~/.config/systemd/user/mas.service` |
 
 ## Quick Start (Claude Code)
@@ -116,7 +137,20 @@ ssh mayacrew@100.88.145.15 'systemctl --user restart mas'
 3. Request (e.g. "백엔드 아키텍처 리뷰해줘")
 4. MAS selects optimal persona → spawns → returns result
 
+## Key Features
+
+- **Startup chain validation**: `/inference/capacity` → Gateway + Token 가용 확인 후 서빙 시작
+- **Per-request sessions**: 요청별 독립 Gateway 세션 (90%+ 토큰 비용 절감)
+- **Function-priority selection**: `org/functions.yaml` regex 패턴으로 페르소나 자동 매칭
+- **Tribe/Squad system**: 크로스도메인 팀 구성 + 함수별 전문가 우선순위
+- **Performance tracking**: 요청별 성능 JSONL 기록 + 페르소나 스코어링
+- **Session cleanup**: Gateway 세션 파일 자동 정리 (일일 cron)
+- **Interrupted request recovery**: 비정상 종료 시 running 요청 → failed 복원
+
 ## Dependencies
 
+- `xapi` (port 7750) — Unified API gateway (inference, batch, capacity)
+- `f1crew-gateway` (port 18789) — FAS Gateway (token routing, session management)
 - `token-manager` (port 7700) — API key management
 - `model-router` (port 7710) — Model selection
+- `amm-surfacer` (port 7800) — AMM memory injection (optional, graceful degradation)
