@@ -90,6 +90,12 @@
     - **Before: 28,359 tokens → After: 14,217 tokens (-50%)**
     - `mas/mas_agent_runner.py` 4곳 수정, 커밋 `2a463cf`
 
+16. **Cycle #31 (2026-02-23)**: 강제 persona_ids 실패 시 auto-select fallback ⭐
+    - Gateway agent가 잘못된 persona ID 전달 시 "no suitable personas found" 즉시 실패
+    - fallback: 잘못된 ID 전부 필터 → 자동 선택 로직으로 재시도
+    - 진단 로깅 추가: 실패 경로에서 analysis 정보 출력
+    - `mas/mas_orchestrator.py` 수정, 커밋 `d274b6a`
+
 14. **Cycle #27 (2026-02-23)**: **Gateway 시스템 프롬프트 오버헤드 감소** ⭐
     - xapi가 MAS 요청 시 `X-OpenClaw-Session-Key: subagent:mas:{user}` 자동 주입
     - Gateway "full" → "minimal" prompt mode: **15,904 → 10,480 tokens (-34%)**
@@ -109,6 +115,7 @@
 14. `org/functions.yaml` + `mas/mas_persona_index.py` — 페르소나 선택 정확도 개선 (8394197, 2026-02-23)
 15. `xapi/xapi/routers/inference.py` — MAS 요청 시 subagent session key 주입 (2026-02-23)
 16. `mas/mas_agent_runner.py` — tokens_used 이중 계산 수정 (2a463cf, 2026-02-23)
+17. `mas/mas_orchestrator.py` — 강제 persona_ids 실패 시 auto-select fallback (d274b6a, 2026-02-23)
 
 ## 미해결 가설
 
@@ -119,6 +126,6 @@
 - ~~Gateway 15K 토큰 시스템 프롬프트~~ → **부분 해결** (Cycle #27: subagent session key로 15.9K→10.5K 감소. 완전 해소는 `/inference/raw` + 토큰 매니저 통합 필요)
 - Gateway 오래된 세션 파일 정리 (sessions/ 디렉토리 비대, sessions.json 2MB)
 - ~~mas/mas/ orphan 서브디렉토리 cleanup~~ → **해결** (Cycle #24: 서버에서 삭제)
-- MAS 자발적 재시작 원인 분석 (SIGTERM → restart 패턴, 주기적 발생)
+- MAS 빈번한 재시작 원인 분석 (6h/13회, 외부 deploy 트리거, daemon-reload→restart 패턴)
 - ~~Gateway 재시작 시 batch 실패 — MAS startup에 Gateway 가용성 확인 필요~~ → **해결** (Cycle #22: /inference/capacity 전체 체인 검증)
 - ~~Gateway 구세션 파일 정리 (109개, 5.1MB)~~ → **해결** (Cycle #23: 정리 스크립트 + 일일 cron)
