@@ -132,6 +132,7 @@ class PersonaIndex:
         # Tribe/Squad indices
         self._tribes: dict[str, TribeInfo] = {}
         self._squads: dict[str, SquadInfo] = {}
+        self._by_callsign: dict[str, str] = {}  # callsign (lower) → persona_id
         self._by_tribe: dict[str, list[str]] = {}   # tribe_id → [persona_ids]
         self._by_squad: dict[str, list[str]] = {}   # squad_id → [persona_ids]
         self._squad_patterns: dict[str, re.Pattern] | None = None  # lazy from org/squads.yaml
@@ -178,12 +179,15 @@ class PersonaIndex:
 
         with self._lock:
             self._by_id.clear()
+            self._by_callsign.clear()
             self._by_category.clear()
             self._by_locale.clear()
             self._by_tag.clear()
 
             for e in entries:
                 self._by_id[e.id] = e
+                if e.callsign:
+                    self._by_callsign[e.callsign.lower()] = e.id
                 self._by_category.setdefault(e.category, []).append(e.id)
                 self._by_locale.setdefault(e.locale, []).append(e.id)
                 for tag in e.tags:
@@ -582,8 +586,16 @@ class PersonaIndex:
     # ── Public API ──
 
     def get(self, persona_id: str) -> PersonaEntry | None:
+        """Look up persona by ID (e.g. 'F1-11') or callsign (e.g. 'Sentinel')."""
         with self._lock:
-            return self._by_id.get(persona_id)
+            entry = self._by_id.get(persona_id)
+            if entry:
+                return entry
+            # Fallback: try callsign (case-insensitive)
+            resolved_id = self._by_callsign.get(persona_id.lower())
+            if resolved_id:
+                return self._by_id.get(resolved_id)
+            return None
 
     def by_category(self, category: str) -> list[PersonaEntry]:
         with self._lock:
