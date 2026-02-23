@@ -84,8 +84,9 @@ def call_xapi_inference(prompt: str, model: str = None, timeout: int = None,
     xapi_url = cfg.get("xapi_url", "http://localhost:7750")
     empty_usage = {"input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0}
 
+    max_retries = cfg.get("inference_max_retries", 3)
     last_error = ""
-    for attempt in range(2):  # 1 retry on transient errors
+    for attempt in range(max_retries):
         try:
             resp = _get_http().post(
                 f"{xapi_url}/inference/chat",
@@ -98,9 +99,10 @@ def call_xapi_inference(prompt: str, model: str = None, timeout: int = None,
                 timeout=timeout,
             )
 
-            if resp.status_code in (502, 503) and attempt == 0:
-                print(f"[agent-runner] xapi {resp.status_code}, retrying in 5s...", flush=True)
-                time.sleep(5)
+            if resp.status_code in (502, 503) and attempt < max_retries - 1:
+                wait = 5 * (attempt + 1)  # 5s, 10s, 15s
+                print(f"[agent-runner] xapi {resp.status_code}, retrying in {wait}s (attempt {attempt + 1}/{max_retries})...", flush=True)
+                time.sleep(wait)
                 continue
             if resp.status_code != 200:
                 error = resp.text[:300]
@@ -136,10 +138,12 @@ def call_xapi_inference(prompt: str, model: str = None, timeout: int = None,
                     "usage": empty_usage, "cost_usd": 0.0}
         except (httpx.ConnectError, httpx.RemoteProtocolError) as e:
             last_error = str(e)
-            if attempt == 0:
-                time.sleep(5)  # wait for xapi restart
+            if attempt < max_retries - 1:
+                wait = 5 * (attempt + 1)
+                print(f"[agent-runner] xapi connect error, retrying in {wait}s (attempt {attempt + 1}/{max_retries})...", flush=True)
+                time.sleep(wait)
                 continue
-            return {"text": "", "model": full_model, "error": f"xapi unreachable at {xapi_url} (after retry)",
+            return {"text": "", "model": full_model, "error": f"xapi unreachable at {xapi_url} (after {max_retries} attempts)",
                     "usage": empty_usage, "cost_usd": 0.0}
         except Exception as e:
             return {"text": "", "model": full_model, "error": str(e),
@@ -339,7 +343,9 @@ def run_agent(
     model = cfg.get("claude_model", "sonnet")
     # Include request_id in user field to ensure each MAS request gets a fresh
     # Gateway session (prevents session history accumulation across requests).
-    user_tag = f"mas:{request_id[:8]}:{callsign}"
+    # Use persona_id (always ASCII) instead of callsign to avoid HTTP header
+    # encoding errors with non-ASCII names (Korean/Japanese personas).
+    user_tag = f"mas:{request_id[:8]}:{persona_id}"
 
     if tools:
         print(f"[agent-runner] {callsign} calling xapi inference "
@@ -453,7 +459,7 @@ def _run_agents_batch(
         batch_requests.append({
             "model": full_model,
             "messages": [{"role": "user", "content": a["prompt"]}],
-            "user": f"mas:{request_id[:8]}:{a['callsign']}",
+            "user": f"mas:{request_id[:8]}:{a['persona_id']}",
             "max_tokens": 4096,
         })
 
@@ -468,26 +474,29 @@ def _run_agents_batch(
             for a in agents
         ]
 
+    max_retries = cfg.get("inference_max_retries", 3)
     start = time.time()
     resp = None
-    for attempt in range(2):  # 1 retry on transient errors
+    for attempt in range(max_retries):
         try:
             resp = _get_http().post(
                 f"{xapi_url}/inference/batch",
                 json={"requests": batch_requests},
                 timeout=timeout + 30,  # extra margin for batch overhead
             )
-            if resp.status_code in (502, 503) and attempt == 0:
-                print(f"[agent-runner] Batch xapi {resp.status_code}, retrying in 5s...", flush=True)
-                time.sleep(5)
+            if resp.status_code in (502, 503) and attempt < max_retries - 1:
+                wait = 5 * (attempt + 1)
+                print(f"[agent-runner] Batch xapi {resp.status_code}, retrying in {wait}s (attempt {attempt + 1}/{max_retries})...", flush=True)
+                time.sleep(wait)
                 continue
             break
         except (httpx.ConnectError, httpx.RemoteProtocolError):
-            if attempt == 0:
-                print(f"[agent-runner] Batch connect error, retrying in 5s...", flush=True)
-                time.sleep(5)
+            if attempt < max_retries - 1:
+                wait = 5 * (attempt + 1)
+                print(f"[agent-runner] Batch connect error, retrying in {wait}s (attempt {attempt + 1}/{max_retries})...", flush=True)
+                time.sleep(wait)
                 continue
-            return _fail_all(f"xapi unreachable at {xapi_url} (after retry)")
+            return _fail_all(f"xapi unreachable at {xapi_url} (after {max_retries} attempts)")
         except Exception as e:
             return _fail_all(str(e))
 
@@ -618,7 +627,7 @@ def run_agent_on_worker(
                 "tools": WORKER_LOCAL_TOOLS,
                 "xapi_url": xapi_url,
                 "api_key": cfg.get("xapi_api_key", ""),
-                "user": f"mas:{request_id[:8]}:{callsign}",
+                "user": f"mas:{request_id[:8]}:{persona_id}",
                 "max_tokens": 4096,
                 "max_tool_rounds": 10,
                 "timeout": worker_timeout,
