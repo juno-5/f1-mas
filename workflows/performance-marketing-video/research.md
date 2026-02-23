@@ -233,6 +233,25 @@ AI 영상의 "Voice Drift" 문제 해결.
 
 ---
 
+### 3.15 AI 클론 아바타 (NICOLA.AI 워크플로우)
+
+> 출처: Google Docs — NICOLA.AI Full AI Clone Workflow Manual
+
+실제 사람 없이 포토리얼 AI 아바타로 지속적 콘텐츠 생산하는 6단계 파이프라인.
+
+| 단계 | 작업 | 도구 |
+|------|------|------|
+| 1. Face Creation | 포토리얼 초상 생성 | NanoBanana Pro (정체성 정확도), Flux 2.0 (시네마틱), Seedrem 4 (텍스처) |
+| 2. Dataset Building | 10-20장 다양한 포즈/의상/각도/환경 이미지 생성 | 위 도구 반복 |
+| 3. Upscaling | 4K-8K 해상도 업스케일 (필수) | OpenArt, Magnific, Lupa AI |
+| 4. Voice Cloning | 톤, 호흡, 감정 전달까지 복제 | ElevenLabs, MathCare |
+| 5. Motion Generation | 정적 이미지에 모션 부여 | VEO 3.1 (시네마틱 JSON), Kling AI (자연스러운 인체), PixVerse (입 동기화) |
+| 6. Final Assembly | 비디오 + 음성 + 캡션 결합 → 일일 콘텐츠 시스템 | 편집 도구 |
+
+**핵심**: 각 단계의 품질이 다음 단계에 직접 영향. Face Creation → Dataset → Upscale 순서가 특히 중요.
+
+---
+
 ## 4. 퍼포먼스 마케팅 영상 유형별 추천 파이프라인
 
 ### 4.1 UGC 스타일 제품 리뷰 (가장 전환율 높음)
@@ -255,15 +274,19 @@ AI 영상의 "Voice Drift" 문제 해결.
 Gemini(캐릭터) → Kling AI(모션 트랜스퍼) → 트렌딩 댄스 적용 → 수직 내보내기
 ```
 
+### 4.5 AI 아바타 기반 반복 콘텐츠 (장기 운영)
+```
+NanoBanana/Flux(얼굴) → 20장 데이터셋 → 4K 업스케일 → ElevenLabs(음성) → VEO 3.1/Kling(모션) → 일일 콘텐츠 시스템
+```
+
 ---
 
 ## 5. 접근 불가 소스
 
 아래 소스는 인증/리다이렉트 제한으로 내용을 가져오지 못했습니다:
 
-- Google Docs: `1bseN2g2MRYqCUT2_VqEUMUylE_3DpF-syy0wlC1lF2c` (인증 필요)
-- Canva: `DAHBTK0BcV0` (inpock.co.kr 리다이렉트, 인증 필요)
-- Notion (pletor-ai): long-form UGC 가이드 (Notion 로딩 미완료)
+- Canva: `DAHBTK0BcV0` (inpock.co.kr 리다이렉트, 브라우저 미지원)
+- Notion (pletor-ai): long-form UGC 가이드 (Notion SPA 로딩 불가)
 
 ---
 
@@ -284,3 +307,4 @@ Gemini(캐릭터) → Kling AI(모션 트랜스퍼) → 트렌딩 댄스 적용 
 13. [Seedance 2.0](https://sequencer.media/posts/tutorials/seedance-2)
 14. [Product Commercials](https://sequencer.media/posts/tutorials/product-commercials)
 15. [AI 인플루언서 댄스 영상 가이드](https://slashpage.com/biggie-ai/qrx6zk258ezv6mv314y5) (biggie-ai)
+16. [NICOLA.AI Full AI Clone Workflow](https://docs.google.com/document/d/1bseN2g2MRYqCUT2_VqEUMUylE_3DpF-syy0wlC1lF2c/) — AI 아바타 6단계 파이프라인
