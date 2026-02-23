@@ -358,15 +358,26 @@ def _execute_infra_tool(name: str, arguments: dict) -> str:
 # --------------------------------------------------------------------------
 
 _NAS_RELEVANT_RE = re.compile(
-    r"노드|node|배포|deploy|클라우드|cloud|PC|"
-    r"원격|remote|실행|exec|파일|file|문서.*검색|doc.*search|NAS",
+    r"노드|\bnode\b|클라우드|\bcloud\b|\bPC\b|"
+    r"원격|\bremote\b|"
+    r"(?:명령|코드|스크립트|원격).{0,4}실행|실행해|\bexec\b|"
+    r"파일|\bfile\b|문서.*검색|\bdoc.*search\b|\bNAS\b|\bdeploy\b",
     re.IGNORECASE,
 )
 
 _INFRA_RELEVANT_RE = re.compile(
-    r"서버|server|서비스|service|헬스|health|상태|status|"
-    r"인프라|infra|게이트웨이|gateway|토큰|token|FAS|MAS|xapi|"
-    r"로그|log|에러|error|모니터|monitor|배포|deploy",
+    r"서버|\bserver\b|"
+    r"서비스.{0,4}(?:상태|확인|장애|재시작|로그|에러)|"
+    r"\bservice\b|"
+    r"헬스|\bhealth\b|\bstatus\b|"
+    r"인프라|\binfra\b|"
+    r"게이트웨이|\bgateway\b|"
+    r"토큰|\btoken\b|"
+    r"\bFAS\b|\bMAS\b|\bxapi\b|"
+    r"(?<!블)로그|\blog\b|"
+    r"에러|\berror\b|"
+    r"모니터링|\bmonitor\b|"
+    r"(?:코드|서버|서비스).{0,4}배포|배포해|\bdeploy\b",
     re.IGNORECASE,
 )
 
