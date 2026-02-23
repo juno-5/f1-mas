@@ -20,5 +20,6 @@
 ## Unresolved Hypotheses
 1. Google Drive 60개 문서 내용 fetch → 도메인별 추가 분류 가능
 2. Notion 통합에 더 많은 페이지 공유 시 fetch 성공률 80%+ 달성 가능
-3. creatives, uiux, models 도메인은 아직 references 비어있음 — 추가 채널 스캔 필요
+3. uiux, models 도메인은 Slack 채널에 문서 공유가 거의 없음 — Notion DB 직접 검색 또는 DM 스캔 필요
 4. DM 히스토리에서 추가 문서 발견 가능
+5. classifier 키워드 보강 필요: "superchart-ae" → sales, "cosduck-app" → commerce
