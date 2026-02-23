@@ -153,8 +153,14 @@ def _fetch_amm_memories(query: str, limit: int = 3, persona_role: str = "") -> s
         return ""
 
 
-def _build_agent_prompt(persona: PersonaEntry, query: str, index: PersonaIndex, extra_context: str = "") -> str:
-    """Build a prompt for a persona agent."""
+def _build_agent_prompt(persona: PersonaEntry, query: str, index: PersonaIndex,
+                        extra_context: str = "", amm_context: str = None) -> str:
+    """Build a prompt for a persona agent.
+
+    Args:
+        amm_context: Pre-fetched AMM memories. If None, fetches independently.
+            Pass pre-fetched value for multi-agent patterns to avoid redundant calls.
+    """
     # Extract key sections from character file
     char_content = index.extract_character_sections(persona.id)
     if not char_content:
@@ -162,8 +168,9 @@ def _build_agent_prompt(persona: PersonaEntry, query: str, index: PersonaIndex, 
 
     template_id = select_template(persona.category, persona.tags)
 
-    # AMM Memory Injection
-    amm_context = _fetch_amm_memories(query, persona_role=persona.role if hasattr(persona, "role") else "")
+    # AMM Memory Injection — use pre-fetched if available
+    if amm_context is None:
+        amm_context = _fetch_amm_memories(query, persona_role=persona.role if hasattr(persona, "role") else "")
 
     full_query = query
     if amm_context:
@@ -214,11 +221,14 @@ def _execute_parallel(
     """
     _log(f"[{request_id}] {pattern_name}: {[p.callsign for p in personas]}")
 
+    # Fetch AMM memories once for the entire request (all agents share the same query)
+    amm_context = _fetch_amm_memories(query)
+
     # Register agents
     agents_info = []
     for p in personas:
         agent_id = state.add_agent(request_id, p.id, p.callsign, p.role)
-        prompt = _build_agent_prompt(p, query, index)
+        prompt = _build_agent_prompt(p, query, index, amm_context=amm_context)
         agents_info.append({
             "agent_id": agent_id,
             "prompt": prompt,
@@ -286,12 +296,15 @@ def _execute_relay(
     """Relay: A's output → B's input, sequential."""
     _log(f"[{request_id}] Relay: {' → '.join(p.callsign for p in personas)}")
 
+    # Fetch AMM memories once for the entire relay chain
+    amm_context = _fetch_amm_memories(query)
+
     all_results = []
     previous_output = ""
 
     for i, persona in enumerate(personas):
         agent_id = state.add_agent(request_id, persona.id, persona.callsign, persona.role)
-        prompt = _build_agent_prompt(persona, query, index, extra_context=previous_output)
+        prompt = _build_agent_prompt(persona, query, index, extra_context=previous_output, amm_context=amm_context)
 
         _slack_agent_progress(request_id, persona.callsign, "running")
         result = run_agent(request_id, agent_id, prompt, persona.id, persona.callsign)
