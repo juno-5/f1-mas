@@ -120,6 +120,11 @@
     - `mas/mas_tools.py` 수정, 커밋 `2d0c734`
     - ⚠️ 배포 경로 발견: `~/.f1crew/scripts/mas/` (실행) ≠ `~/f1-mas/mas/` (소스 복사)
 
+19. **Cycle #36 (2026-02-23)**: xapi inference semaphore 4→6
+    - 5-agent batch가 semaphore=4에서 1 agent 직렬화됨
+    - 6으로 증가: 5-agent batch + 1 concurrent 요청 동시 처리 가능
+    - `xapi/routers/inference.py` 수정, 커밋 `47cffae`
+
 ## 변경 이력
 
 7. `mas/mas_agent_runner.py` + `mas/mas_templates.py` + `mas/mas_conversation.py` — synthesis cap + truncation (2a8737c, 2026-02-23)
@@ -136,6 +141,7 @@
 18. `mas/mas_agent_runner.py` — 비ASCII callsign→persona_id + retry 개선 (b123eb7, 2026-02-23)
 19. `xapi/xapi/routers/inference.py` — ASCII-safe session key header + Bedrock normalization (eaf9c2a, 2026-02-23)
 20. `mas/mas_tools.py` — tool injection regex false positive 수정 (2d0c734, 2026-02-23)
+21. `xapi/xapi/routers/inference.py` — inference semaphore 4→6 (47cffae, 2026-02-23)
 
 ## 미해결 가설
 
