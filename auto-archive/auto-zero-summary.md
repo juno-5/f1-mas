@@ -103,6 +103,14 @@
     - E2E 단일 에이전트: 33,956 → 29,637 tokens (-13%)
     - `xapi/xapi/routers/inference.py` 수정
 
+17. **Cycle #33 (2026-02-23)**: **비ASCII 페르소나 callsign 인코딩 에러 수정** ⭐
+    - `user` 태그에 한국어/일본어 callsign 포함 → HTTP 헤더 ASCII 인코딩 실패 (502)
+    - 30개 모델 페르소나(한국 20 + 일본 10) 전원 영향
+    - `user_tag`에 callsign 대신 persona_id(항상 ASCII) 사용
+    - xapi에 ASCII 인코딩 safety net 추가
+    - **Before: 100% 실패 → After: 정상 완료** (윤소라 KF01 테스트 검증)
+    - `mas/mas_agent_runner.py` 3곳 수정 커밋 `b123eb7` + `xapi/routers/inference.py` 커밋 `eaf9c2a`
+
 ## 변경 이력
 
 7. `mas/mas_agent_runner.py` + `mas/mas_templates.py` + `mas/mas_conversation.py` — synthesis cap + truncation (2a8737c, 2026-02-23)
@@ -116,6 +124,8 @@
 15. `xapi/xapi/routers/inference.py` — MAS 요청 시 subagent session key 주입 (2026-02-23)
 16. `mas/mas_agent_runner.py` — tokens_used 이중 계산 수정 (2a463cf, 2026-02-23)
 17. `mas/mas_orchestrator.py` — 강제 persona_ids 실패 시 auto-select fallback (d274b6a, 2026-02-23)
+18. `mas/mas_agent_runner.py` — 비ASCII callsign→persona_id + retry 개선 (b123eb7, 2026-02-23)
+19. `xapi/xapi/routers/inference.py` — ASCII-safe session key header + Bedrock normalization (eaf9c2a, 2026-02-23)
 
 ## 미해결 가설
 
