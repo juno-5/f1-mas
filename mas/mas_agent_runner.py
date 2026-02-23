@@ -2,8 +2,12 @@
 
 Uses xapi /inference/chat endpoint which proxies through FAS Gateway (port 18789).
 Token management, usage tracking, and rate limiting handled automatically by FAS Gateway.
+
+Supports tool-use: when agents are given tools, the runner executes a multi-turn loop
+(LLM → tool_calls → execute → feed results → LLM → ... → final text).
 """
 
+import json
 import time
 from concurrent.futures import ThreadPoolExecutor, Future
 
@@ -132,14 +136,145 @@ def call_xapi_inference(prompt: str, model: str = None, timeout: int = None, use
             "usage": empty_usage, "cost_usd": 0.0}
 
 
+def call_xapi_with_tools(
+    prompt: str,
+    tools: list[dict],
+    model: str = None,
+    timeout: int = None,
+    user: str = "mas:agent",
+    max_tool_rounds: int = 5,
+) -> dict:
+    """Call LLM with tool-use loop via xapi.
+
+    When LLM returns tool_calls, executes them locally via mas_tools.execute_tool(),
+    feeds results back as role="tool" messages, and re-calls until final text.
+
+    Returns same format as call_xapi_inference.
+    """
+    from .mas_tools import execute_tool as exec_tool
+
+    if model is None:
+        model = cfg.get("claude_model", "sonnet")
+    full_model = _MODEL_MAP.get(model, model)
+
+    if timeout is None:
+        timeout = cfg.get("agent_timeout_seconds", 120)
+
+    xapi_url = cfg.get("xapi_url", "http://localhost:7750")
+
+    messages = [{"role": "user", "content": prompt}]
+    total_usage = {"input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0}
+    total_cost = 0.0
+    final_text = ""
+
+    for round_i in range(max_tool_rounds + 1):
+        try:
+            body = {
+                "model": full_model,
+                "messages": messages,
+                "user": user,
+                "max_tokens": 4096,
+                "tools": tools,
+            }
+
+            resp = _get_http().post(
+                f"{xapi_url}/inference/chat",
+                json=body,
+                timeout=timeout,
+            )
+
+            if resp.status_code != 200:
+                error = resp.text[:300]
+                return {"text": "", "model": full_model,
+                        "error": f"xapi {resp.status_code}: {error}",
+                        "usage": total_usage, "cost_usd": total_cost}
+
+            data = resp.json()
+
+            # Accumulate usage
+            raw_usage = data.get("usage", {})
+            total_usage["input"] += raw_usage.get("input_tokens", raw_usage.get("prompt_tokens", 0))
+            total_usage["output"] += raw_usage.get("output_tokens", raw_usage.get("completion_tokens", 0))
+            total_usage["cacheRead"] += raw_usage.get("cache_read_input_tokens", 0)
+            total_usage["cacheWrite"] += raw_usage.get("cache_creation_input_tokens", 0)
+            total_cost += data.get("cost_usd", 0.0)
+
+            content = data.get("content", "")
+            tool_calls = data.get("tool_calls")
+
+            # No tool calls → final response
+            if not tool_calls:
+                return {
+                    "text": content,
+                    "model": data.get("model", full_model),
+                    "error": None,
+                    "usage": total_usage,
+                    "cost_usd": total_cost,
+                }
+
+            # Tool calls → execute and loop
+            print(f"[agent-runner] Tool round {round_i + 1}: "
+                  f"{len(tool_calls)} call(s)", flush=True)
+
+            # Add assistant message with tool_calls to conversation
+            assistant_msg = {"role": "assistant", "tool_calls": tool_calls}
+            if content:
+                assistant_msg["content"] = content
+            messages.append(assistant_msg)
+
+            # Execute each tool call and append results
+            for tc in tool_calls:
+                fn = tc.get("function", {})
+                tool_name = fn.get("name", "")
+                tool_args_raw = fn.get("arguments", "{}")
+                tool_call_id = tc.get("id", "")
+
+                try:
+                    tool_args = json.loads(tool_args_raw) if isinstance(tool_args_raw, str) else tool_args_raw
+                except (json.JSONDecodeError, TypeError):
+                    tool_args = {}
+
+                print(f"[agent-runner]   -> {tool_name}"
+                      f"({json.dumps(tool_args, ensure_ascii=False)[:100]})",
+                      flush=True)
+                tool_result = exec_tool(tool_name, tool_args)
+                print(f"[agent-runner]   <- {len(tool_result)} chars", flush=True)
+
+                messages.append({
+                    "role": "tool",
+                    "content": tool_result,
+                    "tool_call_id": tool_call_id,
+                })
+
+            final_text = content  # keep last content in case we hit max rounds
+
+        except httpx.TimeoutException:
+            return {"text": "", "model": full_model,
+                    "error": f"timeout after {timeout}s (tool round {round_i})",
+                    "usage": total_usage, "cost_usd": total_cost}
+        except Exception as e:
+            return {"text": "", "model": full_model, "error": str(e),
+                    "usage": total_usage, "cost_usd": total_cost}
+
+    # Max rounds exceeded
+    return {"text": final_text, "model": full_model,
+            "error": f"max tool rounds ({max_tool_rounds}) exceeded",
+            "usage": total_usage, "cost_usd": total_cost}
+
+
 def run_agent(
     request_id: str,
     agent_id: str,
     prompt: str,
     persona_id: str,
     callsign: str,
+    tools: list[dict] | None = None,
 ) -> dict:
     """Execute a single agent via xapi inference.
+
+    Args:
+        tools: Optional OpenAI function-calling tool definitions. When provided,
+            uses tool-use loop (LLM → tool_calls → execute → feed back → repeat).
 
     Returns {"text": str, "tokens_used": int, "model": str, "duration_ms": int}.
     """
@@ -149,8 +284,13 @@ def run_agent(
 
     model = cfg.get("claude_model", "sonnet")
 
-    print(f"[agent-runner] {callsign} calling xapi inference...", flush=True)
-    result = call_xapi_inference(prompt, model=model, user=f"mas:{callsign}")
+    if tools:
+        print(f"[agent-runner] {callsign} calling xapi inference "
+              f"with {len(tools)} tools...", flush=True)
+        result = call_xapi_with_tools(prompt, tools, model=model, user=f"mas:{callsign}")
+    else:
+        print(f"[agent-runner] {callsign} calling xapi inference...", flush=True)
+        result = call_xapi_inference(prompt, model=model, user=f"mas:{callsign}")
 
     duration_ms = int((time.time() - start) * 1000)
 
@@ -175,6 +315,19 @@ def run_agent(
     usage = result.get("usage", {})
     tokens_used = sum(usage.values())
     cost_usd = result.get("cost_usd", 0.0)
+
+    if not text.strip():
+        error_msg = "empty response from inference"
+        print(f"[agent-runner] {callsign} empty response ({duration_ms}ms)", flush=True)
+        state.update_agent(request_id, agent_id,
+                           status="failed", error=error_msg, model=model)
+        return {
+            "text": "",
+            "tokens_used": tokens_used,
+            "model": model,
+            "duration_ms": duration_ms,
+            "error": error_msg,
+        }
 
     print(f"[agent-runner] {callsign} completed ({duration_ms}ms, {len(text)} chars, "
           f"{tokens_used} tokens, ${cost_usd:.4f})", flush=True)
@@ -287,6 +440,15 @@ def _run_agents_batch(
         tokens_used = sum(usage.values())
         cost_usd = item.get("cost_usd", 0.0)
 
+        if not text.strip():
+            empty_err = "empty response from inference"
+            print(f"[agent-runner] {a['callsign']} empty response ({duration_ms}ms)", flush=True)
+            state.update_agent(request_id, a["agent_id"],
+                               status="failed", error=empty_err, model=model)
+            results.append({"text": "", "tokens_used": tokens_used, "model": model,
+                            "duration_ms": duration_ms, "error": empty_err})
+            continue
+
         print(f"[agent-runner] {a['callsign']} completed ({duration_ms}ms, {len(text)} chars, "
               f"{tokens_used} tokens, ${cost_usd:.4f})", flush=True)
 
@@ -310,26 +472,202 @@ def _run_agents_batch(
     return results
 
 
+def get_worker_nodes(count: int = 1) -> list[dict]:
+    """Request worker node allocation from NAS allocator."""
+    nas_url = cfg.get("nas_url", "http://localhost:7730")
+    tag = cfg.get("worker_tag", "worker")
+    try:
+        resp = _get_http().get(
+            f"{nas_url}/nodes/allocate",
+            params={"count": count, "tag": tag},
+            timeout=5.0,
+        )
+        if resp.status_code == 200:
+            return resp.json().get("nodes", [])
+    except Exception as e:
+        print(f"[agent-runner] Worker allocation failed: {e}", flush=True)
+    return []
+
+
+def run_agent_on_worker(
+    request_id: str,
+    agent_id: str,
+    prompt: str,
+    persona_id: str,
+    callsign: str,
+    worker: dict,
+) -> dict:
+    """Execute a single agent on a remote worker node.
+
+    worker: {"node_id", "ip_address", "worker_port", ...} from NAS allocator.
+    The worker runs inference + tool-use loop locally on the node PC.
+    """
+    from .mas_tools import WORKER_LOCAL_TOOLS
+
+    start = time.time()
+    state.update_agent(request_id, agent_id,
+                       status="running", started_at=start)
+
+    worker_ip = worker["ip_address"]
+    worker_port = worker.get("worker_port", 7731)
+    worker_timeout = cfg.get("worker_timeout", 180)
+    model = cfg.get("claude_model", "sonnet")
+    full_model = _MODEL_MAP.get(model, model)
+    xapi_url = cfg.get("xapi_url", "http://localhost:7750")
+
+    print(f"[agent-runner] {callsign} → worker {worker['node_id']} "
+          f"({worker_ip}:{worker_port})", flush=True)
+
+    try:
+        resp = _get_http().post(
+            f"http://{worker_ip}:{worker_port}/worker/task",
+            json={
+                "prompt": prompt,
+                "model": full_model,
+                "tools": WORKER_LOCAL_TOOLS,
+                "xapi_url": xapi_url,
+                "user": f"mas:{callsign}",
+                "max_tokens": 4096,
+                "max_tool_rounds": 10,
+                "timeout": worker_timeout,
+            },
+            timeout=worker_timeout + 30,
+        )
+    except Exception as e:
+        error_msg = f"worker unreachable {worker_ip}:{worker_port}: {e}"
+        print(f"[agent-runner] {callsign} error: {error_msg}", flush=True)
+        state.update_agent(request_id, agent_id,
+                           status="failed", error=error_msg, model=model)
+        return {"text": "", "tokens_used": 0, "model": model,
+                "duration_ms": int((time.time() - start) * 1000), "error": error_msg}
+
+    duration_ms = int((time.time() - start) * 1000)
+
+    if resp.status_code != 200:
+        error_msg = f"worker {resp.status_code}: {resp.text[:300]}"
+        state.update_agent(request_id, agent_id,
+                           status="failed", error=error_msg, model=model)
+        return {"text": "", "tokens_used": 0, "model": model,
+                "duration_ms": duration_ms, "error": error_msg}
+
+    data = resp.json()
+    if data.get("error"):
+        error_msg = data["error"]
+        print(f"[agent-runner] {callsign} worker error: {error_msg}", flush=True)
+        state.update_agent(request_id, agent_id,
+                           status="failed", error=error_msg, model=model)
+        return {"text": "", "tokens_used": data.get("tokens_used", 0), "model": model,
+                "duration_ms": duration_ms, "error": error_msg}
+
+    text = filter_output(data.get("text", ""))
+    tokens_used = data.get("tokens_used", 0)
+    cost_usd = data.get("cost_usd", 0.0)
+    usage = data.get("usage", {"input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0})
+
+    print(f"[agent-runner] {callsign} worker completed ({duration_ms}ms, {len(text)} chars, "
+          f"{tokens_used} tokens, ${cost_usd:.4f}, tools={data.get('tool_calls_count', 0)})",
+          flush=True)
+
+    state.update_agent(request_id, agent_id,
+                       status="completed", output=text,
+                       tokens_used=tokens_used, model=model, cost_usd=cost_usd)
+
+    return {
+        "text": text,
+        "tokens_used": tokens_used,
+        "model": model,
+        "duration_ms": duration_ms,
+        "usage": usage,
+        "cost_usd": cost_usd,
+    }
+
+
+def _run_agents_distributed(
+    request_id: str,
+    agents: list[dict],
+    workers: list[dict],
+) -> list[dict]:
+    """Run agents distributed across worker nodes.
+
+    Maps agents to workers (round-robin if more agents than workers).
+    Agents without a worker fall back to local execution.
+    """
+    pool = _get_pool()
+    futures: list[tuple[dict, Future]] = []
+
+    for i, a in enumerate(agents):
+        if i < len(workers):
+            # Run on remote worker
+            f = pool.submit(
+                run_agent_on_worker,
+                request_id, a["agent_id"], a["prompt"],
+                a["persona_id"], a["callsign"], workers[i],
+            )
+        else:
+            # Fallback to local execution
+            print(f"[agent-runner] {a['callsign']} → local (no worker available)", flush=True)
+            f = pool.submit(
+                run_agent,
+                request_id, a["agent_id"], a["prompt"],
+                a["persona_id"], a["callsign"], a.get("tools"),
+            )
+        futures.append((a, f))
+
+    results = []
+    for a, f in futures:
+        try:
+            result = f.result(timeout=cfg.get("worker_timeout", 180) + 30)
+        except Exception as e:
+            result = {"text": "", "tokens_used": 0, "model": "", "duration_ms": 0,
+                      "error": str(e)}
+            state.update_agent(request_id, a["agent_id"],
+                               status="failed", error=str(e))
+        results.append(result)
+
+    return results
+
+
 def run_agents_parallel(
     request_id: str,
     agents: list[dict],
 ) -> list[dict]:
     """Run multiple agents in parallel.
 
-    Prefers xapi /inference/batch (single HTTP call, async parallelism).
-    Falls back to ThreadPoolExecutor if batch endpoint unavailable.
+    Priority:
+    1. Distributed execution on worker nodes (if enabled + workers available)
+    2. xapi /inference/batch (single HTTP call, async parallelism)
+    3. ThreadPoolExecutor fallback (individual calls, supports tool-use)
 
-    agents: [{"agent_id": str, "prompt": str, "persona_id": str, "callsign": str}, ...]
+    agents: [{"agent_id": str, "prompt": str, "persona_id": str, "callsign": str,
+              "tools": list|None}, ...]
     Returns list of results from run_agent.
     """
+    # Distributed execution on worker nodes
+    if cfg.get("distributed_execution", False):
+        workers = get_worker_nodes(count=len(agents))
+        if workers:
+            print(f"[agent-runner] Distributed: {len(workers)} workers for "
+                  f"{len(agents)} agents", flush=True)
+            return _run_agents_distributed(request_id, agents, workers)
+        elif not cfg.get("distributed_fallback", True):
+            print(f"[agent-runner] No workers available and fallback disabled", flush=True)
+        else:
+            print(f"[agent-runner] No workers available, falling back to local", flush=True)
+
+    # Tool-use agents require individual calls (batch doesn't support multi-turn)
+    has_tools = any(a.get("tools") for a in agents)
+
     # Try batch endpoint first (single HTTP call → xapi asyncio.gather)
-    if cfg.get("use_batch_inference", True):
+    if not has_tools and cfg.get("use_batch_inference", True):
         try:
             return _run_agents_batch(request_id, agents)
         except Exception as e:
             print(f"[agent-runner] Batch failed, falling back to ThreadPool: {e}", flush=True)
 
-    # Fallback: ThreadPoolExecutor (individual calls)
+    if has_tools:
+        print(f"[agent-runner] Using ThreadPool (agents have tools)", flush=True)
+
+    # Fallback: ThreadPoolExecutor (individual calls, supports tool-use)
     pool = _get_pool()
     futures: list[tuple[dict, Future]] = []
 
@@ -341,6 +679,7 @@ def run_agents_parallel(
             a["prompt"],
             a["persona_id"],
             a["callsign"],
+            a.get("tools"),
         )
         futures.append((a, f))
 
