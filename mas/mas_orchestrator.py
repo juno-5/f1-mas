@@ -276,6 +276,7 @@ class Orchestrator:
         pattern: str = None,
         tribe: str = None,
         squad: str = None,
+        max_personas: int = None,
     ):
         """Full orchestration: analyze → select → spawn → synthesize.
 
@@ -290,6 +291,11 @@ class Orchestrator:
             state.update_request(request_id, tribe=analysis["tribe"])
         if analysis.get("squad"):
             state.update_request(request_id, squad=analysis["squad"])
+        # Apply max_personas cap (user-requested limit)
+        if max_personas and isinstance(max_personas, int) and max_personas > 0:
+            analysis["agent_count"] = min(analysis["agent_count"], max_personas)
+            _log(f"[{request_id}] max_personas={max_personas} → agent_count capped to {analysis['agent_count']}")
+
         _log(f"[{request_id}] Analysis: {analysis}")
 
         # 2. Select personas
@@ -308,7 +314,15 @@ class Orchestrator:
             personas = self.select_personas(analysis)
 
         if not personas:
-            _log(f"[{request_id}] No personas found (analysis={analysis})")
+            # Diagnostic: log index state to help debug transient empty selection
+            idx_count = self._index.count()
+            funcs = analysis.get("functions", [])
+            func_results = {f: len(self._index.by_function(f)) for f in funcs[:3]}
+            domain = analysis["domains"][0]
+            cat_count = len(self._index.by_category(domain))
+            _log(f"[{request_id}] No personas found — index={idx_count}, "
+                 f"by_function={func_results}, by_category({domain})={cat_count}, "
+                 f"analysis={analysis}")
             state.update_request(request_id, status="failed",
                                  error="no suitable personas found")
             return

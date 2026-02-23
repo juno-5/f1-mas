@@ -718,11 +718,13 @@ class PersonaIndex:
                     pats = meta.get("patterns", [])
                     if pats:
                         compiled[cat] = [re.compile(p, re.IGNORECASE) for p in pats]
-            except Exception:
-                pass
+            except Exception as e:
+                import traceback
+                print(f"[WARN] [persona_index] Failed to load domains.yaml from {yaml_path}: {e}", flush=True)
 
         # Fallback: minimal domain set (org/domains.yaml should always exist)
         if not compiled:
+            print(f"[WARN] [persona_index] Using fallback domain patterns (yaml_path={yaml_path})", flush=True)
             compiled = {
                 "developers": [re.compile(r"코드|code|아키텍처|architecture|설계|design|배포|deploy|인프라|infra", re.IGNORECASE)],
                 "marketers": [re.compile(r"마케팅|marketing|브랜드|brand|그로스|growth", re.IGNORECASE)],

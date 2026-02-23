@@ -442,6 +442,7 @@ class MASHandler(http.server.BaseHTTPRequestHandler):
         pattern = body.get("pattern")       # force specific pattern
         tribe = body.get("tribe")           # tribe constraint
         squad = body.get("squad")           # squad constraint
+        max_personas = body.get("max_personas")  # cap agent count
         user = body.get("user", "")         # caller identification
 
         orch = _get_orchestrator()
@@ -468,7 +469,8 @@ class MASHandler(http.server.BaseHTTPRequestHandler):
         def _run():
             try:
                 orch.execute(req.request_id, query, persona_ids=persona_ids,
-                            pattern=pattern, tribe=tribe, squad=squad)
+                            pattern=pattern, tribe=tribe, squad=squad,
+                            max_personas=max_personas)
             except Exception as e:
                 state.update_request(req.request_id, status="failed", error=str(e))
                 log(f"[ERROR] {req.request_id}: {e}")
