@@ -2,6 +2,11 @@
 
 import time
 
+try:
+    import httpx
+except ImportError:
+    httpx = None
+
 from . import mas_config as cfg
 from . import mas_state as state
 from .mas_persona_index import PersonaEntry, PersonaIndex
@@ -97,6 +102,57 @@ def execute_pattern(
         return _execute_single(request_id, query, personas[0], index)
 
 
+
+def _fetch_amm_memories(query: str, limit: int = 3, persona_role: str = "") -> str:
+    """Fetch relevant AMM memories to inject into agent prompt."""
+    _log(f"AMM: fetching memories for query: {query[:60]}... (persona: {persona_role[:30]})")
+    if not cfg.get("amm_memory_injection", True):
+        return ""
+    if httpx is None:
+        return ""
+
+    xapi_url = cfg.get("xapi_url", "http://localhost:7750")
+    try:
+        resp = httpx.post(
+            f"{xapi_url}/amm/surface",
+            json={
+                "query": query,
+                "limit": limit,
+                "min_relevance": 0.4,
+            },
+            timeout=5.0,
+        )
+        if resp.status_code != 200:
+            return ""
+        data = resp.json()
+        memories = data.get("memories", [])
+        if not memories:
+            return ""
+
+        sections = []
+        for m in memories[:limit]:
+            title = m.get("raw_title", m.get("title", ""))
+            interp = m.get("interpretation", "")[:200]
+            source = m.get("source_url", "")
+            rel = m.get("score", m.get("relevance_score", 0))
+            if title and interp:
+                entry = f"- **{title}** (rel={rel:.2f}): {interp}"
+                if source:
+                    entry += "\n  Source: " + source
+                sections.append(entry)
+
+        if not sections:
+            _log("AMM: no sections built")
+            return ""
+
+        result = "\n\n## Recent Intelligence (AMM Memory)\n" + "\n".join(sections)
+        _log(f"AMM: injecting {len(sections)} memories ({len(result)} chars)")
+        return result
+    except Exception as e:
+        _log(f"AMM memory fetch ERROR: {e}")
+        return ""
+
+
 def _build_agent_prompt(persona: PersonaEntry, query: str, index: PersonaIndex, extra_context: str = "") -> str:
     """Build a prompt for a persona agent."""
     # Extract key sections from character file
@@ -106,9 +162,14 @@ def _build_agent_prompt(persona: PersonaEntry, query: str, index: PersonaIndex, 
 
     template_id = select_template(persona.category, persona.tags)
 
+    # AMM Memory Injection
+    amm_context = _fetch_amm_memories(query, persona_role=persona.role if hasattr(persona, "role") else "")
+
     full_query = query
+    if amm_context:
+        full_query += amm_context
     if extra_context:
-        full_query = f"{query}\n\n## Previous Context\n{extra_context}"
+        full_query += f"\n\n## Previous Context\n{extra_context}"
 
     return build_prompt(
         template_id=template_id,
