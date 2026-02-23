@@ -27,6 +27,13 @@
 - [ ] 제품/서비스 가격표
 - [ ] 할인 정책 & 승인 프로세스
 
+## Lead Management
+
+| Resource | Source | 비고 |
+|----------|--------|------|
+| [리드 온도 체계](https://www.notion.so/mayacrew/) | 슈퍼멤버스 | 통화 리드 온도 정의 및 운영 기준, 세일즈팀 공통 기준 |
+| [CX 멘토링 (와이즐리)](https://www.notion.so/mayacrew/CX-1d9983e32b3280d59627f02485a95e93) | growth | 와이즐리 CX 김지수 팀장 멘토링 |
+
 ---
 
-*Last updated: 2026-02-23*
+*Last updated: 2026-02-23 (auto-library scan)*

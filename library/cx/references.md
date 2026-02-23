@@ -28,6 +28,15 @@
 - [ ] 고객 여정 맵
 - [ ] 터치포인트별 서비스 기준
 
+## Issue Tracking
+
+| Resource | Source | 비고 |
+|----------|--------|------|
+| [슈퍼멤버스 이슈 및 개선 리스트](https://www.notion.so/mayacrew/d69f2a2d5cc94410920a7bd4f8510bfc) | 개선-및-변경-요청 | 서비스 이슈 트래킹 |
+| [CX 멘토링 (와이즐리)](https://www.notion.so/mayacrew/CX-1d9983e32b3280d59627f02485a95e93) | growth | 와이즐리 김지수 팀장 CX 멘토링 |
+| [고충처리 창구](https://docs.google.com/forms/d/e/1FAIpQLSfEF3zhKAYilOIM7zWR_PbCRaB3RBCSsMJiFYzhYM3r-F3b6A/viewform) | general | 구성원 고충처리 폼 |
+| VOC 채널 | Slack #voc (21명) | 고객 피드백 실시간 수집 |
+
 ---
 
-*Last updated: 2026-02-23*
+*Last updated: 2026-02-23 (auto-library scan)*
