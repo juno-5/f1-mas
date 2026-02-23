@@ -147,6 +147,13 @@
     - **Before: "서버 컴포넌트" → 4 tools → ThreadPool → After: 0 tools → batch**
     - `mas/mas_tools.py` 수정, 커밋 `64e75ce`
 
+23. **Cycle #40 (2026-02-23)**: **Function detection regex distance bound** ⭐
+    - `.*` (무제한) greedy 매칭 → "서버 컴포넌트...상태관리"가 `sre_monitoring` 오탐
+    - "하이브리드...상태관리"가 `revenue_operations` 오탐 (리드.*관리 cross-match)
+    - 전체 `.*` → `.{0,20}` 거리 제한 + "리드" Korean lookbehind
+    - **Before: React 쿼리 → 5 agents/$0.59 → After: 2 agents/$0.30 (-49% 비용)**
+    - `org/functions.yaml` 수정, 커밋 `52b951f`
+
 ## 변경 이력
 
 7. `mas/mas_agent_runner.py` + `mas/mas_templates.py` + `mas/mas_conversation.py` — synthesis cap + truncation (2a8737c, 2026-02-23)
@@ -167,6 +174,7 @@
 22. `config/mas-config.json` — character extraction 활성화 (config만, 코드 변경 없음, 2026-02-23)
 23. `mas/mas_agent_runner.py` — agent max_tokens 4096→8192 configurable (450e1ff, 2026-02-23)
 24. `mas/mas_tools.py` — tool injection compound 패턴 강화 2차 (64e75ce, 2026-02-23)
+25. `org/functions.yaml` — regex distance bound .{0,20} + 리드 lookbehind (52b951f, 2026-02-23)
 
 ## 미해결 가설
 
