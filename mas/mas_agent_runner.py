@@ -109,11 +109,18 @@ def call_xapi_inference(prompt: str, model: str = None, timeout: int = None,
 
             data = resp.json()
             raw_usage = data.get("usage", {})
+            # Cache tokens: try Anthropic format first, then OpenAI prompt_tokens_details
+            cache_read = raw_usage.get("cache_read_input_tokens", 0)
+            cache_write = raw_usage.get("cache_creation_input_tokens", 0)
+            if not cache_read:
+                details = raw_usage.get("prompt_tokens_details", {}) or {}
+                cache_read = details.get("cached_tokens", 0)
+                cache_write = cache_write or details.get("cache_creation_tokens", 0)
             usage = {
                 "input": raw_usage.get("input_tokens", raw_usage.get("prompt_tokens", 0)),
                 "output": raw_usage.get("output_tokens", raw_usage.get("completion_tokens", 0)),
-                "cacheRead": raw_usage.get("cache_read_input_tokens", 0),
-                "cacheWrite": raw_usage.get("cache_creation_input_tokens", 0),
+                "cacheRead": cache_read,
+                "cacheWrite": cache_write,
             }
 
             return {
@@ -330,14 +337,17 @@ def run_agent(
                        status="running", started_at=start)
 
     model = cfg.get("claude_model", "sonnet")
+    # Include request_id in user field to ensure each MAS request gets a fresh
+    # Gateway session (prevents session history accumulation across requests).
+    user_tag = f"mas:{request_id[:8]}:{callsign}"
 
     if tools:
         print(f"[agent-runner] {callsign} calling xapi inference "
               f"with {len(tools)} tools...", flush=True)
-        result = call_xapi_with_tools(prompt, tools, model=model, user=f"mas:{callsign}")
+        result = call_xapi_with_tools(prompt, tools, model=model, user=user_tag)
     else:
         print(f"[agent-runner] {callsign} calling xapi inference...", flush=True)
-        result = call_xapi_inference(prompt, model=model, user=f"mas:{callsign}")
+        result = call_xapi_inference(prompt, model=model, user=user_tag)
 
     duration_ms = int((time.time() - start) * 1000)
 
@@ -413,13 +423,13 @@ def _run_agents_batch(
                            status="running", started_at=time.time())
         print(f"[agent-runner] {a['callsign']} calling xapi batch...", flush=True)
 
-    # Build batch request
+    # Build batch request — include request_id in user for fresh Gateway sessions
     batch_requests = []
     for a in agents:
         batch_requests.append({
             "model": full_model,
             "messages": [{"role": "user", "content": a["prompt"]}],
-            "user": f"mas:{a['callsign']}",
+            "user": f"mas:{request_id[:8]}:{a['callsign']}",
             "max_tokens": 4096,
         })
 
@@ -482,11 +492,17 @@ def _run_agents_batch(
 
         text = filter_output(item.get("content", ""))
         raw_usage = item.get("usage", {})
+        b_cache_read = raw_usage.get("cache_read_input_tokens", 0)
+        b_cache_write = raw_usage.get("cache_creation_input_tokens", 0)
+        if not b_cache_read:
+            b_details = raw_usage.get("prompt_tokens_details", {}) or {}
+            b_cache_read = b_details.get("cached_tokens", 0)
+            b_cache_write = b_cache_write or b_details.get("cache_creation_tokens", 0)
         usage = {
             "input": raw_usage.get("input_tokens", raw_usage.get("prompt_tokens", 0)),
             "output": raw_usage.get("output_tokens", raw_usage.get("completion_tokens", 0)),
-            "cacheRead": raw_usage.get("cache_read_input_tokens", 0),
-            "cacheWrite": raw_usage.get("cache_creation_input_tokens", 0),
+            "cacheRead": b_cache_read,
+            "cacheWrite": b_cache_write,
         }
         tokens_used = sum(usage.values())
         cost_usd = item.get("cost_usd", 0.0)
@@ -577,7 +593,7 @@ def run_agent_on_worker(
                 "model": full_model,
                 "tools": WORKER_LOCAL_TOOLS,
                 "xapi_url": xapi_url,
-                "user": f"mas:{callsign}",
+                "user": f"mas:{request_id[:8]}:{callsign}",
                 "max_tokens": 4096,
                 "max_tool_rounds": 10,
                 "timeout": worker_timeout,
@@ -763,9 +779,10 @@ def run_synthesis(request_id: str, prompt: str) -> dict:
     synth_timeout = cfg.get("synthesis_timeout_seconds", 300)
     synth_max_tokens = cfg.get("synthesis_max_tokens", 2048)
 
+    synth_user = f"mas:{request_id[:8]}:synthesis"
     print(f"[agent-runner] MAS-Synth synthesizing (timeout={synth_timeout}s, max_tokens={synth_max_tokens})...", flush=True)
     result = call_xapi_inference(prompt, model=synth_model, timeout=synth_timeout,
-                                 user="mas:synthesis", max_tokens=synth_max_tokens)
+                                 user=synth_user, max_tokens=synth_max_tokens)
 
     duration_ms = int((time.time() - start) * 1000)
 
