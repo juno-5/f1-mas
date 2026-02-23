@@ -67,7 +67,7 @@ def _is_rate_limit_error(error_msg: str) -> bool:
 
 
 def call_xapi_inference(prompt: str, model: str = None, timeout: int = None,
-                        user: str = "mas:agent", max_tokens: int = 4096) -> dict:
+                        user: str = "mas:agent", max_tokens: int = 8192) -> dict:
     """Call LLM via xapi /inference/chat (replaces claude -p subprocess).
 
     Returns {"text": str, "model": str, "error": str|None,
@@ -445,6 +445,7 @@ def _run_agents_batch(
     full_model = _MODEL_MAP.get(model, model)
     xapi_url = cfg.get("xapi_url", "http://localhost:7750")
     timeout = cfg.get("agent_timeout_seconds", 120)
+    agent_max_tokens = cfg.get("agent_max_tokens", 8192)
     empty_usage = {"input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0}
 
     # Mark all agents as running
@@ -460,7 +461,7 @@ def _run_agents_batch(
             "model": full_model,
             "messages": [{"role": "user", "content": a["prompt"]}],
             "user": f"mas:{request_id[:8]}:{a['persona_id']}",
-            "max_tokens": 4096,
+            "max_tokens": agent_max_tokens,
         })
 
     def _fail_all(error_msg: str) -> list[dict]:
@@ -628,7 +629,7 @@ def run_agent_on_worker(
                 "xapi_url": xapi_url,
                 "api_key": cfg.get("xapi_api_key", ""),
                 "user": f"mas:{request_id[:8]}:{persona_id}",
-                "max_tokens": 4096,
+                "max_tokens": cfg.get("agent_max_tokens", 8192),
                 "max_tool_rounds": 10,
                 "timeout": worker_timeout,
             },
