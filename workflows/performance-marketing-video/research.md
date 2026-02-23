@@ -26,8 +26,12 @@
 | **Nano Banana PRO** | 포토리얼 이미지 생성 | 제품 사진, 인물 생성 |
 | **Topaz Video Upscale** | 4K 업스케일 | ~$0.80/초, 신경망 기반 |
 | **Hume AI / ElevenLabs** | 음성 클로닝 | 음성 일관성 유지 |
-| **Google Gemini** | AI 이미지 생성 | 무료 티어 가능 |
+| **Google Gemini** | AI 이미지 생성 + 프롬프트 작성 | 무료 티어, Gemini 3 Flash |
 | **Trellis** | 이미지 → 3D 모델 변환 | 3D 재배치용 |
+| **Higgsfield** | 포토리얼 인물 이미지 생성 | UGC 인플루언서 생성 |
+| **Kling 3.0** | 비디오 생성 (15초, 멀티샷) | 6샷 스토리보드, Elements 3.0 레퍼런스, 네이티브 립싱크 |
+| **Veed** | 토킹 아바타 애니메이션 | 음성 + 이미지 → 말하는 영상 |
+| **Pletor** | AI 크리에이티브 워크플로우 플랫폼 | 노드 기반, Make/Zapier 연동, API 자동화 |
 | **Sequencer** | 통합 AI 영상 제작 플랫폼 | 노드 에디터, 워크플로우 자동화 |
 
 ---
@@ -252,6 +256,94 @@ AI 영상의 "Voice Drift" 문제 해결.
 
 ---
 
+### 3.16 롱폼 UGC 영상 (~45초) — Pletor AI 워크플로우
+
+> 출처: [Pletor AI](https://pletor-ai.notion.site/make-a-long-form-ugc-video-with-ai-) — Raphael Guilhem
+
+8초짜리 원클릭 UGC가 아닌, **구조화된 워크플로우로 45초 이상의 고품질 UGC** 영상을 ~20분에 제작하는 방법.
+
+**입력 (Context)**:
+- 인플루언서 설명, 훅, 스크립트, 영상 구조, 제품 팩샷, B-roll 지시
+
+#### Phase 1: 인플루언서 생성
+| 단계 | 도구 | 작업 |
+|------|------|------|
+| 프롬프트 작성 | Gemini 3 Flash | 브랜드에 맞는 포토리얼 UGC 인플루언서 프롬프트 생성 |
+| 이미지 생성 | Higgsfield | 인플루언서 이미지 생성 |
+| 피부 보정 | Enhancor | 스킨 텍스처 개선 |
+
+**프롬프트 가이드라인**: "Photorealistic editorial photograph..." 시작, 카메라(35mm/85mm), 조명, 텍스처, 분위기 포함. 브랜드 요소가 있으면 통합하되 과장 금지.
+
+#### Phase 2: 토킹 아바타 프레임 (3프레임)
+| 단계 | 도구 | 작업 |
+|------|------|------|
+| 프레임별 프롬프트 | Gemini 3 Flash | 스크립트 기반 3개 시작 이미지 프롬프트 생성 |
+| 분기 | Split + List 노드 | 3개 브랜치로 워크플로우 분할 |
+| 이미지 생성 | Nano Banana Pro | 제품 유/무에 따라 프레임별 비주얼 생성 |
+| 음성 생성 | Claude Haiku → ElevenLabs v3 | Haiku가 감정/쉼표 지시 포함 프롬프트 작성 → ElevenLabs 음성 생성 |
+| 애니메이션 | Veed | 각 프레임을 음성과 함께 애니메이션 |
+
+**음성 대안**: ElevenLabs에서 직접 음성 클로닝 (인스타 영상 또는 AI 생성 영상에서)
+
+**비디오 대안**:
+- Veo 3.1 / Seedance 1.5 단독 → 리얼리즘 ↑, 음성 일관성 ↓
+- Veo 3.1 + Sync Lipsync → 리얼리즘 + 음성 일관성 모두 확보 (얼굴 가림 주의)
+
+#### Phase 3: B-roll (3개)
+| 단계 | 도구 | 작업 |
+|------|------|------|
+| B-roll 프롬프트 | Gemini 3 Flash | 사용자 지시 기반 B-roll별 프롬프트 |
+| 분기 | Split + List 노드 | 3개 브랜치 |
+| 시작 이미지 | Nano Banana Pro | 제품 + 캐릭터 일관성 유지 이미지 |
+| 비디오 프롬프트 | Gemini 3 Flash | 시네마틱 B-roll 프롬프트 (샷 스타일, 카메라 모션, 액션) |
+| 애니메이션 | Kling 2.5 | 이미지 → 비디오 변환 |
+
+**B-roll 프롬프트 구조**: Shot Style → Description + Context → Action → Camera Motion → Cinematic Qualities → Guardrails
+
+**B-roll 핵심 규칙**:
+- 스마트폰이 보이지 않도록 프롬프트에서 모호함 제거
+- 프레임 간 조명/환경/모델 일관성 (같은 날 촬영 느낌)
+- 텍스트 오버레이, 모션 이펙트 미포함
+
+#### 비용/효율 비교
+
+| 항목 | Pletor AI 워크플로우 | 전통 방식 |
+|------|---------------------|-----------|
+| 제작 시간 | ~20분 | 수일~수주 |
+| 비용 | <$10/영상 | $2K-$50K/월 |
+| 24시간 내 | 수백 개 생성 가능 | 불가 |
+| API 자동화 | Make/Zapier 연동 | 불가 |
+
+---
+
+### 3.17 Kling 3.0 가이드 (ai.favmag)
+
+> 출처: [Canva — ai.favmag](https://www.canva.com/design/DAHBTK0BcV0/)
+
+Higgsfield로 생성한 AI 캐릭터를 Kling 3.0으로 애니메이션하는 워크플로우.
+
+**파이프라인**: Higgsfield (이미지 생성) → Kling 3.0 (비디오 생성)
+
+**Kling 3.0 핵심 기능**:
+
+| 기능 | 설명 |
+|------|------|
+| **멀티 샷 & 스토리보드 3.0** | 최대 6개 샷 한 번에 생성, 샷–리버스–샷·크로스컷 자연 구현 |
+| **네이티브 1080p, 최대 15초** | 3-15초 Full HD 연속 영상, 다중 플롯 가능 |
+| **지속형 서브젝트 레퍼런스 (Elements 3.0)** | 이미지/영상 레퍼런스로 캐릭터 외형·아이덴티티 안정 유지 |
+| **업그레이드 오디오 엔진** | 다국어 자연 립싱크, 정확한 음성 매칭 |
+| **시네마틱 카메라·물리·텍스트** | 올인원 AI 디렉팅 시스템 |
+
+**프롬프트 예시**:
+```
+자연스럽게 웃으면서 정면을 바라본다.
+대사: "저 진짜 사람 같나요? 사실 AI예요."
+```
+
+**UGC 활용 포인트**: Elements 3.0의 지속형 레퍼런스로 캐릭터 일관성 확보 + 네이티브 립싱크로 대사 포함 영상 생성 가능.
+
+---
+
 ## 4. 퍼포먼스 마케팅 영상 유형별 추천 파이프라인
 
 ### 4.1 UGC 스타일 제품 리뷰 (가장 전환율 높음)
@@ -281,16 +373,7 @@ NanoBanana/Flux(얼굴) → 20장 데이터셋 → 4K 업스케일 → ElevenLab
 
 ---
 
-## 5. 접근 불가 소스
-
-아래 소스는 인증/리다이렉트 제한으로 내용을 가져오지 못했습니다:
-
-- Canva: `DAHBTK0BcV0` (inpock.co.kr 리다이렉트, 브라우저 미지원)
-- Notion (pletor-ai): long-form UGC 가이드 (Notion SPA 로딩 불가)
-
----
-
-## 6. 소스 목록
+## 5. 소스 목록
 
 1. [Viral Hooks](https://sequencer.media/posts/tutorials/viral-hooks)
 2. [Writing Good Stories](https://sequencer.media/posts/tutorials/writing-good-stories)
@@ -308,3 +391,5 @@ NanoBanana/Flux(얼굴) → 20장 데이터셋 → 4K 업스케일 → ElevenLab
 14. [Product Commercials](https://sequencer.media/posts/tutorials/product-commercials)
 15. [AI 인플루언서 댄스 영상 가이드](https://slashpage.com/biggie-ai/qrx6zk258ezv6mv314y5) (biggie-ai)
 16. [NICOLA.AI Full AI Clone Workflow](https://docs.google.com/document/d/1bseN2g2MRYqCUT2_VqEUMUylE_3DpF-syy0wlC1lF2c/) — AI 아바타 6단계 파이프라인
+17. [Pletor AI — Long-form UGC](https://pletor-ai.notion.site/make-a-long-form-ugc-video-with-ai-) — 45초 UGC 제작 워크플로우
+18. [Kling 3.0 Guide by ai.favmag](https://www.canva.com/design/DAHBTK0BcV0/) — Higgsfield + Kling 3.0 파이프라인
