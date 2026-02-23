@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 MAS (Master Agent System) Server — Port 7720
-Orchestrates 178 expert personas for multi-agent task execution.
+Orchestrates 184 expert personas for multi-agent task execution.
 
 Endpoints:
   GET  /health              — Health check
@@ -10,6 +10,7 @@ Endpoints:
   GET  /personas            — List all personas
   GET  /personas/select     — Dry-run persona selection
   GET  /personas/<id>/character — Get persona character content
+  GET  /squads/detect       — Auto-detect squad from query text
   POST /request             — Submit a task request
   POST /cancel              — Cancel an active request
   GET  /request/<id>        — Get request status
@@ -98,6 +99,21 @@ class MASHandler(http.server.BaseHTTPRequestHandler):
         elif path.startswith("/personas/") and path.endswith("/character"):
             persona_id = path.split("/personas/")[1].rsplit("/character")[0]
             self._handle_persona_character(persona_id)
+        elif path == "/tribes":
+            self._handle_tribes(params)
+        elif path.startswith("/tribes/") and path.endswith("/squads"):
+            tribe_id = path.split("/tribes/")[1].rsplit("/squads")[0]
+            self._handle_tribe_squads(tribe_id)
+        elif path.startswith("/tribes/"):
+            tribe_id = path.split("/tribes/")[1]
+            self._handle_tribe_detail(tribe_id)
+        elif path == "/squads":
+            self._handle_squads(params)
+        elif path == "/squads/detect":
+            self._handle_squad_detect(params)
+        elif path.startswith("/squads/"):
+            squad_id = path.split("/squads/")[1]
+            self._handle_squad_detail(squad_id)
         elif path == "/requests":
             self._handle_list_requests()
         elif path.startswith("/request/"):
@@ -123,6 +139,8 @@ class MASHandler(http.server.BaseHTTPRequestHandler):
         self._send_json(200, {
             "status": "ok",
             "personas_loaded": idx.count(),
+            "tribes_loaded": len(idx.all_tribes()),
+            "squads_loaded": len(idx.all_squads()),
             "uptime_seconds": int(time.time() - _start_time),
         })
 
@@ -130,10 +148,14 @@ class MASHandler(http.server.BaseHTTPRequestHandler):
         idx = persona_idx.get_index()
         counters = state.get_counters()
         timeline = state.get_timeline(20)
+        tribes = idx.all_tribes()
+        squads = idx.all_squads()
 
         self._send_json(200, {
             "uptime_seconds": int(time.time() - _start_time),
             "personas_loaded": idx.count(),
+            "tribes_loaded": len(tribes),
+            "squads_loaded": len(squads),
             "counters": counters,
             "recent_events": timeline,
             "config": {
@@ -183,6 +205,7 @@ class MASHandler(http.server.BaseHTTPRequestHandler):
                     "id": e.id, "name": e.name, "callsign": e.callsign,
                     "role": e.role, "category": e.category,
                     "locale": e.locale, "tags": e.tags,
+                    "tribe": e.tribe, "squad": e.squad,
                 }
                 for e in entries
             ],
@@ -195,8 +218,11 @@ class MASHandler(http.server.BaseHTTPRequestHandler):
             self._send_json(400, {"error": "missing ?q= parameter"})
             return
 
+        tribe = params.get("tribe")
+        squad = params.get("squad")
+
         orch = _get_orchestrator()
-        analysis = orch.analyze_request(query)
+        analysis = orch.analyze_request(query, tribe=tribe, squad=squad)
         selected = orch.select_personas(analysis)
 
         self._send_json(200, {
@@ -204,7 +230,8 @@ class MASHandler(http.server.BaseHTTPRequestHandler):
             "analysis": analysis,
             "selected": [
                 {"id": e.id, "name": e.name, "callsign": e.callsign,
-                 "role": e.role, "category": e.category}
+                 "role": e.role, "category": e.category,
+                 "tribe": e.tribe, "squad": e.squad}
                 for e in selected
             ],
         })
@@ -232,6 +259,163 @@ class MASHandler(http.server.BaseHTTPRequestHandler):
             "character_content": content,
         })
 
+    # ── Tribe/Squad Handlers ──
+
+    def _handle_tribes(self, params):
+        """List all tribes with squad counts and member counts."""
+        idx = persona_idx.get_index()
+        tribes = idx.all_tribes()
+        self._send_json(200, {
+            "count": len(tribes),
+            "tribes": [
+                {
+                    "tribe_id": t.tribe_id,
+                    "tribe_name": t.tribe_name,
+                    "description": t.description,
+                    "squad_count": len(t.squad_ids),
+                    "member_count": len(idx.by_tribe(t.tribe_id)),
+                    "squads": t.squad_ids,
+                }
+                for t in tribes
+            ],
+        })
+
+    def _handle_tribe_detail(self, tribe_id):
+        """Get tribe detail with squads and members."""
+        idx = persona_idx.get_index()
+        tribe = idx.get_tribe(tribe_id)
+        if not tribe:
+            self._send_json(404, {"error": f"tribe '{tribe_id}' not found"})
+            return
+
+        squads_data = []
+        for sid in tribe.squad_ids:
+            sq = idx.get_squad(sid)
+            if sq:
+                squads_data.append({
+                    "squad_id": sq.squad_id,
+                    "squad_name": sq.squad_name,
+                    "lead_id": sq.lead_id,
+                    "member_count": len(sq.member_ids),
+                    "member_ids": sq.member_ids,
+                })
+
+        members = idx.by_tribe(tribe_id)
+        self._send_json(200, {
+            "tribe_id": tribe.tribe_id,
+            "tribe_name": tribe.tribe_name,
+            "description": tribe.description,
+            "squad_count": len(tribe.squad_ids),
+            "member_count": len(members),
+            "squads": squads_data,
+            "members": [
+                {"id": e.id, "name": e.name, "callsign": e.callsign,
+                 "category": e.category, "squad": e.squad}
+                for e in members
+            ],
+        })
+
+    def _handle_tribe_squads(self, tribe_id):
+        """List squads in a tribe."""
+        idx = persona_idx.get_index()
+        tribe = idx.get_tribe(tribe_id)
+        if not tribe:
+            self._send_json(404, {"error": f"tribe '{tribe_id}' not found"})
+            return
+
+        squads = idx.all_squads(tribe_id)
+        self._send_json(200, {
+            "tribe_id": tribe_id,
+            "count": len(squads),
+            "squads": [
+                {
+                    "squad_id": sq.squad_id,
+                    "squad_name": sq.squad_name,
+                    "lead_id": sq.lead_id,
+                    "member_count": len(sq.member_ids),
+                    "member_ids": sq.member_ids,
+                }
+                for sq in squads
+            ],
+        })
+
+    def _handle_squads(self, params):
+        """List all squads, optionally filtered by tribe."""
+        idx = persona_idx.get_index()
+        tribe_filter = params.get("tribe")
+        squads = idx.all_squads(tribe_filter)
+
+        self._send_json(200, {
+            "count": len(squads),
+            "squads": [
+                {
+                    "squad_id": sq.squad_id,
+                    "squad_name": sq.squad_name,
+                    "tribe_id": sq.tribe_id,
+                    "lead_id": sq.lead_id,
+                    "member_count": len(sq.member_ids),
+                    "member_ids": sq.member_ids,
+                }
+                for sq in squads
+            ],
+        })
+
+    def _handle_squad_detail(self, squad_id):
+        """Get squad detail with members."""
+        idx = persona_idx.get_index()
+        sq = idx.get_squad(squad_id)
+        if not sq:
+            self._send_json(404, {"error": f"squad '{squad_id}' not found"})
+            return
+
+        members = idx.by_squad(squad_id)
+        lead = idx.squad_lead(squad_id)
+        meta = idx.get_squad_meta(squad_id)
+        result = {
+            "squad_id": sq.squad_id,
+            "squad_name": sq.squad_name,
+            "tribe_id": sq.tribe_id,
+            "lead": {
+                "id": lead.id, "name": lead.name, "callsign": lead.callsign,
+                "role": lead.role,
+            } if lead else None,
+            "member_count": len(members),
+            "members": [
+                {"id": e.id, "name": e.name, "callsign": e.callsign,
+                 "role": e.role, "category": e.category, "locale": e.locale}
+                for e in members
+            ],
+        }
+        if meta:
+            result["expertise"] = meta.get("expertise", [])
+            result["tools"] = meta.get("tools", [])
+        self._send_json(200, result)
+
+    def _handle_squad_detect(self, params):
+        """Detect squad from query text."""
+        q = params.get("q", "")
+        if not q:
+            self._send_json(400, {"error": "missing 'q' parameter"})
+            return
+        idx = persona_idx.get_index()
+        squad_id = idx.detect_squad(q)
+        tribe_id = None
+        meta = None
+        if squad_id:
+            sq = idx.get_squad(squad_id)
+            if sq:
+                tribe_id = sq.tribe_id
+            meta = idx.get_squad_meta(squad_id)
+        result = {
+            "query": q,
+            "squad_id": squad_id or "",
+            "tribe_id": tribe_id or "",
+        }
+        if meta:
+            result["expertise"] = meta.get("expertise", [])
+            result["tools"] = meta.get("tools", [])
+        self._send_json(200, result)
+
     def _handle_submit_request(self):
         """Submit a request for agent execution."""
         body = self._read_body()
@@ -243,6 +427,9 @@ class MASHandler(http.server.BaseHTTPRequestHandler):
         # Optional overrides
         persona_ids = body.get("personas")  # force specific personas
         pattern = body.get("pattern")       # force specific pattern
+        tribe = body.get("tribe")           # tribe constraint
+        squad = body.get("squad")           # squad constraint
+        user = body.get("user", "")         # caller identification
 
         orch = _get_orchestrator()
 
@@ -250,7 +437,7 @@ class MASHandler(http.server.BaseHTTPRequestHandler):
         from mas.mas_constitution import check_input
         blocked, reason = check_input(query)
         if blocked:
-            req = state.create_request(query)
+            req = state.create_request(query, user=user)
             state.update_request(req.request_id, status="blocked", error=reason)
             state.record_event("block", f"P0 blocked: {reason}", req.request_id)
             log(f"[BLOCKED] {reason}")
@@ -262,12 +449,13 @@ class MASHandler(http.server.BaseHTTPRequestHandler):
             return
 
         # Start async execution
-        req = state.create_request(query)
+        req = state.create_request(query, user=user)
         log(f"[REQUEST] {req.request_id}: {query[:80]}")
 
         def _run():
             try:
-                orch.execute(req.request_id, query, persona_ids=persona_ids, pattern=pattern)
+                orch.execute(req.request_id, query, persona_ids=persona_ids,
+                            pattern=pattern, tribe=tribe, squad=squad)
             except Exception as e:
                 state.update_request(req.request_id, status="failed", error=str(e))
                 log(f"[ERROR] {req.request_id}: {e}")
@@ -327,6 +515,9 @@ class MASHandler(http.server.BaseHTTPRequestHandler):
                 "user_query": r.user_query,
                 "pattern": r.pattern,
                 "domain": r.domain,
+                "tribe": r.tribe,
+                "squad": r.squad,
+                "user": r.user,
                 "agent_count": len(r.agents),
                 "total_cost_usd": r.total_cost_usd,
                 "total_tokens_used": r.total_tokens_used,
@@ -350,6 +541,34 @@ class MASHandler(http.server.BaseHTTPRequestHandler):
         self._send_json(200, asdict(req))
 
 
+def _wait_for_xapi(max_wait: int = 30, interval: int = 2) -> bool:
+    """Wait for xapi to become reachable before accepting requests.
+
+    Returns True if xapi is up, False if timeout exceeded (MAS starts anyway with warning).
+    """
+    import urllib.request
+    import urllib.error
+
+    xapi_url = cfg.get("xapi_url", "http://localhost:7750")
+    health_url = f"{xapi_url}/health"
+    deadline = time.time() + max_wait
+
+    while time.time() < deadline:
+        try:
+            req = urllib.request.Request(health_url, method="GET")
+            with urllib.request.urlopen(req, timeout=3) as resp:
+                if resp.status == 200:
+                    log(f"xapi ready at {xapi_url}")
+                    return True
+        except (urllib.error.URLError, OSError, TimeoutError):
+            remaining = int(deadline - time.time())
+            log(f"Waiting for xapi at {xapi_url} ({remaining}s remaining)...")
+            time.sleep(interval)
+
+    log(f"WARNING: xapi not reachable after {max_wait}s — starting anyway")
+    return False
+
+
 def main():
     log(f"Starting MAS on port {PORT}")
 
@@ -363,6 +582,9 @@ def main():
     cfg.start_hot_reload()
     persona_idx.start_hot_reload()
 
+    # Wait for xapi dependency before accepting requests
+    _wait_for_xapi()
+
     # Start Slack if enabled
     if cfg.get_nested("slack", "enabled", False):
         try:
@@ -372,7 +594,8 @@ def main():
         except Exception as e:
             log(f"Slack failed to start: {e}")
 
-    # HTTP server
+    # HTTP server — allow_reuse_address prevents "Address already in use" on restart
+    http.server.HTTPServer.allow_reuse_address = True
     server = http.server.HTTPServer(("0.0.0.0", PORT), MASHandler)
     log(f"Listening on :{PORT}")
     state.record_event("boot", f"MAS started on port {PORT}")
