@@ -13,6 +13,10 @@ CONTENT_MODEL = "content_model"
 CREATIVE_DIRECTION = "creative_direction"
 SYNTHESIS = "synthesis"
 GENERATIVE_AI = "generative_ai"
+COMMERCE_TASK = "commerce_task"
+SALES_TASK = "sales_task"
+UIUX_TASK = "uiux_task"
+CX_TASK = "cx_task"
 
 # Fallback inline templates (used if task-templates.md not available)
 _TEMPLATES = {
@@ -23,7 +27,8 @@ _TEMPLATES = {
 
 # Task
 당신은 {callsign} ({role})입니다.
-다음 코드/아키텍처/시스템을 리뷰해주세요:
+다음 기술 주제에 대해 전문가 관점에서 분석하고 답변해주세요.
+코드가 제공된 경우 리뷰하고, 일반 질문인 경우 실무 경험 기반으로 깊이 있게 분석해주세요:
 
 {user_request}
 
@@ -31,13 +36,13 @@ _TEMPLATES = {
 ### Summary
 [1-2줄 요약]
 
-### Issues Found
-1. [Severity: Critical/Major/Minor] [Description]
-   - Location: [file:line]
-   - Recommendation: [fix]
+### Analysis
+1. [핵심 포인트/이슈]
+   - Detail: [설명]
+   - Recommendation: [권장사항]
 
 ### Positive Aspects
-- [what's good]
+- [what's good / 현재 접근법의 장점]
 
 ### Recommendations
 1. [priority order]""",
@@ -165,6 +170,104 @@ _TEMPLATES = {
 
 ### Quality Assurance
 [품질 검증 기준]""",
+
+    COMMERCE_TASK: """# Persona
+{character_content}
+
+{constitution}
+
+# Task
+당신은 {callsign} ({role})입니다.
+다음 커머스 과제를 수행해주세요:
+
+{user_request}
+
+## Output Format
+### Analysis
+[현황 분석 및 핵심 인사이트]
+
+### Strategy
+[전략 방향 및 근거]
+
+### Execution Plan
+1. [단계별 실행 계획]
+
+### Metrics & KPIs
+| 지표 | 목표 | 측정 방법 |
+|------|------|----------|
+| [metric] | [target] | [how] |""",
+
+    SALES_TASK: """# Persona
+{character_content}
+
+{constitution}
+
+# Task
+당신은 {callsign} ({role})입니다.
+다음 세일즈 과제를 수행해주세요:
+
+{user_request}
+
+## Output Format
+### Situation Analysis
+[현재 상황 분석]
+
+### Strategy & Approach
+[전략 및 접근 방식]
+
+### Action Plan
+1. [우선순위별 실행 항목]
+
+### Expected Outcomes
+[예상 결과 및 리스크]""",
+
+    UIUX_TASK: """# Persona
+{character_content}
+
+{constitution}
+
+# Task
+당신은 {callsign} ({role})입니다.
+다음 UX/UI 설계 과제를 수행해주세요:
+
+{user_request}
+
+## Output Format
+### User Context
+[사용자 맥락 및 니즈 분석]
+
+### Design Direction
+[설계 방향 및 원칙]
+
+### Specifications
+[구체적 설계 사양]
+
+### Rationale
+[설계 근거 및 사용성 고려사항]""",
+
+    CX_TASK: """# Persona
+{character_content}
+
+{constitution}
+
+# Task
+당신은 {callsign} ({role})입니다.
+다음 고객 경험 과제를 수행해주세요:
+
+{user_request}
+
+## Output Format
+### Customer Insight
+[고객 인사이트 분석]
+
+### Strategy
+[CX 전략 및 방향]
+
+### Implementation Plan
+1. [실행 계획]
+
+### Impact & Measurement
+[기대 효과 및 측정 방법]""",
 }
 
 # Domain → template mapping
@@ -173,6 +276,10 @@ DOMAIN_TEMPLATE_MAP = {
     "marketers": MARKETING_CAMPAIGN,
     "models": CONTENT_MODEL,
     "creatives": CREATIVE_DIRECTION,
+    "commerce": COMMERCE_TASK,
+    "sales": SALES_TASK,
+    "uiux": UIUX_TASK,
+    "cx": CX_TASK,
 }
 
 # Tag-based overrides
@@ -181,6 +288,16 @@ TAG_TEMPLATE_MAP = {
     "video-gen": GENERATIVE_AI,
     "audio-gen": GENERATIVE_AI,
     "diffusion": GENERATIVE_AI,
+    # Art Master Squad tags
+    "ai-art": GENERATIVE_AI,
+    "kling": GENERATIVE_AI,
+    "higgsfield": GENERATIVE_AI,
+    "seedance": GENERATIVE_AI,
+    "nano-banana": GENERATIVE_AI,
+    "veo3": GENERATIVE_AI,
+    "img2video": GENERATIVE_AI,
+    "prompt-engineering": GENERATIVE_AI,
+    "multi-model": GENERATIVE_AI,
 }
 
 
@@ -222,15 +339,20 @@ def build_prompt(
     )
 
 
-def build_synthesis_prompt(user_request: str, agent_outputs: list[dict]) -> str:
+def build_synthesis_prompt(user_request: str, agent_outputs: list[dict],
+                           max_chars_per_agent: int = 0) -> str:
     """Build a synthesis prompt from multiple agent outputs.
 
     agent_outputs: [{"callsign": str, "role": str, "output": str}, ...]
+    max_chars_per_agent: Truncate each agent output to this many chars (0 = no limit).
     """
     output_sections = []
     for ao in agent_outputs:
+        text = ao['output']
+        if max_chars_per_agent and len(text) > max_chars_per_agent:
+            text = text[:max_chars_per_agent] + "\n\n[...truncated]"
         output_sections.append(
-            f"### {ao['callsign']} ({ao['role']})\n{ao['output']}"
+            f"### {ao['callsign']} ({ao['role']})\n{text}"
         )
 
     return build_prompt(

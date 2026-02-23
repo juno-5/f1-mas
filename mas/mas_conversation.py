@@ -1,5 +1,6 @@
 """MAS Conversation Patterns — Single/Multi-Perspective/Relay/FullTeam execution."""
 
+import re
 import time
 
 try:
@@ -14,6 +15,7 @@ from .mas_templates import (
     build_prompt, build_synthesis_prompt, select_template,
 )
 from .mas_agent_runner import run_agent, run_agents_parallel, run_synthesis
+from .mas_tools import get_tools_for_query
 
 
 PATTERN_SINGLE = "single"
@@ -153,13 +155,95 @@ def _fetch_amm_memories(query: str, limit: int = 3, persona_role: str = "") -> s
         return ""
 
 
+_NAS_RELEVANT_RE = re.compile(
+    r"노드|node|서버|server|배포|deploy|인프라|infra|클라우드|cloud|PC|"
+    r"원격|remote|실행|exec|파일|file|문서.*검색|doc.*search|NAS",
+    re.IGNORECASE,
+)
+
+
+def _fetch_nas_context(query: str, domain: str = "") -> str:
+    """Fetch NAS node info + relevant docs to inject into agent prompt."""
+    if not cfg.get("nas_context_injection", True):
+        return ""
+    if httpx is None:
+        return ""
+    # Only inject when query explicitly mentions NAS-relevant keywords
+    if not _NAS_RELEVANT_RE.search(query):
+        return ""
+
+    nas_url = cfg.get("nas_url", "http://localhost:7730")
+    timeout = cfg.get("nas_timeout", 5.0)
+    doc_limit = cfg.get("nas_doc_limit", 3)
+
+    sections = []
+    try:
+        # 1. Available nodes
+        resp = httpx.get(f"{nas_url}/nodes", timeout=timeout)
+        if resp.status_code == 200:
+            data = resp.json()
+            nodes = data.get("nodes", [])
+            online = [n for n in nodes if n.get("status") == "online"]
+            if online:
+                node_lines = []
+                for n in online:
+                    nid = n.get("node_id", "?")
+                    ip = n.get("ip_address", "?")
+                    os_info = n.get("os_info", "?")
+                    cpu = n.get("cpu_percent", 0)
+                    mem = n.get("mem_percent", 0)
+                    node_lines.append(f"- **{nid}** ({os_info}) IP={ip} CPU={cpu}% MEM={mem}%")
+                sections.append("### Available Nodes\n" + "\n".join(node_lines))
+                sections.append(
+                    "### Node Commands\n"
+                    f"원격 실행: `POST {nas_url}/nodes/{{node_id}}/exec` "
+                    '`{"command": "...", "timeout": 30}`'
+                )
+
+        # 2. Relevant docs
+        resp = httpx.get(
+            f"{nas_url}/docs/search",
+            params={"q": query[:100], "limit": doc_limit},
+            timeout=timeout,
+        )
+        if resp.status_code == 200:
+            data = resp.json()
+            docs = data.get("docs", [])
+            if docs:
+                doc_lines = []
+                for d in docs[:doc_limit]:
+                    title = d.get("title", d.get("filename", "?"))
+                    preview = d.get("preview", "")[:120]
+                    doc_id = d.get("doc_id", "")
+                    doc_lines.append(f"- **{title}** (id={doc_id}): {preview}")
+                sections.append("### Related Documents\n" + "\n".join(doc_lines))
+                sections.append(
+                    f"문서 상세: `GET {nas_url}/docs/{{doc_id}}`\n"
+                    f"문서 검색: `GET {nas_url}/docs/search?q=키워드`"
+                )
+
+    except Exception as e:
+        _log(f"NAS context fetch ERROR: {e}")
+        return ""
+
+    if not sections:
+        return ""
+
+    result = "\n\n## Infrastructure Resources (NAS)\n" + "\n\n".join(sections)
+    _log(f"NAS: injecting context ({len(result)} chars)")
+    return result
+
+
 def _build_agent_prompt(persona: PersonaEntry, query: str, index: PersonaIndex,
-                        extra_context: str = "", amm_context: str = None) -> str:
+                        extra_context: str = "", amm_context: str = None,
+                        nas_context: str = None, domain: str = "") -> str:
     """Build a prompt for a persona agent.
 
     Args:
         amm_context: Pre-fetched AMM memories. If None, fetches independently.
             Pass pre-fetched value for multi-agent patterns to avoid redundant calls.
+        nas_context: Pre-fetched NAS context. If None, fetches independently.
+        domain: Primary domain for NAS relevance check.
     """
     # Extract key sections from character file
     char_content = index.extract_character_sections(persona.id)
@@ -172,9 +256,15 @@ def _build_agent_prompt(persona: PersonaEntry, query: str, index: PersonaIndex,
     if amm_context is None:
         amm_context = _fetch_amm_memories(query, persona_role=persona.role if hasattr(persona, "role") else "")
 
+    # NAS Context Injection — use pre-fetched if available
+    if nas_context is None:
+        nas_context = _fetch_nas_context(query, domain=domain or persona.category)
+
     full_query = query
     if amm_context:
         full_query += amm_context
+    if nas_context:
+        full_query += nas_context
     if extra_context:
         full_query += f"\n\n## Previous Context\n{extra_context}"
 
@@ -193,12 +283,18 @@ def _execute_single(request_id: str, query: str, persona: PersonaEntry, index: P
     _log(f"[{request_id}] Single Expert: {persona.callsign}")
 
     agent_id = state.add_agent(request_id, persona.id, persona.callsign, persona.role)
-    prompt = _build_agent_prompt(persona, query, index)
+    nas_context = _fetch_nas_context(query, domain=persona.category)
+    prompt = _build_agent_prompt(persona, query, index, nas_context=nas_context)
+
+    # Determine available tools for this query
+    tools = get_tools_for_query(query, domain=persona.category) or None
+    if tools:
+        _log(f"[{request_id}] Tools enabled: {len(tools)} tool(s)")
 
     # Notify Slack progress
     _slack_agent_progress(request_id, persona.callsign, "running")
 
-    result = run_agent(request_id, agent_id, prompt, persona.id, persona.callsign)
+    result = run_agent(request_id, agent_id, prompt, persona.id, persona.callsign, tools=tools)
 
     _slack_agent_progress(request_id, persona.callsign,
                           "completed" if not result.get("error") else "failed")
@@ -221,20 +317,27 @@ def _execute_parallel(
     """
     _log(f"[{request_id}] {pattern_name}: {[p.callsign for p in personas]}")
 
-    # Fetch AMM memories once for the entire request (all agents share the same query)
+    # Fetch AMM memories + NAS context once for the entire request
     amm_context = _fetch_amm_memories(query)
+    nas_context = _fetch_nas_context(query, domain=personas[0].category if personas else "")
+
+    # Determine available tools for this query
+    tools = get_tools_for_query(query, domain=personas[0].category if personas else "") or None
+    if tools:
+        _log(f"[{request_id}] Tools enabled: {len(tools)} tool(s)")
 
     # Register agents
     agents_info = []
     for p in personas:
         agent_id = state.add_agent(request_id, p.id, p.callsign, p.role)
-        prompt = _build_agent_prompt(p, query, index, amm_context=amm_context)
+        prompt = _build_agent_prompt(p, query, index, amm_context=amm_context, nas_context=nas_context)
         agents_info.append({
             "agent_id": agent_id,
             "prompt": prompt,
             "persona_id": p.id,
             "callsign": p.callsign,
             "role": p.role,
+            "tools": tools,
         })
         _slack_agent_progress(request_id, p.callsign, "running")
 
@@ -267,10 +370,12 @@ def _execute_parallel(
 
     # Synthesize with available results (don't wait for slow agents)
     state.update_request(request_id, status="synthesizing")
+    max_input_chars = cfg.get("synthesis_max_input_chars", 4000)
     synth_prompt = build_synthesis_prompt(
         query,
         [{"callsign": ai["callsign"], "role": ai["role"], "output": r["text"]}
          for ai, r in successful],
+        max_chars_per_agent=max_input_chars,
     )
 
     synth_result = run_synthesis(request_id, synth_prompt)
@@ -296,18 +401,25 @@ def _execute_relay(
     """Relay: A's output → B's input, sequential."""
     _log(f"[{request_id}] Relay: {' → '.join(p.callsign for p in personas)}")
 
-    # Fetch AMM memories once for the entire relay chain
+    # Fetch AMM memories + NAS context once for the entire relay chain
     amm_context = _fetch_amm_memories(query)
+    nas_context = _fetch_nas_context(query, domain=personas[0].category if personas else "")
+
+    # Determine available tools for this query
+    tools = get_tools_for_query(query, domain=personas[0].category if personas else "") or None
+    if tools:
+        _log(f"[{request_id}] Tools enabled: {len(tools)} tool(s)")
 
     all_results = []
     previous_output = ""
 
     for i, persona in enumerate(personas):
         agent_id = state.add_agent(request_id, persona.id, persona.callsign, persona.role)
-        prompt = _build_agent_prompt(persona, query, index, extra_context=previous_output, amm_context=amm_context)
+        prompt = _build_agent_prompt(persona, query, index, extra_context=previous_output,
+                                     amm_context=amm_context, nas_context=nas_context)
 
         _slack_agent_progress(request_id, persona.callsign, "running")
-        result = run_agent(request_id, agent_id, prompt, persona.id, persona.callsign)
+        result = run_agent(request_id, agent_id, prompt, persona.id, persona.callsign, tools=tools)
         all_results.append(result)
 
         status = "completed" if not result.get("error") else "failed"

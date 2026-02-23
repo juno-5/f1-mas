@@ -66,7 +66,8 @@ def _is_rate_limit_error(error_msg: str) -> bool:
     return any(p.lower() in lower for p in _RATE_LIMIT_PATTERNS)
 
 
-def call_xapi_inference(prompt: str, model: str = None, timeout: int = None, user: str = "mas:agent") -> dict:
+def call_xapi_inference(prompt: str, model: str = None, timeout: int = None,
+                        user: str = "mas:agent", max_tokens: int = 4096) -> dict:
     """Call LLM via xapi /inference/chat (replaces claude -p subprocess).
 
     Returns {"text": str, "model": str, "error": str|None,
@@ -92,7 +93,7 @@ def call_xapi_inference(prompt: str, model: str = None, timeout: int = None, use
                     "model": full_model,
                     "messages": [{"role": "user", "content": prompt}],
                     "user": user,
-                    "max_tokens": 4096,
+                    "max_tokens": max_tokens,
                 },
                 timeout=timeout,
             )
@@ -760,9 +761,11 @@ def run_synthesis(request_id: str, prompt: str) -> dict:
 
     synth_model = cfg.get("synthesis_model", cfg.get("claude_model", "sonnet"))
     synth_timeout = cfg.get("synthesis_timeout_seconds", 300)
+    synth_max_tokens = cfg.get("synthesis_max_tokens", 2048)
 
-    print(f"[agent-runner] MAS-Synth synthesizing (timeout={synth_timeout}s)...", flush=True)
-    result = call_xapi_inference(prompt, model=synth_model, timeout=synth_timeout, user="mas:synthesis")
+    print(f"[agent-runner] MAS-Synth synthesizing (timeout={synth_timeout}s, max_tokens={synth_max_tokens})...", flush=True)
+    result = call_xapi_inference(prompt, model=synth_model, timeout=synth_timeout,
+                                 user="mas:synthesis", max_tokens=synth_max_tokens)
 
     duration_ms = int((time.time() - start) * 1000)
 
