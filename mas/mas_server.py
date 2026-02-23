@@ -509,7 +509,7 @@ class MASHandler(http.server.BaseHTTPRequestHandler):
                                      "running", "synthesizing"))
         summaries = []
         for r in sorted(all_reqs.values(), key=lambda x: x.created_at, reverse=True):
-            summaries.append({
+            summary = {
                 "request_id": r.request_id,
                 "status": r.status,
                 "user_query": r.user_query,
@@ -519,11 +519,22 @@ class MASHandler(http.server.BaseHTTPRequestHandler):
                 "squad": r.squad,
                 "user": r.user,
                 "agent_count": len(r.agents),
+                "selected_personas": r.selected_personas,
                 "total_cost_usd": r.total_cost_usd,
                 "total_tokens_used": r.total_tokens_used,
                 "duration_ms": r.duration_ms,
                 "created_at": r.created_at,
-            })
+            }
+            if r.error:
+                summary["error"] = r.error
+            if r.agents:
+                failed = [a for a in r.agents if a.status == "failed"]
+                if failed:
+                    summary["failed_agents"] = [
+                        {"callsign": a.callsign, "error": a.error}
+                        for a in failed
+                    ]
+            summaries.append(summary)
         self._send_json(200, {
             "total": len(all_reqs),
             "active": active,
