@@ -84,6 +84,12 @@
     - **After**: "React 상태관리" → Blaze, "UX 리서치" → Palette
     - `org/functions.yaml` + `mas/mas_persona_index.py` 수정, 커밋 `8394197`
 
+15. **Cycle #29 (2026-02-23)**: tokens_used 이중 계산 버그 수정 ⭐
+    - `sum(usage.values())` → `usage.get("input", 0) + usage.get("output", 0)`
+    - cacheRead는 input의 subset — sum()이 이중 계산하고 있었음
+    - **Before: 28,359 tokens → After: 14,217 tokens (-50%)**
+    - `mas/mas_agent_runner.py` 4곳 수정, 커밋 `2a463cf`
+
 14. **Cycle #27 (2026-02-23)**: **Gateway 시스템 프롬프트 오버헤드 감소** ⭐
     - xapi가 MAS 요청 시 `X-OpenClaw-Session-Key: subagent:mas:{user}` 자동 주입
     - Gateway "full" → "minimal" prompt mode: **15,904 → 10,480 tokens (-34%)**
@@ -102,6 +108,7 @@
 13. `scripts/cleanup-sessions.sh` — Gateway 세션 자동 정리 cron (d4b3021, 2026-02-23)
 14. `org/functions.yaml` + `mas/mas_persona_index.py` — 페르소나 선택 정확도 개선 (8394197, 2026-02-23)
 15. `xapi/xapi/routers/inference.py` — MAS 요청 시 subagent session key 주입 (2026-02-23)
+16. `mas/mas_agent_runner.py` — tokens_used 이중 계산 수정 (2a463cf, 2026-02-23)
 
 ## 미해결 가설
 
