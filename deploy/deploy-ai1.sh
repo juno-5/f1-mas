@@ -34,11 +34,16 @@ rsync -az "$SCRIPT_DIR/config/persona-registry.md" \
           "$SERVER:~/projects/mayacrew-f1crew/f1-mas/config/"
 
 # 5. Library → server data (insight capture target)
-echo "[5/6] Deploying library..."
+echo "[5/7] Deploying library..."
 rsync -az "$SCRIPT_DIR/library/" "$SERVER:~/projects/mayacrew-f1crew/f1-mas/library/"
 
-# 6. Systemd service
-echo "[6/6] Deploying systemd service..."
+# 6. Scripts → server (library-scanner, cleanup, etc.)
+echo "[6/7] Deploying scripts..."
+scp "$SCRIPT_DIR"/scripts/*.py "$SERVER:~/.f1crew/scripts/mas/" 2>/dev/null || true
+scp "$SCRIPT_DIR"/scripts/*.sh "$SERVER:~/.f1crew/scripts/mas/" 2>/dev/null || true
+
+# 7. Systemd service
+echo "[7/7] Deploying systemd service..."
 scp "$SCRIPT_DIR/systemd/mas.service" "$SERVER:~/.config/systemd/user/mas.service"
 ssh "$SERVER" 'systemctl --user daemon-reload'
 
