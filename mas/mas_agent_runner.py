@@ -353,6 +353,30 @@ def run_agent(
 
     if result.get("error"):
         error_msg = result["error"]
+        partial_text = filter_output(result.get("text", "")).strip()
+
+        # If there's usable text despite the error (e.g. max tool rounds exceeded),
+        # treat as partial success rather than discarding the work.
+        if partial_text:
+            usage = result.get("usage", {})
+            tokens_used = sum(usage.values())
+            cost_usd = result.get("cost_usd", 0.0)
+            print(f"[agent-runner] {callsign} partial ({duration_ms}ms, {len(partial_text)} chars, "
+                  f"{tokens_used} tokens, ${cost_usd:.4f}) — {error_msg}", flush=True)
+            state.update_agent(request_id, agent_id,
+                               status="completed",
+                               output=partial_text,
+                               tokens_used=tokens_used,
+                               model=model,
+                               cost_usd=cost_usd)
+            return {
+                "text": partial_text,
+                "tokens_used": tokens_used,
+                "model": model,
+                "duration_ms": duration_ms,
+                "error": None,
+            }
+
         print(f"[agent-runner] {callsign} error: {error_msg}", flush=True)
 
         if _is_rate_limit_error(error_msg):
