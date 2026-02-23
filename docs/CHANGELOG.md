@@ -4,6 +4,38 @@
 
 ---
 
+## 2026-02-23: Chrome CDP 기반 브라우저 제어
+
+### 변경
+AppleScript JS 실행 방식에서 Chrome DevTools Protocol (CDP) 기반으로 전환.
+macbookpro에 Chrome을 `--remote-debugging-port=9222`로 상시 실행 (LaunchAgent).
+
+### 수정 파일
+- `f1-nas/agent/chrome-cdp.py` — CDP 헬퍼 (navigate, text, html, eval, click, tabs, url)
+- `f1-nas/agent/chrome-cdp-start.sh` — Chrome CDP 실행 스크립트
+- `f1-nas/agent/com.f1crew.chrome-cdp.plist` — macOS LaunchAgent (로그인 시 자동 실행)
+- `f1crew-mayacrew/src/agents/tools/nodes-tool.ts` — 도구 설명을 CDP 패턴으로 변경
+- `f1-mas/agents/*/IDENTITY.md` — 8개 에이전트 모두 CDP 브라우저 제어 가이드로 교체
+
+### 핵심 아키텍처
+```
+Slack 에이전트 → nodes tool (run) → NAS exec API → SSH → macbookpro
+  → python3 chrome-cdp.py text/eval/navigate/click → Chrome CDP (port 9222) → DOM
+```
+
+### 브라우저 제어 전략
+1. **DOM 텍스트 우선**: `text`로 페이지 내용 파악, `eval`로 JS 실행
+2. **스크린샷 금지**: camera_snap, screen_record 사용 안 함
+3. **SPA 대응**: JS eval + 네트워크 API 직접 호출
+4. **Chrome v145+ 제약**: `--user-data-dir` 필수 → `~/.chrome-cdp` 전용 프로필 사용
+
+### 인사이트
+- **macOS SSH ↔ GUI 격리**: SSH에서 실행한 Chrome은 WindowServer 접근 불가 → LaunchAgent (gui/501) 필요
+- **Chrome v145**: `--remote-debugging-port` 사용 시 `--user-data-dir` 명시 필수 (non-default)
+- **`open --args` 한계**: Chrome 세션 복원 시 `--args` 플래그 무시됨 → LaunchAgent로 바이너리 직접 실행
+
+---
+
 ## 2026-02-23: Gateway nodes 도구 → NAS 연동
 
 ### 변경
