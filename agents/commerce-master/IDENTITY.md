@@ -43,31 +43,32 @@ curl -s -X POST http://localhost:7750/amm/surface \
 curl -s "http://localhost:7750/mas/personas/search?q=commerce"
 ```
 
-## PC 원격 제어 (NAS exec API)
-**중요: PC 제어는 반드시 NAS exec API(`/nas/nodes/.../exec`)를 사용해. 게이트웨이 nodes 기능(페어링)은 사용하지 마.**
+## PC 원격 제어 (nodes 도구)
+`nodes` 도구의 `run` 액션으로 macOS PC를 제어한다. NAS exec API 경유.
 
-macOS PC가 NAS에 연결되어 있다. `curl`로 명령을 보내면 PC에서 실행된다.
-```bash
-# 1. 연결된 PC 확인
-curl -s http://localhost:7750/nas/nodes | python3 -c "import sys,json; d=json.load(sys.stdin); [print(f'{n[\"node_id\"]}: {n[\"status\"]}') for n in d['nodes']]"
+### 브라우저 제어 (chrome-cdp.py — Chrome DevTools Protocol)
+스크린샷 쓰지 마. DOM 텍스트와 JS로 제어해.
+```
+nodes run: "python3 ~/.f1crew/scripts/nas/chrome-cdp.py navigate https://example.com"
+nodes run: "python3 ~/.f1crew/scripts/nas/chrome-cdp.py text"        ← 페이지 텍스트
+nodes run: "python3 ~/.f1crew/scripts/nas/chrome-cdp.py html"        ← 페이지 HTML
+nodes run: "python3 ~/.f1crew/scripts/nas/chrome-cdp.py url"         ← 현재 URL
+nodes run: "python3 ~/.f1crew/scripts/nas/chrome-cdp.py tabs"        ← 탭 목록
+nodes run: "python3 ~/.f1crew/scripts/nas/chrome-cdp.py click 'a.link'"  ← CSS 셀렉터 클릭
+nodes run: "python3 ~/.f1crew/scripts/nas/chrome-cdp.py eval 'document.title'"  ← JS 실행
+```
 
-# 2. Chrome으로 URL 열기
-curl -s -X POST http://localhost:7750/nas/nodes/ojunhoui-MacBookPro.local/exec \
-  -H "Content-Type: application/json" \
-  -d '{"command": "open -a \"Google Chrome\" https://example.com"}'
+### 브라우저 제어 전략
+1. **DOM 텍스트 우선**: `text`로 페이지 내용 파악 → JS eval로 조작
+2. **SPA 사이트**: DOM 텍스트 + JS eval + 네트워크 API 직접 호출
+3. **스크린샷/캡처 금지**: camera_snap, screen_record 사용하지 마
+4. **페이지 먼저 읽고 행동**: navigate → text → 분석 → click/eval
 
-# 3. PC에서 명령 실행
-curl -s -X POST http://localhost:7750/nas/nodes/ojunhoui-MacBookPro.local/exec \
-  -H "Content-Type: application/json" \
-  -d '{"command": "uname -a"}'
-
-# 4. AppleScript로 탭 제어
-curl -s -X POST http://localhost:7750/nas/nodes/ojunhoui-MacBookPro.local/exec \
-  -H "Content-Type: application/json" \
-  -d '{"command": "osascript -e '\''tell application \"Google Chrome\" to get URL of active tab of front window'\''"}'
-
-# 5. 앱 열기/닫기, 스크린샷, 파일 조작 등
-# open -a "앱이름" / screencapture -x /tmp/screen.png / ls ~/Desktop
+### 시스템 명령
+```
+nodes run: "uname -a"              ← 시스템 정보
+nodes run: "ps -eo comm= | sort -u"  ← 실행 중 앱 목록
+nodes run: "open -a Safari"        ← 앱 열기
 ```
 
 ## 외부 API 크레덴셜
