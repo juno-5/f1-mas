@@ -32,6 +32,24 @@
 | [GMV MAX Creative Boost 인사이트](https://supermembers.notion.site/GMV-MAX-201ee0bcf38c8078af19de194c4fb1be) | cosduck-app | 틱톡샵 Creative Boost 전략 — 구매 전환 영상만 유효 |
 | [Creative Boost & GMV MAX 실험 노트](https://docs.google.com/spreadsheets/d/1pPAkkAO2Bm) | cosduck-app | 크리에이티브 성과 실험 데이터 |
 
+## 콘텐츠 가이드 & 영상 소스
+
+| Resource | URL | 비고 |
+|----------|-----|------|
+| [비플레인 콘텐츠 가이드 아카이브](https://www.notion.so/310983e32b3280e288e3cfffe4917a27) | Notion | 제품별 촬영 가이드 이력 (세럼, 마스크, 크림, 쿨링선, 오일, 라마단 특별) |
+| [META 광고 영상 소스](https://www.notion.so/META-2f4983e32b3281a09636ed81a89a93aa) | Notion | 이미지/영상 GDrive 폴더, 밈 템플릿(imgflip, tenor, kapwing) |
+| [틱톡 자체 계정 콘텐츠 BP](https://www.notion.so/30d983e32b328193acd3e69473d0137f) | Notion | 틱톡 자체 계정 콘텐츠 BP |
+| [틱톡 코리아 세미나 — 콘텐츠 최적화](https://www.notion.so/30d983e32b3281dbb356cccfdacce88b) | Notion | 틱톡 콘텐츠 최적화 방법 세미나 |
+| [시그널플래너 릴스 가이드](https://www.notion.so/AI-30d983e32b3280638c61fa4ef3b9ee7c) | Notion | 인플루언서 릴스 촬영 가이드 — 광고 심의, 자막/나레이션, 모자이크 |
+| [리뷰 활용 영상 소재 A/B 테스트](https://www.notion.so/A-B-30d983e32b3281659819c169fb2e8f9b) | Notion | 리뷰 기반 영상 구도 A/B 테스트 |
+
+## 브랜딩 & 디자인 요청
+
+| Resource | URL | 비고 |
+|----------|-----|------|
+| [디자인 요청 리스트](https://www.notion.so/30d983e32b328133bab2ee679a8dd760) | Notion DB | 전사 디자인 요청 관리 (kaya 김박스, 세럼 디자인 등) |
+| [듀얼 챔버 디자인 수정 방향](https://www.notion.so/2ea983e32b32809ca1cdf07d4b82debe) | Notion | 듀얼 챔버 디자인 디벨롭 논의 |
+
 ---
 
-*Last updated: 2026-02-23 (auto-library scan — creatives 도메인 문서 Slack에서 희소, 추후 DM/파일 스캔 필요)*
+*Last updated: 2026-02-23 (auto-library scan: Slack + Notion workspace 검색 — 영상/콘텐츠/브랜딩 키워드 34페이지 발견)*
