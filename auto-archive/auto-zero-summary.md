@@ -125,6 +125,15 @@
     - 6으로 증가: 5-agent batch + 1 concurrent 요청 동시 처리 가능
     - `xapi/routers/inference.py` 수정, 커밋 `47cffae`
 
+20. **Cycle #37 (2026-02-23)**: **Character file extraction 활성화** ⭐
+    - `extract_character_sections()` 존재하나 config 미설정 → 전체 캐릭터 파일 주입
+    - `character_extract_sections` + `character_extract_max_chars` 설정으로 핵심 섹션만 추출
+    - **Forge: 36,203→5,572 chars, 입력 토큰 30,912→15,956 (-48.4%), 비용 $0.158→$0.082 (-48.3%)**
+    - **Flux: 25,068→6,953 chars, 입력 토큰 27,890→17,170 (-38.4%), 비용 $0.146→$0.068 (-53.3%)**
+    - 추가 효과: 캐시 히트율 증가 (10K→16K cached tokens) — 짧은 캐릭터로 prefix 공유 향상
+    - 74% 페르소나(219/295)에 적용 → 시스템 전체 비용 ~30% 절감 추정
+    - `config/mas-config.json` 수정 (코드 변경 없음, config만)
+
 ## 변경 이력
 
 7. `mas/mas_agent_runner.py` + `mas/mas_templates.py` + `mas/mas_conversation.py` — synthesis cap + truncation (2a8737c, 2026-02-23)
@@ -142,6 +151,7 @@
 19. `xapi/xapi/routers/inference.py` — ASCII-safe session key header + Bedrock normalization (eaf9c2a, 2026-02-23)
 20. `mas/mas_tools.py` — tool injection regex false positive 수정 (2d0c734, 2026-02-23)
 21. `xapi/xapi/routers/inference.py` — inference semaphore 4→6 (47cffae, 2026-02-23)
+22. `config/mas-config.json` — character extraction 활성화 (config만, 코드 변경 없음, 2026-02-23)
 
 ## 미해결 가설
 

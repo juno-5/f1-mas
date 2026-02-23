@@ -41,5 +41,7 @@
   "log_level": "info",
   "insight_capture_enabled": true,
   "library_injection": true,
-  "library_base_dir": "/home/mayacrew/projects/mayacrew-f1crew/f1-mas/library"
+  "library_base_dir": "/home/mayacrew/projects/mayacrew-f1crew/f1-mas/library",
+  "character_extract_sections": ["Quick Reference", "Communication", "Thinking", "Strengths", "AI Interaction"],
+  "character_extract_max_chars": 8000
 }
