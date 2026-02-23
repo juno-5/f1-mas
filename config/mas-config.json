@@ -38,5 +38,7 @@
   "metrics_enabled": true,
   "hot_reload_interval": 30,
   "persona_cache_ttl": 300,
-  "log_level": "info"
+  "log_level": "info",
+  "insight_capture_enabled": true,
+  "library_base_dir": "/home/mayacrew/projects/mayacrew-f1crew/f1-mas/library"
 }

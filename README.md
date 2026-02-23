@@ -1,6 +1,6 @@
 # MAS — Master Agent System
 
-178명의 전문가 페르소나를 조율하는 오케스트레이터
+204명의 전문가 페르소나를 조율하는 오케스트레이터
 
 ## Architecture
 
@@ -22,12 +22,12 @@ User → MAS (CLAUDE.md) → Persona Selection → Task Spawn → Result Synthes
 | Developers | 33 | `characters/developers/` — F1 Korea (23) + Falcon Global (10) |
 | Marketers | 60 | `characters/marketers/` — KR (30) + US (30) |
 | Models | 60 | `characters/models/` — KR (20) + JP (10) + US (20) + EU (10) |
-| Creatives | 5 | `characters/creatives/` — Five Senses art directors |
-| Commerce | 5 | `characters/commerce/` — E-commerce specialists |
-| Sales | 5 | `characters/sales/` — Sales strategists |
-| UIUX | 5 | `characters/uiux/` — UI/UX designers |
-| CX | 5 | `characters/cx/` — Customer experience experts |
-| **Total** | **178** | |
+| Creatives | 11 | `characters/creatives/` — Five Senses (5) + Art Master Squad (6) |
+| Commerce | 10 | `characters/commerce/` — E-commerce specialists |
+| Sales | 10 | `characters/sales/` — Sales strategists |
+| UIUX | 10 | `characters/uiux/` — UI/UX designers |
+| CX | 10 | `characters/cx/` — Customer experience experts |
+| **Total** | **204** | |
 
 ## Service
 
@@ -56,12 +56,17 @@ f1-mas/
 │   ├── mas_state.py
 │   ├── mas_metrics.py
 │   └── mas_slack.py
-├── characters/            # 178 persona files
+├── characters/            # 204 persona files
 │   ├── INDEX.md
 │   ├── developers/
 │   ├── marketers/
 │   ├── models/
 │   └── creatives/
+├── library/               # Team knowledge base (auto-populated)
+│   ├── INDEX.md           # Library master index
+│   ├── CAPTURE-PROTOCOL.md # Insight capture format
+│   ├── {team}/references.md  # External docs & links
+│   └── {team}/insights.md    # Auto-captured from conversations
 ├── config/
 │   ├── persona-registry.md   # Searchable registry
 │   ├── selection-rules.md    # Selection heuristics
@@ -72,6 +77,19 @@ f1-mas/
 └── systemd/
     └── mas.service            # Systemd user service
 ```
+
+## Library — Team Knowledge Base
+
+직원 대화에서 도메인 지식을 자동 캡처하여 팀별 `insights.md`에 축적.
+
+- 마스터 에이전트가 `[INSIGHT]...[/INSIGHT]` 블록을 응답에 태깅
+- `mas_insight_capture.py`가 블록을 파싱 → `library/{domain}/insights.md`에 append
+- Slack으로 전달되는 최종 응답에서는 블록 자동 제거
+
+| Config Key | Default | Description |
+|------------|---------|-------------|
+| `insight_capture_enabled` | `true` | 인사이트 캡처 활성화 |
+| `library_base_dir` | (characters 기준 자동) | library 폴더 절대 경로 |
 
 ## Deploy
 
@@ -87,6 +105,7 @@ ssh mayacrew@100.88.145.15 'systemctl --user restart mas'
 | `mas/*.py` | `~/.f1crew/scripts/mas/` |
 | `config/mas-config.json` | `~/.f1crew/shared/mas-config.json` |
 | `characters/` | `~/projects/mayacrew-f1crew/f1-mas/characters/` |
+| `library/` | `~/projects/mayacrew-f1crew/f1-mas/library/` |
 | `config/*.md` | `~/projects/mayacrew-f1crew/f1-mas/config/` |
 | `systemd/mas.service` | `~/.config/systemd/user/mas.service` |
 

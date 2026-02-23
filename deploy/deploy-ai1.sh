@@ -27,14 +27,18 @@ echo "[3/5] Deploying characters..."
 rsync -az --delete "$SCRIPT_DIR/characters/" "$SERVER:~/projects/mayacrew-f1crew/f1-mas/characters/"
 
 # 4. Config MDs → server data
-echo "[4/5] Deploying config files..."
+echo "[4/6] Deploying config files..."
 rsync -az "$SCRIPT_DIR/config/persona-registry.md" \
           "$SCRIPT_DIR/config/selection-rules.md" \
           "$SCRIPT_DIR/config/task-templates.md" \
           "$SERVER:~/projects/mayacrew-f1crew/f1-mas/config/"
 
-# 5. Systemd service
-echo "[5/5] Deploying systemd service..."
+# 5. Library → server data (insight capture target)
+echo "[5/6] Deploying library..."
+rsync -az "$SCRIPT_DIR/library/" "$SERVER:~/projects/mayacrew-f1crew/f1-mas/library/"
+
+# 6. Systemd service
+echo "[6/6] Deploying systemd service..."
 scp "$SCRIPT_DIR/systemd/mas.service" "$SERVER:~/.config/systemd/user/mas.service"
 ssh "$SERVER" 'systemctl --user daemon-reload'
 

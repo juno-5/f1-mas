@@ -87,10 +87,12 @@ Claude Code에서 SSH 대신 사용하는 서버 관리 도구:
 - **Cross-domain** → multiple categories
 
 ### Step 2: Identify FUNCTION
+- `org/functions.yaml` — 함수별 regex 패턴 + 페르소나 우선순위 정의
 - Architecture, Security, Performance, AI/ML, Data, DevOps, etc.
 - Commerce, Growth, Amazon, TikTok, Branding, Design, etc.
 - Fashion, Beauty, Lifestyle, Editorial, Runway, etc.
 - Visual, Color, Sound, Motion, Scent, etc.
+- 함수 감지: `mas_persona_index.py`의 `detect_function()`이 쿼리 텍스트에서 regex 매칭
 
 ### Step 3: Identify LOCALE
 - Korea / USA / Japan / Europe / Global
@@ -380,7 +382,19 @@ f1-mas/
 │   ├── mas_constitution.py            # Constitution enforcement
 │   ├── mas_state.py                   # Persistent state
 │   ├── mas_metrics.py                 # Prometheus metrics
+│   ├── mas_performance.py             # Performance JSONL recording
+│   ├── mas_scoring.py                 # Persona scoring (usage stats)
+│   ├── mas_insight_capture.py         # Insight auto-capture from conversations
 │   └── mas_slack.py                   # Slack integration
+├── org/                               # Organization structure
+│   ├── functions.yaml                 # Function detection patterns + persona priority
+│   ├── domains.yaml                   # Domain definitions
+│   ├── tribes.yaml                    # Tribe definitions (cross-domain teams)
+│   └── squads.yaml                    # Squad definitions (functional teams)
+├── scripts/                           # Operational scripts
+│   └── cleanup-sessions.sh            # Gateway session cleanup (daily cron)
+├── docs/                              # Additional documentation
+│   └── MAS-Tribe-Squad-Org.md         # Tribe/Squad organization guide
 ├── agents/                            # Slack bot agent configs (OpenClaw)
 │   ├── zero/                          # 총괄 디스패처
 │   │   ├── CLAUDE.md                  # Agent system prompt
