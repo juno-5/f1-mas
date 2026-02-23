@@ -50,6 +50,7 @@ def _get_orchestrator():
 
 PORT = cfg.get("port", 7720)
 _start_time = time.time()
+_draining = False  # Set True on SIGTERM to reject new requests
 
 
 def log(msg):
@@ -143,8 +144,9 @@ class MASHandler(http.server.BaseHTTPRequestHandler):
 
     def _handle_health(self):
         idx = persona_idx.get_index()
+        status = "draining" if _draining else "ok"
         self._send_json(200, {
-            "status": "ok",
+            "status": status,
             "personas_loaded": idx.count(),
             "tribes_loaded": len(idx.all_tribes()),
             "squads_loaded": len(idx.all_squads()),
@@ -426,6 +428,10 @@ class MASHandler(http.server.BaseHTTPRequestHandler):
     def _handle_submit_request(self):
         """Submit a request for agent execution."""
         body = self._read_body()
+        if _draining:
+            self._send_json(503, {"error": "service shutting down"})
+            return
+
         query = body.get("query", "").strip()
         if not query:
             self._send_json(400, {"error": "missing 'query' field"})
@@ -681,7 +687,9 @@ def main():
     state.record_event("boot", f"MAS started on port {PORT}")
 
     def shutdown_handler(signum, frame):
-        log("Shutting down...")
+        global _draining
+        _draining = True
+        log("Shutting down (draining — new requests rejected)...")
         state.save_state()
         # server.shutdown() from signal handler deadlocks:
         # it waits for serve_forever() which is blocked on this same thread.
