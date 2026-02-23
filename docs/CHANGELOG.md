@@ -4,6 +4,35 @@
 
 ---
 
+## 2026-02-23: Context Limit 방지 — Compaction 최적화
+
+### 문제
+Art Master가 "Context limit exceeded" 에러로 대화 초기화됨.
+- `agent:art-master:main`: 199,216 tokens / 200,000 ctx, compactionCount=11
+- `agent:art-master:openai:49fa...`: 199,716 tokens, compactionCount=1
+- 원인: 도구 출력(CDP 브라우저 텍스트 등)이 무거워 20턴만으로도 200K 돌파
+
+### 적용한 수정
+
+**1. Compaction 튜닝 (f1crew.json)**
+| 설정 | Before | After | 효과 |
+|------|--------|-------|------|
+| `compaction.maxHistoryShare` | 0.5 (기본) | **0.35** | 히스토리 최대 70K (200K의 35%) |
+| `compaction.reserveTokensFloor` | 20000 (기본) | **25000** | 요약용 토큰 예약 확대 |
+| `slack.dmHistoryLimit` | 20 | **10** | DM 턴 수 절반 축소 |
+| `slack.historyLimit` | 20 | **15** | 채널 히스토리도 축소 |
+
+**2. 세션 정리**
+- art-master: main 세션 토큰 카운터 초기화 + stale openai 세션 9개 삭제
+- 전 에이전트: stale openai 세션 16개 일괄 삭제
+
+### 인사이트
+- **`dmHistoryLimit: 20`은 도구 출력이 무거운 에이전트에겐 과다**: CDP text 출력 한 번에 5K~20K tokens. 10턴이면 충분
+- **safeguard 모드의 `maxHistoryShare`가 핵심**: 기본 0.5 (100K tokens)는 도구 출력 무거운 경우 부족. 0.35로 낮추면 70K 한도 → overflow 전에 자동 정리
+- **stale openai 세션 누적**: Gateway API 호출마다 생성되는 세션이 정리 안 됨. 주기적 cleanup 필요
+
+---
+
 ## 2026-02-23: Chrome CDP 기반 브라우저 제어
 
 ### 변경

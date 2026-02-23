@@ -19,7 +19,9 @@
       }
     },
     "compaction": {
-      "mode": "safeguard"
+      "mode": "safeguard",
+      "maxHistoryShare": 0.35,
+      "reserveTokensFloor": 25000
     },
     "maxConcurrent": 4,
     "subagents": {
