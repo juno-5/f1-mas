@@ -40,5 +40,6 @@
   "persona_cache_ttl": 300,
   "log_level": "info",
   "insight_capture_enabled": true,
+  "library_injection": true,
   "library_base_dir": "/home/mayacrew/projects/mayacrew-f1crew/f1-mas/library"
 }

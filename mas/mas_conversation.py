@@ -234,15 +234,27 @@ def _fetch_nas_context(query: str, domain: str = "") -> str:
     return result
 
 
+def _fetch_library_context(domain: str) -> str:
+    """Fetch team library references + recent insights for prompt injection."""
+    try:
+        from .mas_insight_capture import fetch_library_context
+        return fetch_library_context(domain)
+    except Exception as e:
+        _log(f"Library context fetch ERROR: {e}")
+        return ""
+
+
 def _build_agent_prompt(persona: PersonaEntry, query: str, index: PersonaIndex,
                         extra_context: str = "", amm_context: str = None,
-                        nas_context: str = None, domain: str = "") -> str:
+                        nas_context: str = None, library_context: str = None,
+                        domain: str = "") -> str:
     """Build a prompt for a persona agent.
 
     Args:
         amm_context: Pre-fetched AMM memories. If None, fetches independently.
             Pass pre-fetched value for multi-agent patterns to avoid redundant calls.
         nas_context: Pre-fetched NAS context. If None, fetches independently.
+        library_context: Pre-fetched library context. If None, fetches independently.
         domain: Primary domain for NAS relevance check.
     """
     # Extract key sections from character file
@@ -260,7 +272,13 @@ def _build_agent_prompt(persona: PersonaEntry, query: str, index: PersonaIndex,
     if nas_context is None:
         nas_context = _fetch_nas_context(query, domain=domain or persona.category)
 
+    # Library Context Injection — team references + recent insights
+    if library_context is None:
+        library_context = _fetch_library_context(domain or persona.category)
+
     full_query = query
+    if library_context:
+        full_query += library_context
     if amm_context:
         full_query += amm_context
     if nas_context:
@@ -284,7 +302,9 @@ def _execute_single(request_id: str, query: str, persona: PersonaEntry, index: P
 
     agent_id = state.add_agent(request_id, persona.id, persona.callsign, persona.role)
     nas_context = _fetch_nas_context(query, domain=persona.category)
-    prompt = _build_agent_prompt(persona, query, index, nas_context=nas_context)
+    library_context = _fetch_library_context(persona.category)
+    prompt = _build_agent_prompt(persona, query, index, nas_context=nas_context,
+                                 library_context=library_context)
 
     # Determine available tools for this query
     tools = get_tools_for_query(query, domain=persona.category) or None
@@ -317,9 +337,10 @@ def _execute_parallel(
     """
     _log(f"[{request_id}] {pattern_name}: {[p.callsign for p in personas]}")
 
-    # Fetch AMM memories + NAS context once for the entire request
+    # Fetch AMM memories + NAS context + library context once for the entire request
     amm_context = _fetch_amm_memories(query)
     nas_context = _fetch_nas_context(query, domain=personas[0].category if personas else "")
+    library_context = _fetch_library_context(personas[0].category if personas else "")
 
     # Determine available tools for this query
     tools = get_tools_for_query(query, domain=personas[0].category if personas else "") or None
@@ -330,7 +351,8 @@ def _execute_parallel(
     agents_info = []
     for p in personas:
         agent_id = state.add_agent(request_id, p.id, p.callsign, p.role)
-        prompt = _build_agent_prompt(p, query, index, amm_context=amm_context, nas_context=nas_context)
+        prompt = _build_agent_prompt(p, query, index, amm_context=amm_context,
+                                     nas_context=nas_context, library_context=library_context)
         agents_info.append({
             "agent_id": agent_id,
             "prompt": prompt,
@@ -401,9 +423,10 @@ def _execute_relay(
     """Relay: A's output → B's input, sequential."""
     _log(f"[{request_id}] Relay: {' → '.join(p.callsign for p in personas)}")
 
-    # Fetch AMM memories + NAS context once for the entire relay chain
+    # Fetch AMM memories + NAS context + library context once for the entire relay chain
     amm_context = _fetch_amm_memories(query)
     nas_context = _fetch_nas_context(query, domain=personas[0].category if personas else "")
+    library_context = _fetch_library_context(personas[0].category if personas else "")
 
     # Determine available tools for this query
     tools = get_tools_for_query(query, domain=personas[0].category if personas else "") or None
@@ -416,7 +439,8 @@ def _execute_relay(
     for i, persona in enumerate(personas):
         agent_id = state.add_agent(request_id, persona.id, persona.callsign, persona.role)
         prompt = _build_agent_prompt(persona, query, index, extra_context=previous_output,
-                                     amm_context=amm_context, nas_context=nas_context)
+                                     amm_context=amm_context, nas_context=nas_context,
+                                     library_context=library_context)
 
         _slack_agent_progress(request_id, persona.callsign, "running")
         result = run_agent(request_id, agent_id, prompt, persona.id, persona.callsign, tools=tools)

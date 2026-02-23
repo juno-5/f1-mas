@@ -136,6 +136,55 @@ def save_insights(domain: str, insights: list[dict], request_id: str = "",
             return 0
 
 
+def fetch_library_context(domain: str, max_refs_chars: int = 2000,
+                          max_insights: int = 5) -> str:
+    """Read library references + recent insights for a domain.
+
+    Injected into agent prompts so they can leverage accumulated team knowledge.
+    Returns formatted markdown string, or "" if nothing available.
+    """
+    if not cfg.get("library_injection", True):
+        return ""
+
+    lib_domain = _CATEGORY_DOMAIN_MAP.get(domain, domain)
+    library_dir = _get_library_dir()
+    sections = []
+
+    # 1. References (full file, truncated)
+    refs_file = library_dir / lib_domain / "references.md"
+    if refs_file.exists():
+        try:
+            content = refs_file.read_text(encoding="utf-8").strip()
+            # Skip if only template (no real content filled in)
+            if content and "| |" not in content and len(content) > 100:
+                if len(content) > max_refs_chars:
+                    content = content[:max_refs_chars] + "\n[... truncated ...]"
+                sections.append(content)
+        except Exception:
+            pass
+
+    # 2. Recent insights (last N entries)
+    insights_file = library_dir / lib_domain / "insights.md"
+    if insights_file.exists():
+        try:
+            content = insights_file.read_text(encoding="utf-8").strip()
+            # Extract ### entries (newest first = bottom of file)
+            entries = re.split(r"(?=^### \[)", content, flags=re.MULTILINE)
+            real_entries = [e.strip() for e in entries if e.strip().startswith("### [")]
+            if real_entries:
+                recent = real_entries[-max_insights:]  # last N
+                sections.append("## Recent Team Insights\n\n" + "\n\n".join(recent))
+        except Exception:
+            pass
+
+    if not sections:
+        return ""
+
+    result = "\n\n## Team Library (" + lib_domain + ")\n\n" + "\n\n---\n\n".join(sections)
+    _log(f"Library: injecting {len(result)} chars for domain={lib_domain}")
+    return result
+
+
 def process_synthesis(synthesis: str, domain: str, request_id: str = "",
                       source_agent: str = "") -> str:
     """Extract insights from synthesis, save them, return cleaned synthesis.
