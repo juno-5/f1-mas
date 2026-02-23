@@ -358,25 +358,31 @@ def _execute_infra_tool(name: str, arguments: dict) -> str:
 # --------------------------------------------------------------------------
 
 _NAS_RELEVANT_RE = re.compile(
-    r"노드|\bnode\b|클라우드|\bcloud\b|\bPC\b|"
-    r"원격|\bremote\b|"
+    r"(?:NAS|원격).{0,4}노드|\bNAS\b|"
+    r"클라우드.{0,4}(?:노드|인스턴스)|\bcloud.{0,4}(?:node|instance)\b|"
+    r"\bPC\b.{0,4}(?:접속|연결|원격|실행)|"
+    r"원격.{0,4}(?:접속|실행|명령)|\bremote.{0,4}(?:exec|connect)\b|"
     r"(?:명령|코드|스크립트|원격).{0,4}실행|실행해|\bexec\b|"
-    r"파일|\bfile\b|문서.*검색|\bdoc.*search\b|\bNAS\b|\bdeploy\b",
+    r"문서.*검색|\bdoc.*search\b|\bnas_|nas 노드",
     re.IGNORECASE,
 )
 
 _INFRA_RELEVANT_RE = re.compile(
-    r"서버|\bserver\b|"
+    r"서버.{0,4}(?:상태|확인|장애|재시작|다운|점검|접속|로그|에러)|"
+    r"\bserver.{0,4}(?:status|down|restart|error|log|check)\b|"
     r"서비스.{0,4}(?:상태|확인|장애|재시작|로그|에러)|"
-    r"\bservice\b|"
-    r"헬스|\bhealth\b|\bstatus\b|"
+    r"\bservice.{0,4}(?:status|down|restart|health|error)\b|"
+    r"(?:서비스|서버|시스템).{0,4}헬스.?체크|헬스.?체크.{0,4}(?:확인|결과|해줘|실행)|"
+    r"\b(?:service|server).{0,4}health.?check\b|"
     r"인프라|\binfra\b|"
-    r"게이트웨이|\bgateway\b|"
-    r"토큰|\btoken\b|"
+    r"(?:API\s*)?게이트웨이.{0,4}(?:상태|에러|로그|재시작|장애)|"
+    r"토큰.{0,4}(?:관리|풀|사용량|만료|소진|갱신)|\btoken.{0,4}(?:pool|manager|usage)\b|"
     r"\bFAS\b|\bMAS\b|\bxapi\b|"
-    r"(?<!블)로그|\blog\b|"
-    r"에러|\berror\b|"
-    r"모니터링|\bmonitor\b|"
+    r"(?:서비스|서버|시스템).{0,4}로그|로그.{0,4}(?:확인|분석|조회)|"
+    r"\b(?:service|server|system).{0,4}log\b|"
+    r"에러.{0,4}(?:로그|원인|분석|추적|확인)|(?:서버|서비스|시스템).{0,4}에러|"
+    r"\berror.{0,4}(?:log|trace|cause|debug)\b|"
+    r"(?:시스템|서버|서비스).{0,4}모니터링|모니터링.{0,4}(?:대시보드|설정|알림)|"
     r"(?:코드|서버|서비스).{0,4}배포|배포해|\bdeploy\b",
     re.IGNORECASE,
 )
