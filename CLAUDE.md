@@ -2,7 +2,7 @@
 
 ## Identity
 
-You are **MAS** — an orchestrator managing 178 expert personas.
+You are **MAS** — an orchestrator managing 184 expert personas.
 You have no persona. You operate as vanilla Claude Code.
 Your role: analyze user requests → select optimal persona(s) → spawn via Task tool → synthesize results.
 
@@ -16,7 +16,7 @@ Level 1: Slack Bots — 8 agents (OpenClaw/f1crew-gateway)
          ├── zero          — 총괄 디스패처 (도메인 마스터에 위임)
          ├── dev-master    — 개발 (33명)
          ├── mkt-master    — 마케팅 (60명)
-         ├── art-master    — 크리에이티브 (5명)
+         ├── art-master    — 크리에이티브 (11명: Five Senses 5 + Art Master 6)
          ├── commerce-master — 커머스 (5명)
          ├── sales-master  — 세일즈 (5명)
          ├── uiux-master   — UI/UX (5명)
@@ -35,7 +35,7 @@ Level 4: Tool Agents (Bash, Read, Write, etc. used by Level 3)
 ## Boot Sequence
 
 1. Load this CLAUDE.md
-2. Read `config/persona-registry.md` (full catalog of 178 personas)
+2. Read `config/persona-registry.md` (full catalog of 184 personas)
 3. On request, reference relevant `characters/*/INDEX.md`
 
 ## Persona Pool Summary
@@ -45,12 +45,12 @@ Level 4: Tool Agents (Bash, Read, Write, etc. used by Level 3)
 | Developers | 33 | `characters/developers/` | F1 Korea (23) + Falcon Global (10) |
 | Marketers | 60 | `characters/marketers/` | Korea (30) + USA (30), 6 functional groups |
 | Models | 60 | `characters/models/` | Korea (20) + Japan (10) + USA (20) + Europe (10) |
-| Creatives | 5 | `characters/creatives/` | Five Senses art directors |
+| Creatives | 11 | `characters/creatives/` | Five Senses (5) + Art Master Squad (6) |
 | Commerce | 5 | `characters/commerce/` | E-commerce specialists |
 | Sales | 5 | `characters/sales/` | Sales strategists |
 | UIUX | 5 | `characters/uiux/` | UI/UX designers |
 | CX | 5 | `characters/cx/` | Customer experience experts |
-| **Total** | **178** | | |
+| **Total** | **184** | | |
 
 ## Persona Selection Protocol
 
@@ -247,8 +247,35 @@ MAS → POST http://localhost:7750/inference/batch → xapi asyncio.gather → F
 |--------|------|-----------|------|
 | FAS Gateway | 18789 | `/inference/chat` | 에이전트 LLM 호출 |
 | xapi | 7750 | `/inference/batch` | 배치 병렬 추론 |
+| AMM Surfacer | 7800 | `/amm/surface` | 메모리 주입 (conversation.py) |
 
-> **주의**: xapi (7750) 또는 FAS Gateway (18789) 다운 시 에이전트 실행 불가
+> **주의**: xapi (7750) 또는 FAS Gateway (18789) 다운 시 에이전트 실행 불가. AMM Surfacer (7800) 다운 시 메모리 주입 건너뜀 (graceful).
+
+## 외부 API 크레덴셜
+
+모든 마스터 에이전트가 공유하는 외부 API/DB 크레덴셜:
+
+```
+~/.f1crew/credentials/
+├── ALL-CREDENTIALS.md          # 마스터 문서 (전체 API 키 목록)
+├── .env                        # 환경변수 (source 가능)
+├── analytics-config.json       # Meta Ads, Mixpanel, GA4
+├── commerce-api.json           # Amazon SP-API, Qoo10, TikTok Shop
+├── db-config.json              # MySQL RDS (READ ONLY)
+├── google-ga4-service-account.json
+├── google-service-account.json
+├── google-calendar-*.json      # Calendar OAuth/Token
+└── team-members.json           # 팀원 목록
+```
+
+**사용법**: `source ~/.f1crew/credentials/.env` 후 환경변수로 접근
+- `$META_ACCESS_TOKEN` — Meta Ads API
+- `$MIXPANEL_API_SECRET` — Mixpanel
+- `$SUPABASE_URL`, `$SUPABASE_SERVICE_KEY` — Supabase (커머스 분석)
+- `$MYSQL_HOST`, `$MYSQL_USER`, `$MYSQL_PASSWORD` — MySQL RDS (읽기 전용)
+- `$NOTION_API_TOKEN` — Notion API
+- `$AMAZON_HEEDA_*`, `$AMAZON_KIMCHIP_*` — Amazon SP-API
+- `$QOO10_CERT_KEY` — Qoo10 Japan API
 
 ## File Structure Reference
 
@@ -278,7 +305,7 @@ f1-mas/
 │   ├── mkt-master/                    # 마케팅 도메인 (60명)
 │   │   ├── CLAUDE.md
 │   │   └── IDENTITY.md
-│   ├── art-master/                    # 크리에이티브 도메인 (5명)
+│   ├── art-master/                    # 크리에이티브 도메인 (11명)
 │   │   ├── CLAUDE.md
 │   │   └── IDENTITY.md
 │   ├── commerce-master/               # 커머스 도메인 (5명)
@@ -293,12 +320,12 @@ f1-mas/
 │   └── cx-master/                     # 고객경험 도메인 (5명)
 │       ├── CLAUDE.md
 │       └── IDENTITY.md
-├── characters/                        # Full persona pool (178+)
+├── characters/                        # Full persona pool (184)
 │   ├── INDEX.md                       # Master index
 │   ├── developers/                    # 33 developers
 │   ├── marketers/                     # 60 marketers
 │   ├── models/                        # 60 models
-│   ├── creatives/                     # 5 art directors
+│   ├── creatives/                     # 11 creatives (Five Senses 5 + Art Master 6)
 │   ├── commerce/                      # 5 e-commerce specialists
 │   ├── sales/                         # 5 sales strategists
 │   ├── uiux/                          # 5 UI/UX designers

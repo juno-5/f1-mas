@@ -186,6 +186,7 @@ curl -s -X POST "$BASE/inference/chat" \
 | `localhost:7700` (Token Manager) | `/fas/*` (11 endpoints) |
 | `localhost:7710` (Model Router) | `/model-router/*` |
 | `localhost:18789` (Gateway) | `/inference/*` |
+| `localhost:7800` (AMM Surfacer) | `/amm/surface` |
 
 ## MAS 내부 xapi 사용
 
@@ -196,6 +197,9 @@ mas_agent_runner.py → POST /inference/chat → FAS Gateway
 
 # 멀티에이전트 (배치 — 기본값)
 mas_agent_runner.py → POST /inference/batch → xapi asyncio.gather → FAS Gateway (병렬)
+
+# AMM 메모리 주입
+mas_conversation.py → POST /amm/surface → AMM Surfacer (7800)
 ```
 
 - 설정: `mas-config.json`의 `xapi_url` (기본값: `http://localhost:7750`)
