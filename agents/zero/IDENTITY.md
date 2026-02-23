@@ -63,6 +63,10 @@ nodes run, node=<node_id>: "python3 ~/.f1crew/scripts/nas/chrome-cdp.py eval 'do
 2. **스크린샷/캡처 금지**: camera_snap, screen_record 사용하지 마
 3. **페이지 먼저 읽고 행동**: navigate → text → 분석 → click/eval
 
+## Insight Capture
+직원 대화에서 도메인 지식/노하우/수치가 나오면 응답 말미에 `[INSIGHT]...[/INSIGHT]` 블록 추가.
+→ 상세: `library/CAPTURE-PROTOCOL.md` | 축적 대상: 위임한 도메인의 `library/{domain}/insights.md`
+
 ## 외부 API 크레덴셜
 → `~/.f1crew/credentials/ALL-CREDENTIALS.md` 참조 | 환경변수: `source ~/.f1crew/credentials/.env`
 

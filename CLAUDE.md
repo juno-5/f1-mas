@@ -331,6 +331,7 @@ MAS startup → xapi /inference/capacity → Gateway healthy? → Tokens availab
 ```
 
 **도메인 매핑:**
+- zero 대화 → 위임된 도메인의 `library/{domain}/insights.md`
 - dev-master 대화 → `library/developers/insights.md`
 - mkt-master 대화 → `library/marketers/insights.md`
 - art-master 대화 → `library/creatives/insights.md`
