@@ -59,16 +59,43 @@ def render() -> str:
     lines.append("# TYPE mas_uptime_seconds gauge")
     lines.append(f"mas_uptime_seconds {int(time.time() - _start_time)}")
 
-    # Request duration histogram (simplified — last N requests)
+    # Cost counter
+    lines.append("# HELP mas_cost_usd_total Total estimated cost in USD")
+    lines.append("# TYPE mas_cost_usd_total counter")
+    lines.append(f"mas_cost_usd_total {counters.get('total_cost_usd', 0):.6f}")
+
+    # Request duration statistics (last 50 completed requests)
     all_reqs = state.get_all_requests()
     completed = [r for r in all_reqs.values() if r.status == "completed" and r.duration_ms > 0]
     if completed:
-        durations = [r.duration_ms for r in completed[-50:]]
-        avg_ms = sum(durations) / len(durations)
-        max_ms = max(durations)
+        durations = sorted(r.duration_ms for r in completed[-50:])
+        n = len(durations)
+        avg_ms = sum(durations) / n
         lines.append("# HELP mas_request_duration_ms Request duration in milliseconds")
         lines.append("# TYPE mas_request_duration_ms gauge")
         lines.append(f'mas_request_duration_ms{{stat="avg"}} {int(avg_ms)}')
-        lines.append(f'mas_request_duration_ms{{stat="max"}} {max_ms}')
+        lines.append(f'mas_request_duration_ms{{stat="p50"}} {durations[n // 2]}')
+        lines.append(f'mas_request_duration_ms{{stat="p95"}} {durations[int(n * 0.95)]}')
+        lines.append(f'mas_request_duration_ms{{stat="max"}} {durations[-1]}')
+
+    # Per-pattern breakdown
+    terminal = [r for r in all_reqs.values() if r.status in ("completed", "failed")]
+    by_pattern: dict[str, list] = {}
+    for r in terminal:
+        by_pattern.setdefault(r.pattern, []).append(r)
+
+    if by_pattern:
+        lines.append("# HELP mas_pattern_requests_total Requests by pattern and status")
+        lines.append("# TYPE mas_pattern_requests_total counter")
+        lines.append("# HELP mas_pattern_duration_avg_ms Avg duration by pattern (completed only)")
+        lines.append("# TYPE mas_pattern_duration_avg_ms gauge")
+        for pat, reqs in by_pattern.items():
+            ok = sum(1 for r in reqs if r.status == "completed")
+            fail = sum(1 for r in reqs if r.status == "failed")
+            lines.append(f'mas_pattern_requests_total{{pattern="{pat}",status="completed"}} {ok}')
+            lines.append(f'mas_pattern_requests_total{{pattern="{pat}",status="failed"}} {fail}')
+            ok_durs = [r.duration_ms for r in reqs if r.status == "completed" and r.duration_ms > 0]
+            if ok_durs:
+                lines.append(f'mas_pattern_duration_avg_ms{{pattern="{pat}"}} {int(sum(ok_durs) / len(ok_durs))}')
 
     return "\n".join(lines) + "\n"
