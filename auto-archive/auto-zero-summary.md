@@ -134,6 +134,13 @@
     - 74% 페르소나(219/295)에 적용 → 시스템 전체 비용 ~30% 절감 추정
     - `config/mas-config.json` 수정 (코드 변경 없음, config만)
 
+21. **Cycle #38 (2026-02-23)**: **Output token 잘림 수정 (agent_max_tokens)** ⭐
+    - MAS max_tokens=4096 하드코딩 → Gateway가 5,120 output token에서 응답 강제 종료
+    - 장문 에이전트(Forge, Blaze 등) 기술 분석이 중간에 잘림
+    - 3곳 모두 `cfg.get("agent_max_tokens", 8192)`로 통일
+    - **Before: Forge out=5,120 tokens (잘림) → After: Blaze out=7,495 tokens (자연 완료)**
+    - `mas/mas_agent_runner.py` 3곳 수정, 커밋 `450e1ff`
+
 ## 변경 이력
 
 7. `mas/mas_agent_runner.py` + `mas/mas_templates.py` + `mas/mas_conversation.py` — synthesis cap + truncation (2a8737c, 2026-02-23)
@@ -152,6 +159,7 @@
 20. `mas/mas_tools.py` — tool injection regex false positive 수정 (2d0c734, 2026-02-23)
 21. `xapi/xapi/routers/inference.py` — inference semaphore 4→6 (47cffae, 2026-02-23)
 22. `config/mas-config.json` — character extraction 활성화 (config만, 코드 변경 없음, 2026-02-23)
+23. `mas/mas_agent_runner.py` — agent max_tokens 4096→8192 configurable (450e1ff, 2026-02-23)
 
 ## 미해결 가설
 
