@@ -68,6 +68,9 @@ class RequestState:
     error: str = ""
     total_cost_usd: float = 0.0
     total_tokens_used: int = 0
+    tribe: str = ""
+    squad: str = ""
+    user: str = ""
 
 
 _state_lock = threading.Lock()
@@ -80,6 +83,7 @@ _counters = {
     "blocked_requests": 0,
     "total_agents_spawned": 0,
     "total_tokens_used": 0,
+    "total_cost_usd": 0.0,
 }
 
 
@@ -121,7 +125,11 @@ def _save():
 
 
 def _load():
-    """Load state from file (counters + timeline + completed request history)."""
+    """Load state from file (counters + timeline + request history).
+
+    Restores both completed history and interrupted active requests.
+    Active requests are marked as failed (interrupted by restart).
+    """
     global _counters, _timeline
     path = _state_file()
     try:
@@ -130,18 +138,38 @@ def _load():
         _counters.update(data.get("counters", {}))
         _timeline = data.get("timeline", [])[-200:]
 
+        def _restore_request(h: dict):
+            rid = h.get("request_id", "")
+            if not rid or rid in _requests:
+                return
+            agents = []
+            for a in h.get("agents", []):
+                agents.append(AgentState(**{k: v for k, v in a.items()
+                                            if k in AgentState.__dataclass_fields__}))
+            req_fields = {k: v for k, v in h.items()
+                          if k in RequestState.__dataclass_fields__ and k != "agents"}
+            req = RequestState(**req_fields, agents=agents)
+            _requests[rid] = req
+
         # Restore completed request history (v2+)
         for h in data.get("history", []):
-            rid = h.get("request_id", "")
-            if rid and rid not in _requests:
-                agents = []
+            _restore_request(h)
+
+        # Restore interrupted active requests — mark as failed
+        for rid, h in data.get("active_requests", {}).items():
+            if rid not in _requests:
+                h["status"] = RequestStatus.FAILED
+                h["error"] = "interrupted by restart"
+                h["completed_at"] = h.get("completed_at") or time.time()
+                if h.get("created_at"):
+                    h["duration_ms"] = int((h["completed_at"] - h["created_at"]) * 1000)
+                # Mark running agents as failed
                 for a in h.get("agents", []):
-                    agents.append(AgentState(**{k: v for k, v in a.items()
-                                                if k in AgentState.__dataclass_fields__}))
-                req_fields = {k: v for k, v in h.items()
-                              if k in RequestState.__dataclass_fields__ and k != "agents"}
-                req = RequestState(**req_fields, agents=agents)
-                _requests[rid] = req
+                    if a.get("status") in ("pending", "running"):
+                        a["status"] = AgentStatus.FAILED
+                        a["error"] = "interrupted by restart"
+                _restore_request(h)
+                _counters["failed_requests"] = _counters.get("failed_requests", 0) + 1
     except (FileNotFoundError, json.JSONDecodeError):
         pass
 
@@ -153,13 +181,14 @@ def record_event(event_type: str, detail: str, request_id: str = ""):
         _common_record_event(_timeline, event_type, detail, **extra)
 
 
-def create_request(user_query: str) -> RequestState:
+def create_request(user_query: str, user: str = "") -> RequestState:
     """Create a new request and return its state."""
     req = RequestState(
         request_id=str(uuid.uuid4())[:8],
         user_query=user_query,
         status=RequestStatus.PENDING,
         created_at=time.time(),
+        user=user,
     )
     with _state_lock:
         _requests[req.request_id] = req
@@ -231,6 +260,7 @@ def update_agent(request_id: str, agent_id: str, **kwargs):
                     agent.completed_at = time.time()
                     agent.duration_ms = int((agent.completed_at - agent.started_at) * 1000)
                     _counters["total_tokens_used"] += agent.tokens_used
+                    _counters["total_cost_usd"] += agent.cost_usd
                 elif kwargs.get("status") == AgentStatus.FAILED:
                     agent.completed_at = time.time()
                     if agent.started_at:
