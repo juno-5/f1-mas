@@ -22,6 +22,7 @@
     "p1_refuse": true
   },
   "xapi_url": "http://localhost:7750",
+  "xapi_api_key": "0htFHzqn8sPpWoF8SZxlgRk6uthWqAIcKVI89pT5-4A",
   "use_batch_inference": true,
   "synthesis_timeout_seconds": 300,
   "amm_memory_injection": true,

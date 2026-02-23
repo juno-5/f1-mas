@@ -617,6 +617,7 @@ def run_agent_on_worker(
                 "model": full_model,
                 "tools": WORKER_LOCAL_TOOLS,
                 "xapi_url": xapi_url,
+                "api_key": cfg.get("xapi_api_key", ""),
                 "user": f"mas:{request_id[:8]}:{callsign}",
                 "max_tokens": 4096,
                 "max_tool_rounds": 10,
