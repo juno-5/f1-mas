@@ -136,10 +136,16 @@
 
 21. **Cycle #38 (2026-02-23)**: **Output token 잘림 수정 (agent_max_tokens)** ⭐
     - MAS max_tokens=4096 하드코딩 → Gateway가 5,120 output token에서 응답 강제 종료
-    - 장문 에이전트(Forge, Blaze 등) 기술 분석이 중간에 잘림
     - 3곳 모두 `cfg.get("agent_max_tokens", 8192)`로 통일
     - **Before: Forge out=5,120 tokens (잘림) → After: Blaze out=7,495 tokens (자연 완료)**
     - `mas/mas_agent_runner.py` 3곳 수정, 커밋 `450e1ff`
+
+22. **Cycle #39 (2026-02-23)**: **Tool injection compound 패턴 강화 (2차)** ⭐
+    - "서버 컴포넌트", "에러 바운더리" 등 개발 용어가 infra 도구 오주입 유발
+    - 단독 키워드(서버, 에러, 토큰, 로그, 노드, 파일 등)를 모두 compound 패턴으로 변경
+    - NAS 패턴도 동시 수정: 노드→NAS+노드, 파일→문서검색만, PC→+접속/연결
+    - **Before: "서버 컴포넌트" → 4 tools → ThreadPool → After: 0 tools → batch**
+    - `mas/mas_tools.py` 수정, 커밋 `64e75ce`
 
 ## 변경 이력
 
@@ -160,6 +166,7 @@
 21. `xapi/xapi/routers/inference.py` — inference semaphore 4→6 (47cffae, 2026-02-23)
 22. `config/mas-config.json` — character extraction 활성화 (config만, 코드 변경 없음, 2026-02-23)
 23. `mas/mas_agent_runner.py` — agent max_tokens 4096→8192 configurable (450e1ff, 2026-02-23)
+24. `mas/mas_tools.py` — tool injection compound 패턴 강화 2차 (64e75ce, 2026-02-23)
 
 ## 미해결 가설
 
