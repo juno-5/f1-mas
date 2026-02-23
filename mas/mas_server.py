@@ -596,28 +596,54 @@ class MASHandler(http.server.BaseHTTPRequestHandler):
 
 
 def _wait_for_xapi(max_wait: int = 30, interval: int = 2) -> bool:
-    """Wait for xapi to become reachable before accepting requests.
+    """Wait for xapi + Gateway to become ready before accepting requests.
 
-    Returns True if xapi is up, False if timeout exceeded (MAS starts anyway with warning).
+    Checks /inference/capacity for full chain readiness (xapi + Gateway + tokens).
+    Falls back to /health if /inference/capacity unavailable.
+    Returns True if ready, False if timeout exceeded (MAS starts anyway with warning).
     """
     import urllib.request
     import urllib.error
 
     xapi_url = cfg.get("xapi_url", "http://localhost:7750")
+    capacity_url = f"{xapi_url}/inference/capacity"
     health_url = f"{xapi_url}/health"
     deadline = time.time() + max_wait
 
     while time.time() < deadline:
         try:
+            # Try /inference/capacity first — checks full chain
+            req = urllib.request.Request(capacity_url, method="GET")
+            with urllib.request.urlopen(req, timeout=3) as resp:
+                if resp.status == 200:
+                    data = json.loads(resp.read())
+                    gw_ok = data.get("gateway_healthy", False)
+                    ready = data.get("ready", False)
+                    if ready:
+                        log(f"xapi ready at {xapi_url} (gateway_healthy={gw_ok}, "
+                            f"tokens_available={data.get('tokens_available_pct', '?')}%)")
+                        return True
+                    remaining = int(deadline - time.time())
+                    log(f"xapi up but not ready (gateway_healthy={gw_ok}) "
+                        f"— waiting ({remaining}s remaining)...")
+                    time.sleep(interval)
+                    continue
+        except (urllib.error.URLError, OSError, TimeoutError, json.JSONDecodeError):
+            pass
+
+        # Fallback: try /health (xapi might not have /inference/capacity)
+        try:
             req = urllib.request.Request(health_url, method="GET")
             with urllib.request.urlopen(req, timeout=3) as resp:
                 if resp.status == 200:
-                    log(f"xapi ready at {xapi_url}")
+                    log(f"xapi ready at {xapi_url} (health-only, capacity endpoint unavailable)")
                     return True
         except (urllib.error.URLError, OSError, TimeoutError):
-            remaining = int(deadline - time.time())
-            log(f"Waiting for xapi at {xapi_url} ({remaining}s remaining)...")
-            time.sleep(interval)
+            pass
+
+        remaining = int(deadline - time.time())
+        log(f"Waiting for xapi at {xapi_url} ({remaining}s remaining)...")
+        time.sleep(interval)
 
     log(f"WARNING: xapi not reachable after {max_wait}s — starting anyway")
     return False
