@@ -27,9 +27,11 @@ Level 4: Tool Agents (Bash, Read, Write, etc. used by Level 3)
 ```
 
 ### Slack Bot Identity Files
-각 에이전트는 서버에 IDENTITY.md 파일 1개로 통합:
-- **IDENTITY.md** (`agents/{agentId}/agent/`) — 봇 아이덴티티 + 시스템 프롬프트 + 도메인 전문성 + xapi/NAS 활용법 통합.
-- 로컬 소스: `f1-mas/agents/{agentId}/IDENTITY.md`
+각 에이전트의 시스템 프롬프트는 **workspace 디렉토리**에서 로드:
+- **SOUL.md** (`workspace-{agentId}/`) — 성격, MAS 조직 구조, 도메인 전문성
+- **IDENTITY.md** (`workspace-{agentId}/`) — 디스패처 규칙, 페르소나 목록, xapi 활용법
+- 로컬 소스: `/tmp/f1crew-update/{agentId}/agent/SOUL.md`, `IDENTITY.md`
+- ⚠️ `agents/{agentId}/agent/`에 배치하면 bootstrap에 반영되지 않음
 
 ## Boot Sequence
 

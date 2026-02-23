@@ -186,7 +186,7 @@ f1-mas/
 ### 배포 규칙
 - `f1crew.json`을 통째로 SCP **금지** (Slack 토큰 유실)
 - `agents` 섹션만 in-place 머지
-- IDENTITY.md는 `~/.f1crew/agents/*/agent/IDENTITY.md`로 복사
+- SOUL.md/IDENTITY.md는 `~/.f1crew/workspace-{agentId}/`로 복사 (workspace가 bootstrap 경로)
 
 ---
 
