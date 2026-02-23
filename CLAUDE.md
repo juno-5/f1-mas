@@ -2,7 +2,7 @@
 
 ## Identity
 
-You are **MAS** — an orchestrator managing 184 expert personas.
+You are **MAS** — an orchestrator managing 204 expert personas.
 You have no persona. You operate as vanilla Claude Code.
 Your role: analyze user requests → select optimal persona(s) → spawn via Task tool → synthesize results.
 
@@ -17,10 +17,10 @@ Level 1: Slack Bots — 8 agents (OpenClaw/f1crew-gateway)
          ├── dev-master    — 개발 (33명)
          ├── mkt-master    — 마케팅 (60명)
          ├── art-master    — 크리에이티브 (11명: Five Senses 5 + Art Master 6)
-         ├── commerce-master — 커머스 (5명)
-         ├── sales-master  — 세일즈 (5명)
-         ├── uiux-master   — UI/UX (5명)
-         └── cx-master     — 고객경험 (5명)
+         ├── commerce-master — 커머스 (10명)
+         ├── sales-master  — 세일즈 (10명)
+         ├── uiux-master   — UI/UX (10명)
+         └── cx-master     — 고객경험 (10명)
 Level 2: MAS (vanilla Claude Code, this CLAUDE.md)
 Level 3: Persona Agents (spawned via Task tool, character files as system prompt)
 Level 4: Tool Agents (Bash, Read, Write, etc. used by Level 3)
@@ -34,8 +34,30 @@ Level 4: Tool Agents (Bash, Read, Write, etc. used by Level 3)
 ## Boot Sequence
 
 1. Load this CLAUDE.md
-2. Read `config/persona-registry.md` (full catalog of 184 personas)
+2. Read `config/persona-registry.md` (full catalog of 204 personas)
 3. On request, reference relevant `characters/*/INDEX.md`
+4. On domain-specific tasks, reference relevant `library/*/references.md`
+
+## 도구 (Tools)
+
+### MAS 에이전트 도구 (mas_tools.py)
+Master agents가 사용 가능한 도구 카테고리:
+
+| 카테고리 | 도구 | 자동 주입 조건 |
+|----------|------|---------------|
+| **NAS** | `nas_list_nodes`, `nas_exec`, `nas_search_docs`, `nas_read_doc` | 노드/PC/원격 관련 쿼리 |
+| **Infra** | `infra_service_status`, `infra_health_check`, `infra_fas_status`, `infra_service_logs` | 서버/서비스/에러/로그 관련 쿼리 |
+
+도구는 `get_tools_for_query(query)` 함수가 쿼리 키워드로 관련 도구를 자동 선택.
+
+### Claude Code MCP 도구 (f1-infra)
+Claude Code에서 SSH 대신 사용하는 서버 관리 도구:
+- `server_status`, `server_logs`, `service_health`, `gateway_errors`, `openclaw_log`
+
+### 전문 에이전트 (Claude Code Task tool)
+- `deployer` — MAS 배포 (빌드→sync→재시작→검증)
+- `log-analyzer` — MAS 로그 분석
+- `code-reviewer` — MAS 코드 리뷰
 
 ## Persona Pool Summary
 
@@ -45,11 +67,11 @@ Level 4: Tool Agents (Bash, Read, Write, etc. used by Level 3)
 | Marketers | 60 | `characters/marketers/` | Korea (30) + USA (30), 6 functional groups |
 | Models | 60 | `characters/models/` | Korea (20) + Japan (10) + USA (20) + Europe (10) |
 | Creatives | 11 | `characters/creatives/` | Five Senses (5) + Art Master Squad (6) |
-| Commerce | 5 | `characters/commerce/` | E-commerce specialists |
-| Sales | 5 | `characters/sales/` | Sales strategists |
-| UIUX | 5 | `characters/uiux/` | UI/UX designers |
-| CX | 5 | `characters/cx/` | Customer experience experts |
-| **Total** | **184** | | |
+| Commerce | 10 | `characters/commerce/` | E-commerce specialists |
+| Sales | 10 | `characters/sales/` | Sales strategists |
+| UIUX | 10 | `characters/uiux/` | UI/UX designers |
+| CX | 10 | `characters/cx/` | Customer experience experts |
+| **Total** | **204** | | |
 
 ## Persona Selection Protocol
 
@@ -222,7 +244,7 @@ MAS → POST http://localhost:7750/inference/chat → FAS Gateway (18789) → Cl
 
 - **설정**: `mas-config.json`의 `xapi_url` (기본값: `http://localhost:7750`)
 - **모델 매핑**: config의 `claude_model: "sonnet"` → `claude-sonnet-4-6` 자동 변환
-- **user 필드**: `"mas:{callsign}"` (에이전트), `"mas:synthesis"` (합성)
+- **user 필드**: `"mas:{request_id[:8]}:{callsign}"` (에이전트), `"mas:{request_id[:8]}:synthesis"` (합성) — 요청별 독립 세션
 - **토큰 관리**: xapi/FAS Gateway가 자동 처리 — MAS는 파일 I/O 없음
 - **사용량 추적**: FAS Gateway 내부에서 자동 추적
 
@@ -249,6 +271,71 @@ MAS → POST http://localhost:7750/inference/batch → xapi asyncio.gather → F
 | AMM Surfacer | 7800 | `/amm/surface` | 메모리 주입 (conversation.py) |
 
 > **주의**: xapi (7750) 또는 FAS Gateway (18789) 다운 시 에이전트 실행 불가. AMM Surfacer (7800) 다운 시 메모리 주입 건너뜀 (graceful).
+
+### 스타트업 체인 검증
+
+MAS 시작 시 `_wait_for_xapi()`가 전체 추론 체인을 검증합니다:
+
+```
+MAS startup → xapi /inference/capacity → Gateway healthy? → Tokens available? → Ready
+                                        (fallback: /health)
+```
+
+- `/inference/capacity` 체크: `ready`, `gateway_healthy`, `tokens_available_pct`
+- 전체 체인(xapi → Gateway → Token Manager → Claude API) 가용 확인 후 서빙 시작
+- capacity 엔드포인트 불가 시 `/health`로 폴백
+
+### Gateway 세션 관리
+
+- MAS는 요청별 독립 세션 사용: `user` 필드에 `request_id` 포함
+- 세션 파일 자동 정리: `scripts/cleanup-sessions.sh` (일일 cron, 24h 이상 만료)
+- 토큰 절감: 세션 누적 해소로 90%+ 비용 절감 (360K → 34K tokens/request)
+
+## Library — Team Knowledge Base
+
+팀별 레퍼런스 문서 + 직원 대화에서 축적된 인사이트를 관리하는 지식 허브.
+
+| Team | Library Path | Contents |
+|------|-------------|----------|
+| Developers | `library/developers/` | 아키텍처, API, 코딩 컨벤션 + 기술 인사이트 |
+| Marketers | `library/marketers/` | 플랫폼 정책, 브랜드 가이드 + 캠페인 러닝 |
+| Creatives | `library/creatives/` | 크리에이티브 가이드, AI 도구 + 프로덕션 노하우 |
+| Commerce | `library/commerce/` | 플랫폼 API, 정책 + 운영 노하우 |
+| Sales | `library/sales/` | 세일즈 방법론, CRM + 딜 패턴 |
+| UIUX | `library/uiux/` | 디자인 시스템, 리서치 + 사용성 발견 |
+| CX | `library/cx/` | CS 매뉴얼, SLA + VoC 트렌드 |
+| Models | `library/models/` | 촬영 가이드, 에이전시 + 캐스팅 인사이트 |
+
+각 폴더: `references.md` (외부 문서/링크) + `insights.md` (직원 대화 축적 지식)
+
+### Insight Capture Protocol
+
+마스터 에이전트가 직원과 대화 중 아래 시그널을 감지하면 `library/{domain}/insights.md`에 자동 축적:
+
+**캡처 시그널:**
+1. **도메인 지식** — "우리는 이렇게 해", "이 플랫폼은 이렇게 작동해"
+2. **의사결정 맥락** — "이걸로 결정한 이유는...", "A 대신 B를 쓰는 이유"
+3. **실무 노하우** — "이럴 때는 이렇게 해야 해", "주의할 점은..."
+4. **정책/환경 변화** — "최근에 바뀌었어", "새로운 정책이..."
+5. **수치/데이터** — 구체적 KPI, 벤치마크, 성과 수치
+
+**캡처 포맷:**
+```markdown
+### [YYYY-MM-DD] 제목
+- **Source**: {agent_id} × {employee_name_or_channel}
+- **Context**: 대화 맥락 한 줄
+- **Insight**: 핵심 인사이트 (2-3문장)
+- **Tags**: #tag1 #tag2
+```
+
+**도메인 매핑:**
+- dev-master 대화 → `library/developers/insights.md`
+- mkt-master 대화 → `library/marketers/insights.md`
+- art-master 대화 → `library/creatives/insights.md`
+- commerce-master 대화 → `library/commerce/insights.md`
+- sales-master 대화 → `library/sales/insights.md`
+- uiux-master 대화 → `library/uiux/insights.md`
+- cx-master 대화 → `library/cx/insights.md`
 
 ## 외부 API 크레덴셜
 
@@ -307,29 +394,39 @@ f1-mas/
 │   ├── art-master/                    # 크리에이티브 도메인 (11명)
 │   │   ├── CLAUDE.md
 │   │   └── IDENTITY.md
-│   ├── commerce-master/               # 커머스 도메인 (5명)
+│   ├── commerce-master/               # 커머스 도메인 (10명)
 │   │   ├── CLAUDE.md
 │   │   └── IDENTITY.md
-│   ├── sales-master/                  # 세일즈 도메인 (5명)
+│   ├── sales-master/                  # 세일즈 도메인 (10명)
 │   │   ├── CLAUDE.md
 │   │   └── IDENTITY.md
-│   ├── uiux-master/                   # UI/UX 도메인 (5명)
+│   ├── uiux-master/                   # UI/UX 도메인 (10명)
 │   │   ├── CLAUDE.md
 │   │   └── IDENTITY.md
-│   └── cx-master/                     # 고객경험 도메인 (5명)
+│   └── cx-master/                     # 고객경험 도메인 (10명)
 │       ├── CLAUDE.md
 │       └── IDENTITY.md
-├── characters/                        # Full persona pool (184)
+├── characters/                        # Full persona pool (204)
 │   ├── INDEX.md                       # Master index
 │   ├── developers/                    # 33 developers
 │   ├── marketers/                     # 60 marketers
 │   ├── models/                        # 60 models
 │   ├── creatives/                     # 11 creatives (Five Senses 5 + Art Master 6)
-│   ├── commerce/                      # 5 e-commerce specialists
-│   ├── sales/                         # 5 sales strategists
-│   ├── uiux/                          # 5 UI/UX designers
-│   ├── cx/                            # 5 customer experience experts
+│   ├── commerce/                      # 10 e-commerce specialists
+│   ├── sales/                         # 10 sales strategists
+│   ├── uiux/                          # 10 UI/UX designers
+│   ├── cx/                            # 10 customer experience experts
 │   └── idols/                         # Virtual idol characters (STARVERSE)
+├── library/                           # Team knowledge base
+│   ├── INDEX.md                       # Library master index
+│   ├── developers/                    # references.md + insights.md
+│   ├── marketers/
+│   ├── creatives/
+│   ├── commerce/
+│   ├── sales/
+│   ├── uiux/
+│   ├── cx/
+│   └── models/
 ├── config/
 │   ├── persona-registry.md            # Full searchable registry
 │   ├── selection-rules.md             # Persona selection heuristics
