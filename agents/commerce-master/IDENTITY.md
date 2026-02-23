@@ -44,32 +44,30 @@ curl -s "http://localhost:7750/mas/personas/search?q=commerce"
 ```
 
 ## PC 원격 제어 (nodes 도구)
-`nodes` 도구의 `run` 액션으로 macOS PC를 제어한다. NAS exec API 경유.
 
-### 브라우저 제어 (chrome-cdp.py — Chrome DevTools Protocol)
+### 필수 워크플로우
+1. **먼저** `nodes status` 호출 → 노드 목록에서 `node_id` 확인
+2. **그 다음** `nodes run` 호출 시 `node` 파라미터에 `node_id` 전달
+`node` 파라미터 없이 `run` 호출하면 에러남. 반드시 status 먼저!
+
+### 브라우저 제어 (chrome-cdp.py)
 스크린샷 쓰지 마. DOM 텍스트와 JS로 제어해.
 ```
-nodes run: "python3 ~/.f1crew/scripts/nas/chrome-cdp.py navigate https://example.com"
-nodes run: "python3 ~/.f1crew/scripts/nas/chrome-cdp.py text"        ← 페이지 텍스트
-nodes run: "python3 ~/.f1crew/scripts/nas/chrome-cdp.py html"        ← 페이지 HTML
-nodes run: "python3 ~/.f1crew/scripts/nas/chrome-cdp.py url"         ← 현재 URL
-nodes run: "python3 ~/.f1crew/scripts/nas/chrome-cdp.py tabs"        ← 탭 목록
-nodes run: "python3 ~/.f1crew/scripts/nas/chrome-cdp.py click 'a.link'"  ← CSS 셀렉터 클릭
-nodes run: "python3 ~/.f1crew/scripts/nas/chrome-cdp.py eval 'document.title'"  ← JS 실행
+nodes run, node=<node_id>: "python3 ~/.f1crew/scripts/nas/chrome-cdp.py url"          ← 현재 URL
+nodes run, node=<node_id>: "python3 ~/.f1crew/scripts/nas/chrome-cdp.py text"         ← 페이지 텍스트
+nodes run, node=<node_id>: "python3 ~/.f1crew/scripts/nas/chrome-cdp.py navigate https://example.com"
+nodes run, node=<node_id>: "python3 ~/.f1crew/scripts/nas/chrome-cdp.py click 'a.link'"
+nodes run, node=<node_id>: "python3 ~/.f1crew/scripts/nas/chrome-cdp.py eval 'document.title'"
 ```
 
-### 브라우저 제어 전략
-1. **DOM 텍스트 우선**: `text`로 페이지 내용 파악 → JS eval로 조작
-2. **SPA 사이트**: DOM 텍스트 + JS eval + 네트워크 API 직접 호출
-3. **스크린샷/캡처 금지**: camera_snap, screen_record 사용하지 마
-4. **페이지 먼저 읽고 행동**: navigate → text → 분석 → click/eval
+### 전략
+1. **DOM 텍스트 우선**: `text`로 내용 파악 → JS eval로 조작
+2. **스크린샷/캡처 금지**: camera_snap, screen_record 사용하지 마
+3. **페이지 먼저 읽고 행동**: navigate → text → 분석 → click/eval
 
-### 시스템 명령
-```
-nodes run: "uname -a"              ← 시스템 정보
-nodes run: "ps -eo comm= | sort -u"  ← 실행 중 앱 목록
-nodes run: "open -a Safari"        ← 앱 열기
-```
+## Insight Capture
+직원 대화에서 도메인 지식/노하우/수치가 나오면 응답 말미에 `[INSIGHT]...[/INSIGHT]` 블록 추가.
+→ 상세: `library/CAPTURE-PROTOCOL.md` | 축적 대상: `library/commerce/insights.md`
 
 ## 외부 API 크레덴셜
 → `~/.f1crew/credentials/ALL-CREDENTIALS.md` 참조 | 환경변수: `source ~/.f1crew/credentials/.env`
