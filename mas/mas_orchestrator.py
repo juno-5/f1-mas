@@ -197,6 +197,10 @@ _FUNCTION_PATTERNS = {
         re.IGNORECASE,
     ),
     # --- Missing function patterns (auto-zero cycle #3) ---
+    "platform_engineering": re.compile(
+        r"플랫폼.*엔지니어|platform.*engineer|개발자.*포털|developer.*portal|IDP|내부.*개발.*플랫폼|internal.*developer|DevOps|devops|CI.?CD|인프라.*자동화|infra.*automat|SRE.*플랫폼",
+        re.IGNORECASE,
+    ),
     "cloud_container": re.compile(
         r"도커|docker|쿠버네티스|kubernetes|k8s|컨테이너|container|클라우드|cloud|AWS|GCP|Azure|파드|pod|헬름|helm",
         re.IGNORECASE,
@@ -225,6 +229,31 @@ _FUNCTION_PATTERNS = {
         r"엔지니어링.*관리|eng.*manage|코드.*리뷰|code.*review|스프린트|sprint|애자일|agile|스크럼|scrum|기술.*리더|tech.*lead|1on1",
         re.IGNORECASE,
     ),
+    # Art Master Squad functions
+    "ai_art_direction": re.compile(
+        r"AI.*아트.*디렉|ai.*art.*direct|AI.*크리에이티브.*디렉|ai.*creative.*direct|AI.*소재.*총괄",
+        re.IGNORECASE,
+    ),
+    "ai_video_gen": re.compile(
+        r"Veo|AI.*영상.*생성|ai.*video.*gen|AI.*영상.*제작|AI.*광고.*영상|브랜드.*필름.*AI",
+        re.IGNORECASE,
+    ),
+    "ai_image_gen": re.compile(
+        r"Nano.?Banana|AI.*이미지.*생성|ai.*image.*gen|AI.*제품.*사진|AI.*상업.*이미지",
+        re.IGNORECASE,
+    ),
+    "ai_motion": re.compile(
+        r"Kling|Higgsfield|AI.*모션|ai.*motion|img2video|이미지.*투.*비디오",
+        re.IGNORECASE,
+    ),
+    "ai_shortform": re.compile(
+        r"Seedance|AI.*숏폼|ai.*short.?form|AI.*바이럴|AI.*릴스|AI.*쇼츠",
+        re.IGNORECASE,
+    ),
+    "prompt_architecture": re.compile(
+        r"프롬프트.*엔지니어|prompt.*engineer|프롬프트.*아키텍|prompt.*architect|프롬프트.*최적화|prompt.*optim",
+        re.IGNORECASE,
+    ),
 }
 
 
@@ -237,7 +266,8 @@ class Orchestrator:
     def __init__(self):
         self._index = get_index()
 
-    def analyze_request(self, query: str, pattern: str = None) -> dict:
+    def analyze_request(self, query: str, pattern: str = None,
+                        tribe: str = None, squad: str = None) -> dict:
         """Analyze user request: detect domain, function, locale, complexity.
 
         Returns {"domains": [...], "functions": [...], "locale": str,
@@ -255,22 +285,30 @@ class Orchestrator:
         # Locale detection
         locale = self._index.detect_locale(query)
 
-        # Complexity estimation
+        # Complexity estimation — use domain-relevant function count to avoid
+        # cross-domain functions inflating agent count
         query_len = len(query)
-        func_count = len(functions)
+        primary_domain = domains[0]
+        domain_func_count = 0
+        for func in functions:
+            candidates = self._index.by_function(func)
+            if candidates and any(c.category == primary_domain for c in candidates):
+                domain_func_count += 1
+        # Use domain func count for sizing, but at least 1 if any functions matched
+        effective_count = max(domain_func_count, 1) if functions else 0
 
-        if query_len < 50 and func_count <= 1:
+        if query_len < 50 and effective_count <= 1:
             complexity = "simple"
             agent_count = 1
-        elif query_len < 200 and func_count <= 2:
+        elif query_len < 200 and effective_count <= 2:
             complexity = "focused"
-            agent_count = min(2, func_count + 1)
-        elif len(domains) > 1 or func_count >= 3:
+            agent_count = min(2, effective_count + 1)
+        elif len(domains) > 1 or effective_count >= 3:
             complexity = "full_project"
-            agent_count = min(5, func_count + 1)
+            agent_count = min(5, effective_count + 1)
         else:
             complexity = "multi_faceted"
-            agent_count = min(3, func_count + 1)
+            agent_count = min(3, effective_count + 1)
 
         # Pattern-based minimum: multi_perspective needs 2+, full_team needs 3+
         if pattern == "multi_perspective":
@@ -281,12 +319,35 @@ class Orchestrator:
         # Ensure at least 1 agent
         agent_count = max(1, agent_count)
 
+        # Cost-aware agent count cap
+        if cfg.get("cost_aware_limiting", True):
+            try:
+                from .mas_scoring import get_scorer
+                avg_cost = get_scorer().global_avg_cost_per_agent()
+                budget = cfg.get("per_request_budget_usd", 0.50)
+                if avg_cost > 0:
+                    max_by_budget = max(1, int(budget / avg_cost))
+                    agent_count = min(agent_count, max_by_budget)
+            except Exception:
+                pass  # scoring not ready yet, skip
+
+        # Tribe/Squad resolution
+        resolved_squad = squad or self._index.detect_squad(query)
+        resolved_tribe = tribe or self._index.detect_tribe(query)
+        # Squad→tribe is authoritative (squad is more specific than tribe keyword matching)
+        if resolved_squad:
+            sq = self._index.get_squad(resolved_squad)
+            if sq:
+                resolved_tribe = sq.tribe_id
+
         return {
             "domains": domains,
             "functions": functions if functions else [self._default_function(domains[0])],
             "locale": locale,
             "complexity": complexity,
             "agent_count": agent_count,
+            "tribe": resolved_tribe or "",
+            "squad": resolved_squad or "",
         }
 
     def _default_function(self, domain: str) -> str:
@@ -306,20 +367,114 @@ class Orchestrator:
     def select_personas(self, analysis: dict) -> list[PersonaEntry]:
         """Select optimal personas based on analysis.
 
-        Strategy: pick top-1 per function first (round-robin), then fill remaining slots.
+        If tribe/squad is specified, constrain selection to that pool.
+        Otherwise, use function-priority-based selection (existing logic).
+        """
+        squad_id = analysis.get("squad", "")
+        tribe_id = analysis.get("tribe", "")
+
+        # Squad-constrained selection
+        if squad_id:
+            pool = self._index.by_squad(squad_id)
+            if pool:
+                return self._select_from_pool(pool, analysis)
+
+        # Tribe-constrained selection
+        if tribe_id:
+            pool = self._index.by_tribe(tribe_id)
+            if pool:
+                return self._select_from_pool(pool, analysis)
+
+        # Default: function-priority-based selection
+        return self._select_by_function(analysis)
+
+    def _select_from_pool(self, pool: list[PersonaEntry], analysis: dict) -> list[PersonaEntry]:
+        """Select personas from a constrained pool (tribe/squad).
+
+        Strategy:
+        1. Function-priority matches within pool
+        2. Locale matches to fill remaining
+        3. Any remaining pool members
         """
         selected = []
         seen_ids = set()
         locale = analysis["locale"]
         max_count = analysis["agent_count"]
+        pool_ids = {p.id for p in pool}
 
-        # Pass 1: Pick top-1 per function (best locale match)
+        # Pass 1: Function-priority matches within pool
         for func in analysis["functions"]:
+            if len(selected) >= max_count:
+                break
+            candidates = self._index.by_function(func)
+            for c in candidates:
+                if c.id in pool_ids and c.id not in seen_ids:
+                    selected.append(c)
+                    seen_ids.add(c.id)
+                    break
+
+        # Pass 2: Locale-matching pool members
+        if len(selected) < max_count:
+            for p in pool:
+                if p.id not in seen_ids and p.locale == locale:
+                    selected.append(p)
+                    seen_ids.add(p.id)
+                    if len(selected) >= max_count:
+                        break
+
+        # Pass 3: Any remaining pool members
+        if len(selected) < max_count:
+            for p in pool:
+                if p.id not in seen_ids:
+                    selected.append(p)
+                    seen_ids.add(p.id)
+                    if len(selected) >= max_count:
+                        break
+
+        return selected[:max_count]
+
+    def _select_by_function(self, analysis: dict) -> list[PersonaEntry]:
+        """Original function-priority-based selection (no pool constraint).
+
+        Strategy: pick top-1 per function first (round-robin), then fill remaining slots.
+        Functions are sorted so domain-relevant ones come before cross-domain ones.
+        """
+        selected = []
+        seen_ids = set()
+        locale = analysis["locale"]
+        max_count = analysis["agent_count"]
+        primary_domain = analysis["domains"][0]
+
+        # Sort functions: domain-relevant first, cross-domain second
+        domain_funcs = []
+        cross_funcs = []
+        for func in analysis["functions"]:
+            candidates = self._index.by_function(func)
+            if candidates and any(c.category == primary_domain for c in candidates):
+                domain_funcs.append(func)
+            else:
+                cross_funcs.append(func)
+        ordered_funcs = domain_funcs + cross_funcs
+
+        # Score-aware reranking (if enabled and data available)
+        scorer = None
+        if cfg.get("scoring_enabled", True):
+            try:
+                from .mas_scoring import get_scorer
+                scorer = get_scorer()
+            except Exception:
+                scorer = None
+
+        # Pass 1: Pick top-1 per function (best locale match, score-reranked)
+        for func in ordered_funcs:
             if len(selected) >= max_count:
                 break
             candidates = self._index.by_function(func)
             if not candidates:
                 continue
+            # Rerank by efficiency score if data available
+            if scorer and scorer.has_data(func):
+                candidates = scorer.rerank(candidates, func, locale)
 
             picked = None
             # Prefer locale match
@@ -363,6 +518,8 @@ class Orchestrator:
         query: str,
         persona_ids: list[str] = None,
         pattern: str = None,
+        tribe: str = None,
+        squad: str = None,
     ):
         """Full orchestration: analyze → select → spawn → synthesize.
 
@@ -370,7 +527,13 @@ class Orchestrator:
         """
         # 1. Analyze
         state.update_request(request_id, status="analyzing")
-        analysis = self.analyze_request(query, pattern=pattern)
+        analysis = self.analyze_request(query, pattern=pattern, tribe=tribe, squad=squad)
+
+        # Record tribe/squad in state
+        if analysis.get("tribe"):
+            state.update_request(request_id, tribe=analysis["tribe"])
+        if analysis.get("squad"):
+            state.update_request(request_id, squad=analysis["squad"])
         _log(f"[{request_id}] Analysis: {analysis}")
 
         # 2. Select personas
@@ -435,6 +598,13 @@ class Orchestrator:
         state.record_event("complete" if not result.get("error") else "error",
                            f"Request {request_id} {state.get_request(request_id).status}",
                            request_id)
+
+        # 8. Performance ledger — record per-agent outcomes for scoring
+        try:
+            from .mas_performance import record_outcome
+            record_outcome(request_id, analysis)
+        except Exception as e:
+            _log(f"[{request_id}] Performance recording failed: {e}")
 
     def _slack_notify_assembly(self, request_id, query, personas, analysis):
         """Send Slack notification about team assembly."""

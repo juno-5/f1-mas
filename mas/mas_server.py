@@ -9,7 +9,9 @@ Endpoints:
   GET  /metrics             — Prometheus metrics
   GET  /personas            — List all personas
   GET  /personas/select     — Dry-run persona selection
+  GET  /personas/scores     — Per-persona efficiency scores
   GET  /personas/<id>/character — Get persona character content
+  GET  /functions/<key>/ranking — Personas ranked by score for a function
   GET  /squads/detect       — Auto-detect squad from query text
   POST /request             — Submit a task request
   POST /cancel              — Cancel an active request
@@ -114,6 +116,11 @@ class MASHandler(http.server.BaseHTTPRequestHandler):
         elif path.startswith("/squads/"):
             squad_id = path.split("/squads/")[1]
             self._handle_squad_detail(squad_id)
+        elif path == "/personas/scores":
+            self._handle_persona_scores()
+        elif path.startswith("/functions/") and path.endswith("/ranking"):
+            func_key = path.split("/functions/")[1].rsplit("/ranking")[0]
+            self._handle_function_ranking(func_key)
         elif path == "/requests":
             self._handle_list_requests()
         elif path.startswith("/request/"):
@@ -540,6 +547,42 @@ class MASHandler(http.server.BaseHTTPRequestHandler):
             "active": active,
             "requests": summaries,
         })
+
+    def _handle_persona_scores(self):
+        """Return per-persona efficiency scores from performance ledger."""
+        if not cfg.get("scoring_enabled", True):
+            self._send_json(200, {"enabled": False, "scores": {}})
+            return
+        try:
+            from mas.mas_scoring import get_scorer
+            scorer = get_scorer()
+            scores = scorer.get_all_scores()
+            result = {}
+            for pid, ps in scores.items():
+                result[pid] = {
+                    "total_requests": ps.total_requests,
+                    "success_rate": round(ps.success_rate, 3),
+                    "avg_cost_usd": round(ps.avg_cost_usd, 4),
+                    "avg_duration_ms": ps.avg_duration_ms,
+                    "efficiency_score": round(ps.efficiency_score, 4),
+                    "functions": list(ps.by_function.keys()),
+                }
+            self._send_json(200, {"enabled": True, "count": len(result), "scores": result})
+        except Exception as e:
+            self._send_json(500, {"error": str(e)})
+
+    def _handle_function_ranking(self, func_key):
+        """Return personas ranked by score for a function."""
+        if not cfg.get("scoring_enabled", True):
+            self._send_json(200, {"enabled": False, "ranking": []})
+            return
+        try:
+            from mas.mas_scoring import get_scorer
+            scorer = get_scorer()
+            ranking = scorer.function_ranking(func_key)
+            self._send_json(200, {"function": func_key, "ranking": ranking})
+        except Exception as e:
+            self._send_json(500, {"error": str(e)})
 
     def _handle_get_request(self, request_id):
         """Get request status and results."""
