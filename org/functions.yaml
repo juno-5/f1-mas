@@ -196,7 +196,8 @@ social_content:
 visual_design:
   patterns:
     - "디자인|design|비주얼|visual|로고|logo|UI.{0,20}디자인|패키지.{0,20}디자인"
-  priority: ["DES-KR-01", "DES-KR-02", "DES-US-01", "DES-US-02"]
+  # Cycle #25: AM-01 추가 — creatives 도메인 비주얼 쿼리에서 creatives 전문가 선택
+  priority: ["DES-KR-01", "DES-KR-02", "DES-US-01", "DES-US-02", "AM-01"]
 
 # ─── Models ──────────────────────────────────────────────
 

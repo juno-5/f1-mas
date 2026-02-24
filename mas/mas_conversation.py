@@ -2,6 +2,7 @@
 
 import re
 import time
+from concurrent.futures import ThreadPoolExecutor, Future
 
 try:
     import httpx
@@ -92,28 +93,115 @@ def execute_pattern(
 
     Returns {"synthesis": str, "agent_outputs": [...], "error": str|None}.
     """
-    if pattern == PATTERN_SINGLE:
-        return _execute_single(request_id, query, personas[0], index)
-    elif pattern == PATTERN_MULTI:
-        return _execute_parallel(request_id, query, personas, index, pattern_name="Multi-Perspective")
-    elif pattern == PATTERN_RELAY:
-        return _execute_relay(request_id, query, personas, index)
-    elif pattern == PATTERN_FULL_TEAM:
-        return _execute_full_team(request_id, query, personas, index)
-    else:
-        return _execute_single(request_id, query, personas[0], index)
+    start = time.time()
+    callsigns = [p.callsign for p in personas]
 
+    if pattern == PATTERN_SINGLE:
+        result = _execute_single(request_id, query, personas[0], index)
+    elif pattern == PATTERN_MULTI:
+        result = _execute_parallel(request_id, query, personas, index, pattern_name="Multi-Perspective")
+    elif pattern == PATTERN_RELAY:
+        result = _execute_relay(request_id, query, personas, index)
+    elif pattern == PATTERN_FULL_TEAM:
+        result = _execute_full_team(request_id, query, personas, index)
+    else:
+        result = _execute_single(request_id, query, personas[0], index)
+
+    duration_ms = int((time.time() - start) * 1000)
+    status = "OK" if not result.get("error") else f"ERROR: {result['error'][:60]}"
+    _log(f"[{request_id}] DONE pattern={pattern} agents={callsigns} "
+         f"duration={duration_ms}ms status={status}")
+    return result
+
+
+
+# ---------------------------------------------------------------------------
+# AMM Circuit Breaker + Keyword Gating
+# ---------------------------------------------------------------------------
+
+class _AmmCircuitBreaker:
+    """Simple circuit breaker for AMM service.
+
+    States: CLOSED (normal) → OPEN (skip calls) → HALF-OPEN (try one call).
+    """
+
+    def __init__(self):
+        self._fail_count = 0
+        self._open_until = 0.0
+
+    @property
+    def is_open(self) -> bool:
+        if self._open_until and time.time() < self._open_until:
+            return True
+        if self._open_until and time.time() >= self._open_until:
+            # Half-open: allow one attempt, reset counter
+            self._open_until = 0.0
+            self._fail_count = 0
+        return False
+
+    def record_success(self):
+        self._fail_count = 0
+        self._open_until = 0.0
+
+    def record_failure(self):
+        threshold = cfg.get("amm_cb_fail_threshold", 3)
+        cooldown = cfg.get("amm_cb_open_seconds", 300)
+        self._fail_count += 1
+        if self._fail_count >= threshold:
+            self._open_until = time.time() + cooldown
+            _log(f"AMM circuit breaker OPEN for {cooldown}s after {self._fail_count} failures")
+
+
+_amm_cb = _AmmCircuitBreaker()
+
+_AMM_TRIGGER_RE = re.compile(
+    r"지난번|이전에|저번|예전에|기억|우리\s*브랜드|과거|히스토리|history|"
+    r"remember|previous|last\s*time|before|기존|했던|했었|알려줬|말했|"
+    r"참고.*자료|레퍼런스|reference|context|맥락",
+    re.IGNORECASE,
+)
+
+_amm_executor = ThreadPoolExecutor(max_workers=2, thread_name_prefix="amm")
+
+
+def _should_call_amm(query: str) -> bool:
+    """Determine if AMM memory lookup is needed for this query.
+
+    Policy modes (amm_policy config key):
+      - "always": always call AMM
+      - "never": never call AMM
+      - "auto" (default): keyword-based gating
+    """
+    policy = cfg.get("amm_policy", "auto")
+    if policy == "always":
+        return True
+    if policy == "never":
+        return False
+    # auto: keyword-based gating
+    return bool(_AMM_TRIGGER_RE.search(query))
 
 
 def _fetch_amm_memories(query: str, limit: int = 3, persona_role: str = "") -> str:
-    """Fetch relevant AMM memories to inject into agent prompt."""
-    _log(f"AMM: fetching memories for query: {query[:60]}... (persona: {persona_role[:30]})")
+    """Fetch relevant AMM memories — conditional + circuit breaker + fast timeout."""
     if not cfg.get("amm_memory_injection", True):
         return ""
     if httpx is None:
         return ""
 
+    # Keyword gating: skip AMM for queries that don't need memory
+    if not _should_call_amm(query):
+        _log("AMM: skipped (no memory keywords)")
+        return ""
+
+    # Circuit breaker: skip if AMM is failing
+    if _amm_cb.is_open:
+        _log("AMM: skipped (circuit breaker OPEN)")
+        return ""
+
+    _log(f"AMM: fetching memories for query: {query[:60]}...")
     xapi_url = cfg.get("xapi_url", "http://localhost:7750")
+    timeout = cfg.get("amm_timeout", 1.5)
+
     try:
         resp = httpx.post(
             f"{xapi_url}/amm/surface",
@@ -122,10 +210,13 @@ def _fetch_amm_memories(query: str, limit: int = 3, persona_role: str = "") -> s
                 "limit": limit,
                 "min_relevance": 0.4,
             },
-            timeout=5.0,
+            timeout=timeout,
         )
         if resp.status_code != 200:
+            _amm_cb.record_failure()
             return ""
+
+        _amm_cb.record_success()
         data = resp.json()
         memories = data.get("memories", [])
         if not memories:
@@ -151,8 +242,18 @@ def _fetch_amm_memories(query: str, limit: int = 3, persona_role: str = "") -> s
         _log(f"AMM: injecting {len(sections)} memories ({len(result)} chars)")
         return result
     except Exception as e:
+        _amm_cb.record_failure()
         _log(f"AMM memory fetch ERROR: {e}")
         return ""
+
+
+def _fetch_amm_async(query: str, limit: int = 3) -> "Future[str]":
+    """Launch AMM fetch in background thread. Returns a Future.
+
+    Use future.result(timeout=0) to get result without blocking,
+    or just ignore if agent execution finished first.
+    """
+    return _amm_executor.submit(_fetch_amm_memories, query, limit)
 
 
 _NAS_RELEVANT_RE = re.compile(
@@ -161,9 +262,12 @@ _NAS_RELEVANT_RE = re.compile(
     re.IGNORECASE,
 )
 
+# NAS circuit breaker — same pattern as AMM
+_nas_cb = _AmmCircuitBreaker()
+
 
 def _fetch_nas_context(query: str, domain: str = "") -> str:
-    """Fetch NAS node info + relevant docs to inject into agent prompt."""
+    """Fetch NAS node info + relevant docs — with circuit breaker + reduced timeout."""
     if not cfg.get("nas_context_injection", True):
         return ""
     if httpx is None:
@@ -172,33 +276,42 @@ def _fetch_nas_context(query: str, domain: str = "") -> str:
     if not _NAS_RELEVANT_RE.search(query):
         return ""
 
+    # Circuit breaker
+    if _nas_cb.is_open:
+        _log("NAS: skipped (circuit breaker OPEN)")
+        return ""
+
     nas_url = cfg.get("nas_url", "http://localhost:7730")
-    timeout = cfg.get("nas_timeout", 5.0)
+    timeout = cfg.get("nas_timeout", 2.0)
     doc_limit = cfg.get("nas_doc_limit", 3)
 
     sections = []
     try:
         # 1. Available nodes
         resp = httpx.get(f"{nas_url}/nodes", timeout=timeout)
-        if resp.status_code == 200:
-            data = resp.json()
-            nodes = data.get("nodes", [])
-            online = [n for n in nodes if n.get("status") == "online"]
-            if online:
-                node_lines = []
-                for n in online:
-                    nid = n.get("node_id", "?")
-                    ip = n.get("ip_address", "?")
-                    os_info = n.get("os_info", "?")
-                    cpu = n.get("cpu_percent", 0)
-                    mem = n.get("mem_percent", 0)
-                    node_lines.append(f"- **{nid}** ({os_info}) IP={ip} CPU={cpu}% MEM={mem}%")
-                sections.append("### Available Nodes\n" + "\n".join(node_lines))
-                sections.append(
-                    "### Node Commands\n"
-                    f"원격 실행: `POST {nas_url}/nodes/{{node_id}}/exec` "
-                    '`{"command": "...", "timeout": 30}`'
-                )
+        if resp.status_code != 200:
+            _nas_cb.record_failure()
+            return ""
+        _nas_cb.record_success()
+
+        data = resp.json()
+        nodes = data.get("nodes", [])
+        online = [n for n in nodes if n.get("status") == "online"]
+        if online:
+            node_lines = []
+            for n in online:
+                nid = n.get("node_id", "?")
+                ip = n.get("ip_address", "?")
+                os_info = n.get("os_info", "?")
+                cpu = n.get("cpu_percent", 0)
+                mem = n.get("mem_percent", 0)
+                node_lines.append(f"- **{nid}** ({os_info}) IP={ip} CPU={cpu}% MEM={mem}%")
+            sections.append("### Available Nodes\n" + "\n".join(node_lines))
+            sections.append(
+                "### Node Commands\n"
+                f"원격 실행: `POST {nas_url}/nodes/{{node_id}}/exec` "
+                '`{"command": "...", "timeout": 30}`'
+            )
 
         # 2. Relevant docs
         resp = httpx.get(
@@ -223,6 +336,7 @@ def _fetch_nas_context(query: str, domain: str = "") -> str:
                 )
 
     except Exception as e:
+        _nas_cb.record_failure()
         _log(f"NAS context fetch ERROR: {e}")
         return ""
 
@@ -335,12 +449,14 @@ def _execute_parallel(
     """Parallel execution: register → run parallel → synthesize.
 
     Used by both multi_perspective and full_team patterns.
+    AMM fetch runs async in parallel with agent inference, injected at synthesis.
     """
     _log(f"[{request_id}] {pattern_name}: {[p.callsign for p in personas]}")
 
-    # Fetch AMM memories + NAS context once for the entire request
-    # Library context is fetched per-persona (domain-specific)
-    amm_context = _fetch_amm_memories(query)
+    # Launch AMM fetch async — runs in parallel with agent inference
+    amm_future = _fetch_amm_async(query)
+
+    # NAS context (sync, keyword-gated so usually skipped)
     nas_context = _fetch_nas_context(query, domain=personas[0].category if personas else "")
 
     # Determine available tools for this query
@@ -348,11 +464,11 @@ def _execute_parallel(
     if tools:
         _log(f"[{request_id}] Tools enabled: {len(tools)} tool(s)")
 
-    # Register agents
+    # Register agents — build prompts WITHOUT AMM (injected at synthesis)
     agents_info = []
     for p in personas:
         agent_id = state.add_agent(request_id, p.id, p.callsign, p.role)
-        prompt = _build_agent_prompt(p, query, index, amm_context=amm_context,
+        prompt = _build_agent_prompt(p, query, index, amm_context="",
                                      nas_context=nas_context)
         agents_info.append({
             "agent_id": agent_id,
@@ -365,13 +481,20 @@ def _execute_parallel(
         })
         _slack_agent_progress(request_id, p.callsign, "running")
 
-    # Run in parallel
+    # Run in parallel (AMM fetch also running concurrently)
     results = run_agents_parallel(request_id, agents_info)
 
     # Notify completion
     for ai, r in zip(agents_info, results):
         _slack_agent_progress(request_id, ai["callsign"],
                               "completed" if not r.get("error") else "failed")
+
+    # Collect AMM result (non-blocking — should be done by now)
+    amm_context = ""
+    try:
+        amm_context = amm_future.result(timeout=0.5)
+    except Exception:
+        _log(f"[{request_id}] AMM async: not available at synthesis time")
 
     # Progressive synthesis: synthesize with whatever succeeded
     successful = [(ai, r) for ai, r in zip(agents_info, results) if not r.get("error")]
@@ -387,16 +510,25 @@ def _execute_parallel(
     # If only 1 succeeded, skip synthesis
     if len(successful) == 1:
         ai, r = successful[0]
+        text = r['text']
+        if amm_context:
+            text = amm_context + "\n\n" + text
         return {
-            "synthesis": f"## {ai['callsign']} ({ai['role']})\n\n{r['text']}",
+            "synthesis": f"## {ai['callsign']} ({ai['role']})\n\n{text}",
             "agent_outputs": results, "error": None,
         }
 
     # Synthesize with available results (don't wait for slow agents)
     state.update_request(request_id, status="synthesizing")
     max_input_chars = cfg.get("synthesis_max_input_chars", 4000)
+
+    # Build synthesis query — inject AMM context if available
+    synth_query = query
+    if amm_context:
+        synth_query = query + amm_context
+
     synth_prompt = build_synthesis_prompt(
-        query,
+        synth_query,
         [{"callsign": ai["callsign"], "role": ai["role"], "output": r["text"]}
          for ai, r in successful],
         max_chars_per_agent=max_input_chars,
@@ -425,8 +557,7 @@ def _execute_relay(
     """Relay: A's output → B's input, sequential."""
     _log(f"[{request_id}] Relay: {' → '.join(p.callsign for p in personas)}")
 
-    # Fetch AMM memories + NAS context once for the entire relay chain
-    # Library context is fetched per-persona (domain-specific)
+    # AMM: conditional + fast-fail (relay is sequential, async has less benefit)
     amm_context = _fetch_amm_memories(query)
     nas_context = _fetch_nas_context(query, domain=personas[0].category if personas else "")
 

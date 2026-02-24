@@ -358,9 +358,10 @@ def _execute_infra_tool(name: str, arguments: dict) -> str:
 # --------------------------------------------------------------------------
 
 _NAS_RELEVANT_RE = re.compile(
-    r"(?:NAS|원격).{0,4}노드|\bNAS\b|"
+    r"노드.{0,4}(?:목록|상태|확인|조회|리스트)|(?:NAS|원격).{0,4}노드|\bNAS\b|"
+    r"\bnode.{0,4}(?:list|status|check)\b|"
     r"클라우드.{0,4}(?:노드|인스턴스)|\bcloud.{0,4}(?:node|instance)\b|"
-    r"\bPC\b.{0,4}(?:접속|연결|원격|실행)|"
+    r"\bPC\b.{0,4}(?:접속|연결|원격|실행|상태|확인)|"
     r"원격.{0,4}(?:접속|실행|명령)|\bremote.{0,4}(?:exec|connect)\b|"
     r"(?:명령|코드|스크립트|원격).{0,4}실행|실행해|\bexec\b|"
     r"문서.*검색|\bdoc.*search\b|\bnas_|nas 노드",

@@ -207,14 +207,14 @@ MEMORY_DOMAIN_NORMALIZE = {
 
 # Keyword patterns for normalizing memory Domain field to library domains
 MEMORY_DOMAIN_PATTERNS = [
-    (re.compile(r"dev|infra|hpc|gpu|server|backend|frontend|api|code|deploy|token.?econ", re.I), "developers"),
-    (re.compile(r"market|ads?|campaign|seo|brand|growth|advertis|social.?media", re.I), "marketers"),
-    (re.compile(r"creative|art|visual|design|video|photo|music|audio|color|motion|film", re.I), "creatives"),
-    (re.compile(r"commerce|shop|amazon|ecommerce|seller|fulfillment|logistics|물류", re.I), "commerce"),
-    (re.compile(r"sales|deal|pipeline|revenue|pricing|negotiat", re.I), "sales"),
-    (re.compile(r"ux|ui|usability|figma|prototype|wireframe|interaction|user.?research", re.I), "uiux"),
-    (re.compile(r"cx|cs|support|customer|service|healthcare|health|의료|환자", re.I), "cx"),
-    (re.compile(r"model|fashion|casting|shoot|runway|editorial|beauty", re.I), "models"),
+    (re.compile(r"dev|infra|hpc|gpu|server|backend|frontend|\bapi\b|code|deploy|token.?econ|개발|인프라|클라우드|보안|소프트웨어|딥러닝|머신러닝|병렬", re.I), "developers"),
+    (re.compile(r"market|ads?\b|campaign|seo|brand|growth|advertis|social.?media|광고|마케|브랜드", re.I), "marketers"),
+    (re.compile(r"creative|visual|\bdesign\b|video|photo|music|audio|color|motion|film|크리에이|영상|음악|사운드|감성", re.I), "creatives"),
+    (re.compile(r"commerce|shop|amazon|ecommerce|seller|fulfillment|logistics|물류|커머스|배송|셀러|입고", re.I), "commerce"),
+    (re.compile(r"\bsales\b|deal\b|pipeline|revenue|pricing|negotiat|세일즈|영업|거래", re.I), "sales"),
+    (re.compile(r"\bux\b|\bui\b|usability|figma|prototype|wireframe|interaction|user.?research|\bUX\b|\bUI\b", re.I), "uiux"),
+    (re.compile(r"\bcx\b|\bcs\b|support|customer|service|healthcare|health|의료|환자|서비스.?운영|고객", re.I), "cx"),
+    (re.compile(r"fashion|casting|shoot|runway|editorial|beauty|모델|캐스팅|촬영|패션|뷰티", re.I), "models"),
 ]
 
 # Workspace owner → default library domain (all agents)

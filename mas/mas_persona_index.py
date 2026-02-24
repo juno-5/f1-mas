@@ -703,15 +703,16 @@ class PersonaIndex:
     def _get_domain_compiled(self) -> dict[str, list[re.Pattern]]:
         """Load and cache domain keyword patterns from org/domains.yaml."""
         yaml_path = self._find_org_yaml("domains.yaml")
+        needs_reload = False
         if yaml_path and os.path.isfile(yaml_path):
             try:
                 mtime = os.path.getmtime(yaml_path)
                 if mtime != self._domains_yaml_mtime:
-                    self._domain_compiled = None
+                    needs_reload = True
                     self._domains_yaml_mtime = mtime
             except OSError:
                 pass
-        if self._domain_compiled is not None:
+        if not needs_reload and self._domain_compiled is not None:
             return self._domain_compiled
 
         compiled: dict[str, list[re.Pattern]] = {}
@@ -780,16 +781,16 @@ class PersonaIndex:
     def _get_tribe_patterns(self) -> dict[str, re.Pattern]:
         """Load and cache tribe keyword patterns from org/tribes.yaml."""
         yaml_path = self._find_org_yaml("tribes.yaml")
+        needs_reload = False
         if yaml_path and os.path.isfile(yaml_path):
             try:
                 mtime = os.path.getmtime(yaml_path)
                 if mtime != self._tribes_yaml_mtime:
-                    self._tribe_patterns = None
-                    self._tribe_meta = None
+                    needs_reload = True
                     self._tribes_yaml_mtime = mtime
             except OSError:
                 pass
-        if self._tribe_patterns is not None:
+        if not needs_reload and self._tribe_patterns is not None:
             return self._tribe_patterns
 
         patterns = {}
@@ -839,17 +840,16 @@ class PersonaIndex:
     def _get_squad_patterns(self) -> dict[str, re.Pattern]:
         """Load and cache squad keyword patterns from org/squads.yaml."""
         yaml_path = self._find_org_yaml("squads.yaml")
-        # Check mtime for hot-reload invalidation
+        needs_reload = False
         if yaml_path and os.path.isfile(yaml_path):
             try:
                 mtime = os.path.getmtime(yaml_path)
                 if mtime != self._squads_yaml_mtime:
-                    self._squad_patterns = None
-                    self._squad_meta = None
+                    needs_reload = True
                     self._squads_yaml_mtime = mtime
             except OSError:
                 pass
-        if self._squad_patterns is not None:
+        if not needs_reload and self._squad_patterns is not None:
             return self._squad_patterns
 
         patterns = {}
@@ -926,19 +926,22 @@ class PersonaIndex:
     # ── Function YAML loading (org/functions.yaml) ──
 
     def _load_functions_yaml(self):
-        """Load function patterns/priority/defaults from org/functions.yaml (mtime-cached)."""
+        """Load function patterns/priority/defaults from org/functions.yaml (mtime-cached).
+
+        Uses atomic swap: old values remain readable until new parse completes,
+        preventing race conditions where concurrent threads see None values.
+        """
         yaml_path = self._find_org_yaml("functions.yaml")
+        needs_reload = False
         if yaml_path and os.path.isfile(yaml_path):
             try:
                 mtime = os.path.getmtime(yaml_path)
                 if mtime != self._functions_yaml_mtime:
-                    self._function_compiled = None
-                    self._function_priority = None
-                    self._function_defaults = None
+                    needs_reload = True
                     self._functions_yaml_mtime = mtime
             except OSError:
                 pass
-        if self._function_compiled is not None:
+        if not needs_reload and self._function_compiled is not None:
             return
 
         compiled = {}
@@ -979,10 +982,11 @@ class PersonaIndex:
             }
 
         # Don't cache empty compiled — let next call retry (protects against
-        # partial file reads during SCP/deployment)
+        # partial file reads during SCP/deployment). Keep old values readable.
         if not compiled:
             print(f"[WARN] [persona_index] functions.yaml parsed 0 patterns — will retry", flush=True)
             return
+        # Atomic swap: replace all three at once (old values stay until here)
         self._function_compiled = compiled
         self._function_priority = priority
         self._function_defaults = defaults

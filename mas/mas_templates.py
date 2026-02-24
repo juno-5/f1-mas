@@ -45,7 +45,17 @@ _TEMPLATES = {
 - [what's good / 현재 접근법의 장점]
 
 ### Recommendations
-1. [priority order]""",
+1. [priority order]
+
+### Team Insight (선택)
+답변 중 팀에 유용한 실무 노하우나 의사결정 근거가 있다면:
+[INSIGHT]
+Title: (인사이트 제목)
+Context: (어떤 맥락에서 도출)
+Insight: (핵심 발견 2-3문장)
+Tags: #tag1 #tag2
+[/INSIGHT]
+일상적이거나 일반적인 내용은 태깅하지 마세요.""",
 
     MARKETING_CAMPAIGN: """# Persona
 {character_content}
@@ -74,7 +84,17 @@ _TEMPLATES = {
 ### KPIs
 | Metric | Target |
 |--------|--------|
-| [metric] | [target] |""",
+| [metric] | [target] |
+
+### Team Insight (선택)
+답변 중 팀에 유용한 실무 노하우나 의사결정 근거가 있다면:
+[INSIGHT]
+Title: (인사이트 제목)
+Context: (어떤 맥락에서 도출)
+Insight: (핵심 발견 2-3문장)
+Tags: #tag1 #tag2
+[/INSIGHT]
+일상적이거나 일반적인 내용은 태깅하지 마세요.""",
 
     CONTENT_MODEL: """# Persona
 {character_content}
@@ -101,7 +121,17 @@ _TEMPLATES = {
 1. [shot description]
 
 ### References
-- [reference links/descriptions]""",
+- [reference links/descriptions]
+
+### Team Insight (선택)
+답변 중 팀에 유용한 실무 노하우나 의사결정 근거가 있다면:
+[INSIGHT]
+Title: (인사이트 제목)
+Context: (어떤 맥락에서 도출)
+Insight: (핵심 발견 2-3문장)
+Tags: #tag1 #tag2
+[/INSIGHT]
+일상적이거나 일반적인 내용은 태깅하지 마세요.""",
 
     CREATIVE_DIRECTION: """# Persona
 {character_content}
@@ -125,7 +155,17 @@ _TEMPLATES = {
 [레퍼런스]
 
 ### Integration Notes
-[다른 감각과의 조화 포인트]""",
+[다른 감각과의 조화 포인트]
+
+### Team Insight (선택)
+답변 중 팀에 유용한 실무 노하우나 의사결정 근거가 있다면:
+[INSIGHT]
+Title: (인사이트 제목)
+Context: (어떤 맥락에서 도출)
+Insight: (핵심 발견 2-3문장)
+Tags: #tag1 #tag2
+[/INSIGHT]
+일상적이거나 일반적인 내용은 태깅하지 마세요.""",
 
     SYNTHESIS: """# Multi-Perspective Synthesis
 
@@ -179,7 +219,17 @@ Tags: #tag1 #tag2
 [실제 생성 프롬프트 또는 파이프라인 코드]
 
 ### Quality Assurance
-[품질 검증 기준]""",
+[품질 검증 기준]
+
+### Team Insight (선택)
+답변 중 팀에 유용한 실무 노하우나 의사결정 근거가 있다면:
+[INSIGHT]
+Title: (인사이트 제목)
+Context: (어떤 맥락에서 도출)
+Insight: (핵심 발견 2-3문장)
+Tags: #tag1 #tag2
+[/INSIGHT]
+일상적이거나 일반적인 내용은 태깅하지 마세요.""",
 
     COMMERCE_TASK: """# Persona
 {character_content}
@@ -205,7 +255,17 @@ Tags: #tag1 #tag2
 ### Metrics & KPIs
 | 지표 | 목표 | 측정 방법 |
 |------|------|----------|
-| [metric] | [target] | [how] |""",
+| [metric] | [target] | [how] |
+
+### Team Insight (선택)
+답변 중 팀에 유용한 실무 노하우나 의사결정 근거가 있다면:
+[INSIGHT]
+Title: (인사이트 제목)
+Context: (어떤 맥락에서 도출)
+Insight: (핵심 발견 2-3문장)
+Tags: #tag1 #tag2
+[/INSIGHT]
+일상적이거나 일반적인 내용은 태깅하지 마세요.""",
 
     SALES_TASK: """# Persona
 {character_content}
@@ -229,7 +289,17 @@ Tags: #tag1 #tag2
 1. [우선순위별 실행 항목]
 
 ### Expected Outcomes
-[예상 결과 및 리스크]""",
+[예상 결과 및 리스크]
+
+### Team Insight (선택)
+답변 중 팀에 유용한 실무 노하우나 의사결정 근거가 있다면:
+[INSIGHT]
+Title: (인사이트 제목)
+Context: (어떤 맥락에서 도출)
+Insight: (핵심 발견 2-3문장)
+Tags: #tag1 #tag2
+[/INSIGHT]
+일상적이거나 일반적인 내용은 태깅하지 마세요.""",
 
     UIUX_TASK: """# Persona
 {character_content}
@@ -253,7 +323,17 @@ Tags: #tag1 #tag2
 [구체적 설계 사양]
 
 ### Rationale
-[설계 근거 및 사용성 고려사항]""",
+[설계 근거 및 사용성 고려사항]
+
+### Team Insight (선택)
+답변 중 팀에 유용한 실무 노하우나 의사결정 근거가 있다면:
+[INSIGHT]
+Title: (인사이트 제목)
+Context: (어떤 맥락에서 도출)
+Insight: (핵심 발견 2-3문장)
+Tags: #tag1 #tag2
+[/INSIGHT]
+일상적이거나 일반적인 내용은 태깅하지 마세요.""",
 
     CX_TASK: """# Persona
 {character_content}
@@ -277,7 +357,17 @@ Tags: #tag1 #tag2
 1. [실행 계획]
 
 ### Impact & Measurement
-[기대 효과 및 측정 방법]""",
+[기대 효과 및 측정 방법]
+
+### Team Insight (선택)
+답변 중 팀에 유용한 실무 노하우나 의사결정 근거가 있다면:
+[INSIGHT]
+Title: (인사이트 제목)
+Context: (어떤 맥락에서 도출)
+Insight: (핵심 발견 2-3문장)
+Tags: #tag1 #tag2
+[/INSIGHT]
+일상적이거나 일반적인 내용은 태깅하지 마세요.""",
 }
 
 # Domain → template mapping

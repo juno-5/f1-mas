@@ -78,6 +78,34 @@ def render() -> str:
         lines.append(f'mas_request_duration_ms{{stat="p95"}} {durations[int(n * 0.95)]}')
         lines.append(f'mas_request_duration_ms{{stat="max"}} {durations[-1]}')
 
+    # Routine metrics
+    routine_reqs = [r for r in all_reqs.values() if r.pattern == "routine"]
+    routine_completed = sum(1 for r in routine_reqs if r.status == "completed")
+    routine_failed = sum(1 for r in routine_reqs if r.status == "failed")
+    lines.append("# HELP mas_routine_requests_total Requests handled by routine engine")
+    lines.append("# TYPE mas_routine_requests_total counter")
+    lines.append(f'mas_routine_requests_total{{status="completed"}} {routine_completed}')
+    lines.append(f'mas_routine_requests_total{{status="failed"}} {routine_failed}')
+
+    if routine_reqs:
+        routine_tokens = sum(r.total_tokens_used for r in routine_reqs if r.total_tokens_used > 0)
+        routine_cost = sum(r.total_cost_usd for r in routine_reqs if r.total_cost_usd > 0)
+        lines.append("# HELP mas_routine_tokens_total Tokens used by routine engine")
+        lines.append("# TYPE mas_routine_tokens_total counter")
+        lines.append(f"mas_routine_tokens_total {routine_tokens}")
+        lines.append("# HELP mas_routine_cost_usd_total Cost of routine requests in USD")
+        lines.append("# TYPE mas_routine_cost_usd_total counter")
+        lines.append(f"mas_routine_cost_usd_total {routine_cost:.6f}")
+
+    # Loaded routines gauge
+    try:
+        from .mas_routines import get_registry
+        lines.append("# HELP mas_routines_loaded Number of routines in registry")
+        lines.append("# TYPE mas_routines_loaded gauge")
+        lines.append(f"mas_routines_loaded {len(get_registry())}")
+    except Exception:
+        pass
+
     # Per-pattern breakdown
     terminal = [r for r in all_reqs.values() if r.status in ("completed", "failed")]
     by_pattern: dict[str, list] = {}

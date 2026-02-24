@@ -54,6 +54,12 @@ _DEFAULTS = {
     "nas_timeout": 5.0,
     "agent_tools_enabled": True,
     "max_tool_rounds": 5,
+    "routines_enabled": True,
+    "routine_min_confidence": 0.7,
+    "routine_default_model": "haiku",
+    "routine_timeout": 60,
+    "routine_reload_interval": 30,
+    "routine_fallback_to_pipeline": True,
 }
 
 _config = {}

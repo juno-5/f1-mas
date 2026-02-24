@@ -57,25 +57,50 @@ def _get_library_dir() -> Path:
     return Path(__file__).resolve().parent.parent / "library"
 
 
+_FIELD_RE = re.compile(
+    r"^\**\s*(title|context|insight|tags)\s*\**\s*:\s*\**\s*(.*)",
+    re.IGNORECASE,
+)
+
+
+def _clean_value(v: str) -> str:
+    """Strip leading/trailing markdown artifacts (* and whitespace) from a value."""
+    return v.strip().strip("*").strip()
+
+
 def extract_insights(text: str) -> list[dict]:
     """Extract [INSIGHT]...[/INSIGHT] blocks from text.
 
     Returns list of {"title", "context", "insight", "tags", "raw"}.
+    Handles LLM formatting variants: "Title:", "**Title**:", "**Title:**", etc.
+    Supports multi-line field values (e.g. Insight text spanning multiple lines).
     """
     matches = _INSIGHT_RE.findall(text)
     results = []
     for raw in matches:
         entry = {"raw": raw.strip()}
-        for line in raw.strip().splitlines():
-            line = line.strip()
-            if line.lower().startswith("title:"):
-                entry["title"] = line[6:].strip()
-            elif line.lower().startswith("context:"):
-                entry["context"] = line[8:].strip()
-            elif line.lower().startswith("insight:"):
-                entry["insight"] = line[8:].strip()
-            elif line.lower().startswith("tags:"):
-                entry["tags"] = line[5:].strip()
+        lines = raw.strip().splitlines()
+        current_field = None
+        current_lines = []
+
+        for line in lines:
+            stripped = line.strip()
+            m = _FIELD_RE.match(stripped)
+            if m:
+                # Save previous field
+                if current_field and current_lines:
+                    entry[current_field] = _clean_value("\n".join(current_lines))
+                # Start new field
+                current_field = m.group(1).lower()
+                first_val = _clean_value(m.group(2))
+                current_lines = [first_val] if first_val else []
+            elif current_field and stripped:
+                current_lines.append(stripped)
+
+        # Save last field
+        if current_field and current_lines:
+            entry[current_field] = _clean_value("\n".join(current_lines))
+
         if entry.get("title") or entry.get("insight"):
             results.append(entry)
     return results

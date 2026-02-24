@@ -2,7 +2,20 @@
 
 > 각 팀의 레퍼런스 문서 + 실무 인사이트를 축적하는 지식 허브
 
-## 구조
+## 제품별 라이브러리 (Primary)
+
+| Product | Directory | 하위 구조 | 비고 |
+|---------|-----------|----------|------|
+| 슈퍼멤버스 | `supermembers/` | dev, marketing, sales, cx, uiux, operations, planning | 블로그 체험단 플랫폼 |
+| 슈퍼차트 | `superchart/` | dev, marketing, sales, planning, cx | 인플루언서 마케팅 대행 |
+| 코스덕 | `cosduck/` | dev, marketing, design, creative, planning, sales, cx | K-Beauty 틱톡샵 에이전시 |
+| 커머스 | `commerce/` | heeda, kimchip, mapda, medihair | 자체 브랜드 이커머스 |
+
+### 노션 디렉토리
+
+[마야크루 팀별 폴더](https://www.notion.so/mayacrew/311983e32b3280788ac5c9d8ecb279d7) — 제품별로 정리된 전사 참조 문서
+
+## 팀별 라이브러리 (에이전트 연동)
 
 | Team | Directory | References | Insights |
 |------|-----------|------------|----------|
@@ -15,12 +28,16 @@
 | CX | `cx/` | CS 운영 매뉴얼, SLA 기준 | VoC 트렌드, 이슈 대응 사례 |
 | Models | `models/` | 촬영 가이드, 에이전시 정보 | 캐스팅 인사이트, 트렌드 |
 
+> 팀별 디렉토리는 에이전트 시스템(마스터 봇)이 대화 중 인사이트를 자동 캡처하는 용도로 유지됩니다.
+> 제품 특정 문서는 **제품별 라이브러리**에, 팀 공통 문서는 **팀별 라이브러리**에 보관합니다.
+
 ## 파일 컨벤션
 
-각 팀 폴더는 두 파일로 구성:
+각 팀 폴더는 세 파일로 구성:
 
 - **`references.md`** — 외부 문서, 링크, 공식 가이드, 내부 SOP
 - **`insights.md`** — 실제 직원 대화에서 축적된 도메인 지식 (자동 캡처)
+- **`memory-insights.md`** — 봇 메모리에서 수집된 인사이트 카드 (auto-library 자동 수집)
 
 ## 인사이트 캡처 프로토콜
 

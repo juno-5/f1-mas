@@ -298,9 +298,42 @@ class Orchestrator:
                 if len(selected) >= max_count:
                     break
 
+        # Pass 3: Multi-domain fill — for multi-domain queries, ensure
+        # at least one persona from each detected domain if slots remain.
+        if len(selected) < max_count and len(analysis["domains"]) > 1:
+            represented = {p.category for p in selected}
+            for domain in analysis["domains"]:
+                if domain in represented or len(selected) >= max_count:
+                    continue
+                domain_personas = self._index.by_category(domain)
+                for p in domain_personas:
+                    if p.id not in seen_ids and (p.locale == locale or p.locale == "global"):
+                        selected.append(p)
+                        seen_ids.add(p.id)
+                        represented.add(domain)
+                        break
+                if len(selected) >= max_count:
+                    break
+
+        # Cycle #68: Domain affinity check — when function candidates don't match the
+        # explicitly detected domain, prefer domain-based selection.
+        # Only applies when domain was specifically matched (not default "developers").
+        if selected and primary_domain != "developers":
+            has_domain_match = any(p.category == primary_domain for p in selected)
+            if not has_domain_match:
+                _log(f"[selection] Domain affinity override: selected={[p.id for p in selected]} "
+                     f"have no {primary_domain} match, overriding with domain-based")
+                domain_personas = self._index.by_category(primary_domain)
+                if domain_personas:
+                    locale_match = [p for p in domain_personas
+                                    if p.locale == locale or p.locale == "global"]
+                    pool = locale_match if locale_match else domain_personas
+                    selected = pool[:max_count]
+
         # Fallback: if no function-based selection, use domain + locale
         if not selected:
             domain = analysis["domains"][0]
+            _log(f"[selection] Fallback to domain+locale: domain={domain}, locale={locale}")
             domain_personas = self._index.by_category(domain)
             locale_match = [p for p in domain_personas if p.locale == locale or p.locale == "global"]
             pool = locale_match if locale_match else domain_personas
@@ -426,11 +459,33 @@ class Orchestrator:
 
             # 6a. Insight capture — extract [INSIGHT] blocks, save to library, strip from output
             try:
-                from .mas_insight_capture import process_synthesis
+                from .mas_insight_capture import process_synthesis, extract_insights, save_insights
+                primary_domain = analysis["domains"][0]
+
+                # Capture insights from individual agent outputs (multi-agent)
+                agent_outputs = result.get("agent_outputs", [])
+                for i, ao in enumerate(agent_outputs):
+                    ao_text = ao.get("text", "")
+                    if not ao_text or "[INSIGHT]" not in ao_text:
+                        continue
+                    ao_callsign = personas[i].callsign if i < len(personas) else "unknown"
+                    ao_insights = extract_insights(ao_text)
+                    if ao_insights:
+                        from .mas_insight_capture import _CATEGORY_DOMAIN_MAP
+                        lib_domain = _CATEGORY_DOMAIN_MAP.get(primary_domain, primary_domain)
+                        saved = save_insights(lib_domain, ao_insights,
+                                              request_id=request_id,
+                                              source_agent=ao_callsign)
+                        if saved:
+                            _log(f"[{request_id}] Agent insight: {ao_callsign} → {saved} insight(s)")
+
+                # Capture insights from synthesis output + strip
+                agent_names = ", ".join(p.callsign for p in personas)
                 synthesis = process_synthesis(
                     synthesis,
-                    domain=analysis["domains"][0],
+                    domain=primary_domain,
                     request_id=request_id,
+                    source_agent=agent_names,
                 )
             except Exception as e:
                 _log(f"[{request_id}] Insight capture failed: {e}")

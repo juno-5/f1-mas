@@ -14,7 +14,8 @@
 
 | Tool | URL | 용도 |
 |------|-----|------|
-| Supabase | | 커머스 분석 DB |
+| [Supabase Dashboard](https://supabase.com/dashboard) | Supabase | 커머스 분석 DB — `$SUPABASE_URL`, `$SUPABASE_SERVICE_KEY` |
+| [Development 스프레드시트](https://docs.google.com/spreadsheets/d/1Pct6TMAW1dQsU3dZBg9EFW6kRTW1ZQRzaaRWAf77Is8/) | Google Sheets | 개발 트래킹 |
 
 ## Operations
 
