@@ -210,6 +210,14 @@
     - **After: → `domains: ['marketers']`** (developers removed, Korean `AI를`/`AI기반` still work)
     - `org/domains.yaml` 수정
 
+32. **Cycle #49 (2026-02-24)**: **training keyword context-bound disambiguation** ⭐
+    - Standalone `training` matched non-ML contexts (sales, employee, CX, strength training)
+    - Replaced with compound patterns: `(model|data|pre)+training`, `training+(data|pipeline|loss|...)`
+    - Korean `학습` kept standalone (unambiguous ML context)
+    - **Before: "sales training program" → `domains: ['developers', 'sales']`, `functions: ['ml_training']`**
+    - **After: → `domains: ['sales']`, `functions: ['enterprise_sales']`**
+    - `org/domains.yaml` + `org/functions.yaml` 수정
+
 ## 변경 이력
 
 7. `mas/mas_agent_runner.py` + `mas/mas_templates.py` + `mas/mas_conversation.py` — synthesis cap + truncation (2a8737c, 2026-02-23)
@@ -238,6 +246,7 @@
 30. `mas/mas_orchestrator.py` — clean_query propagation to execution pipeline (2026-02-24)
 31. `org/functions.yaml` — performance regex disambiguation (compound pattern, 2026-02-24)
 32. `org/domains.yaml` — AI domain regex word boundary fix (2026-02-24)
+33. `org/domains.yaml` + `org/functions.yaml` — training context-bound disambiguation (2026-02-24)
 
 ## 미해결 가설
 
