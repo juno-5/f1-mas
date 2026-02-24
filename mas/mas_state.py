@@ -303,6 +303,12 @@ def get_all_requests() -> dict[str, RequestState]:
         return dict(_requests)
 
 
+def count_active() -> int:
+    """Count requests in active (non-terminal) states."""
+    with _state_lock:
+        return sum(1 for r in _requests.values() if r.status in _ACTIVE_STATUSES)
+
+
 def get_counters() -> dict:
     with _state_lock:
         return dict(_counters)

@@ -217,6 +217,12 @@
     - **After: batch 실패 시 ThreadPool 개별 호출로 부분 성공 가능**
     - `mas/mas_agent_runner.py` 수정
 
+34. **Cycle #55 (2026-02-24)**: **Graceful shutdown wait for in-flight requests** ⭐
+    - SIGTERM 시 `count_active()` polling → 최대 30초 대기 후 종료
+    - **Before: SIGTERM → 즉시 프로세스 종료 → daemon thread killed → "interrupted by restart"**
+    - **After: SIGTERM → draining → 30초 대기 (완료 임박 요청 보호) → timeout 후 종료**
+    - `mas/mas_state.py` + `mas/mas_server.py` 수정
+
 32. **Cycle #49 (2026-02-24)**: **training keyword context-bound disambiguation** ⭐
     - Standalone `training` matched non-ML contexts (sales, employee, CX, strength training)
     - Replaced with compound patterns: `(model|data|pre)+training`, `training+(data|pipeline|loss|...)`
@@ -256,6 +262,7 @@
 33. `org/domains.yaml` + `org/functions.yaml` — training context-bound disambiguation (2026-02-24)
 34. `mas/mas_agent_runner.py` — inference concurrency semaphore (2026-02-24, Inconclusive → Cycle #52에서 배포 누락 확인 후 재배포, Confirmed)
 35. `mas/mas_agent_runner.py` — batch→ThreadPool fallback dead code fix (2026-02-24)
+36. `mas/mas_state.py` + `mas/mas_server.py` — graceful shutdown wait (2026-02-24)
 
 ## 미해결 가설
 

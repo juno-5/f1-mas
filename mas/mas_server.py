@@ -122,6 +122,8 @@ class MASHandler(http.server.BaseHTTPRequestHandler):
         elif path.startswith("/functions/") and path.endswith("/ranking"):
             func_key = path.split("/functions/")[1].rsplit("/ranking")[0]
             self._handle_function_ranking(func_key)
+        elif path == "/routines":
+            self._handle_routines()
         elif path == "/requests":
             self._handle_list_requests()
         elif path.startswith("/request/"):
@@ -425,6 +427,29 @@ class MASHandler(http.server.BaseHTTPRequestHandler):
             result["tools"] = meta.get("tools", [])
         self._send_json(200, result)
 
+    def _handle_routines(self):
+        """List loaded routines."""
+        try:
+            from mas.mas_routines import get_registry
+            registry = get_registry()
+            routines = []
+            for rid, data in registry.items():
+                routines.append({
+                    "id": rid,
+                    "name": data.get("name", rid),
+                    "description": data.get("description", ""),
+                    "domain": data.get("domain", ""),
+                    "steps": len(data.get("steps", [])),
+                    "triggers": len(data.get("triggers", [])),
+                })
+            self._send_json(200, {
+                "enabled": cfg.get("routines_enabled", True),
+                "count": len(routines),
+                "routines": routines,
+            })
+        except Exception as e:
+            self._send_json(500, {"error": str(e)})
+
     def _handle_submit_request(self):
         """Submit a request for agent execution."""
         body = self._read_body()
@@ -670,6 +695,15 @@ def main():
     cfg.start_hot_reload()
     persona_idx.start_hot_reload()
 
+    # Start routine engine hot-reload
+    if cfg.get("routines_enabled", True):
+        try:
+            from mas.mas_routines import start_hot_reload as start_routine_reload
+            start_routine_reload()
+            log("Routine engine started")
+        except Exception as e:
+            log(f"Routine engine failed to start: {e}")
+
     # Wait for xapi dependency before accepting requests
     _wait_for_xapi()
 
@@ -706,6 +740,25 @@ def main():
     except KeyboardInterrupt:
         pass
     finally:
+        # Wait for in-flight requests to complete (up to shutdown_wait_seconds)
+        # Daemon threads are killed on main thread exit, so this gives them
+        # a chance to finish before the process terminates.
+        wait_max = cfg.get("shutdown_wait_seconds", 30)
+        active = state.count_active()
+        if active > 0:
+            log(f"Waiting for {active} active request(s) (max {wait_max}s)...")
+            waited = 0
+            while waited < wait_max:
+                time.sleep(1)
+                waited += 1
+                active = state.count_active()
+                if active == 0:
+                    log(f"All requests completed after {waited}s")
+                    break
+            else:
+                active = state.count_active()
+                if active > 0:
+                    log(f"Shutdown timeout: {active} request(s) still active after {wait_max}s")
         state.save_state()
 
 
