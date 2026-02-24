@@ -28,6 +28,8 @@ developers:
     - "플랫폼.*개발|플랫폼.*구축|platform.*develop|platform.*engineer|개발.*플랫폼"
     # Cycle #20: 웹 프론트엔드 기술 키워드 (CSS 스타일링→models 오분류 방지)
     - "\\bCSS\\b|\\bSCSS\\b|\\bHTML\\b|\\bDOM\\b|React|Vue|Angular|Svelte|webpack|vite|\\bSPA\\b|styled.?component|컴포넌트|렌더링"
+    # Cycle #23: ML 모델 키워드 (모델 학습/추론/서빙/파인튜닝 → developers, models 도메인 오분류 방지)
+    - "모델.{0,4}(학습|훈련|추론|서빙|배포|파인튜닝|최적화|파이프라인|아키텍처)|model.{0,4}(train|deploy|inference|serv|fine.?tun|pre.?train|pipeline|optim|architect)|딥러닝|deep.?learn|파인튜닝|fine.?tun|\\bGPT\\b|\\bLLM\\b"
 
 marketers:
   patterns:
@@ -37,10 +39,14 @@ marketers:
     - "아마존|amazon|tiktok|틱톡|커머스|commerce|이커머스|e.?commerce"
     - "SNS|소셜|social|인플루언서|influencer|콘텐츠|content.?marketing"
     - "\\bCRO\\b|전환율|conversion|AB테스트|그래픽.?디자인|광고.?디자인|배너.?디자인"
+    # Cycle #58: 시장조사/경쟁분석 — marketers 도메인으로 라우팅
+    - "시장.*조사|시장.*분석|시장.*리서치|market.*research|market.*analysis|경쟁사|competitor|경쟁.*분석|competitive.*analysis"
+    - "타겟.*시장|target.*market|시장.*진입|market.*entry|시장.*트렌드|market.*trend|벤치마크|benchmark"
 
 models:
   patterns:
-    - "모델|model(?!.*router)|화보|lookbook|촬영|shooting|캐스팅|casting"
+    # Cycle #23: 모델|model → ML 컨텍스트 제외 (학습/추론/서빙/파인튜닝/파이프라인/최적화/아키텍처)
+    - "모델(?!.{0,20}(학습|훈련|추론|서빙|배포|파인튜닝|최적화|파이프라인|아키텍처))|model(?!.{0,20}(router|train|deploy|inference|serv|fine.?tun|pre.?train|pipeline|optim|architect))|화보|lookbook|촬영|shooting|캐스팅|casting"
     - "패션|fashion|뷰티|beauty|스타일링|styling|런웨이|runway"
     - "화장품|cosmetic|헤어|hair|메이크업|makeup|룩북"
 
@@ -48,7 +54,8 @@ creatives:
   patterns:
     - "조명|lighting|라이팅|컬러|color|팔레트|palette|사운드|sound"
     - "음악|music|음향|audio|모션|motion|영상|video|시네마|cinema"
-    - "향수|향기|scent|감각|sensory|오감|five.?sense|아트디렉션|art.?direction"
+    # Cycle #27: 크리에이티브/아트 디렉션 키워드 보강 (공백 포함 형태)
+    - "향수|향기|scent|감각|sensory|오감|five.?sense|아트.?디렉션|art.?direction|크리에이티브.?디렉|creative.?direct"
     - "AI.*이미지|AI.*영상|AI.*아트|image.?gen|video.?gen|프롬프트.*엔지니어링|prompt.?engineer"
     - "Veo|Kling|Nano.?Banana|Seedance|Higgsfield|AI.*소재|AI.*크리에이티브|숏폼.*제작"
     # Cycle #23: 크리에이티브 디렉션 키워드 추가 (marketers 오분류 방지)

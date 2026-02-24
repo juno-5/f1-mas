@@ -897,6 +897,7 @@ class PersonaIndex:
         for base in [
             os.path.expanduser("~/projects/mayacrew-f1crew/f1-mas"),
             os.path.expanduser("~/F1/f1-mas"),
+            os.path.expanduser("~/.f1crew/scripts/mas"),
         ]:
             candidate = os.path.join(base, "org", filename)
             if os.path.isfile(candidate):

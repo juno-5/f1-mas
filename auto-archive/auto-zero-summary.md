@@ -230,6 +230,13 @@
     - 복합 신호 "비교 분석" (weak×2) → sonnet 유지 (정상)
     - `mas/mas_agent_runner.py` 수정
 
+36. **Cycle #58 (2026-02-24)**: **도메인 감지 시장조사 패턴 + 배포 경로 버그 수정** ⭐
+    - marketers 도메인에 시장조사/경쟁분석 패턴 추가 (경쟁사, 시장 조사, 벤치마크 등)
+    - **배포 경로 버그 발견**: `_find_org_yaml()` fallback에 `~/.f1crew/scripts/mas` 누락 → 추가
+    - **Before: "경쟁사 시장 조사" → `developers` (기본값 폴백)**
+    - **After: → `marketers` → Ashley Yoo (브랜드 전략가)**
+    - `org/domains.yaml` + `mas/mas_persona_index.py` 수정
+
 32. **Cycle #49 (2026-02-24)**: **training keyword context-bound disambiguation** ⭐
     - Standalone `training` matched non-ML contexts (sales, employee, CX, strength training)
     - Replaced with compound patterns: `(model|data|pre)+training`, `training+(data|pipeline|loss|...)`
@@ -271,6 +278,8 @@
 35. `mas/mas_agent_runner.py` — batch→ThreadPool fallback dead code fix (2026-02-24)
 36. `mas/mas_state.py` + `mas/mas_server.py` — graceful shutdown wait (2026-02-24)
 37. `mas/mas_agent_runner.py` — auto-model 복잡도 스코어링 개선 (2026-02-24)
+
+38. `org/domains.yaml` + `mas/mas_persona_index.py` — 시장조사 패턴 + _find_org_yaml fallback (2026-02-24)
 
 ## 미해결 가설
 
