@@ -210,6 +210,7 @@ def call_xapi_inference(prompt: str, model: str = None, timeout: int = None,
                     "messages": [{"role": "user", "content": prompt}],
                     "user": user,
                     "max_tokens": max_tokens,
+                    "timeout": timeout,
                 },
                 timeout=timeout,
             )
