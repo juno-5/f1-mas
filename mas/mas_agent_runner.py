@@ -880,7 +880,13 @@ def run_agents_parallel(
     has_tools = any(a.get("tools") for a in agents)
 
     # Try batch endpoint first (single HTTP call → xapi asyncio.gather)
-    if not has_tools and cfg.get("use_batch_inference", True):
+    # Skip batch in direct mode — batch always routes through Gateway.
+    # ThreadPool with individual /inference/raw calls is cheaper (96% token reduction).
+    use_batch = not has_tools and cfg.get("use_batch_inference", True)
+    if use_batch and _select_inference_endpoint() == "raw":
+        use_batch = False
+        print(f"[agent-runner] Skipping batch (direct mode), using ThreadPool", flush=True)
+    if use_batch:
         try:
             return _run_agents_batch(request_id, agents)
         except Exception as e:
