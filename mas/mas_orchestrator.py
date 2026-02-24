@@ -170,10 +170,10 @@ class Orchestrator:
             pool_cands = [c for c in candidates if c.id in pool_ids and c.id not in seen_ids]
             if not pool_cands:
                 continue
-            # Prefer locale match within pool
+            # Prefer locale match within pool ("global" matches any locale)
             picked = None
             for c in pool_cands:
-                if c.locale == locale:
+                if c.locale == locale or c.locale == "global":
                     picked = c
                     break
             if not picked:
@@ -181,10 +181,10 @@ class Orchestrator:
             selected.append(picked)
             seen_ids.add(picked.id)
 
-        # Pass 2: Locale-matching pool members
+        # Pass 2: Locale-matching pool members ("global" matches any locale)
         if len(selected) < max_count:
             for p in pool:
-                if p.id not in seen_ids and p.locale == locale:
+                if p.id not in seen_ids and (p.locale == locale or p.locale == "global"):
                     selected.append(p)
                     seen_ids.add(p.id)
                     if len(selected) >= max_count:
@@ -245,9 +245,9 @@ class Orchestrator:
                 candidates = scorer.rerank(candidates, func, locale)
 
             picked = None
-            # Prefer locale match
+            # Prefer locale match ("global" matches any locale)
             for c in candidates:
-                if c.locale == locale and c.id not in seen_ids:
+                if (c.locale == locale or c.locale == "global") and c.id not in seen_ids:
                     picked = c
                     break
             if not picked:
@@ -274,7 +274,7 @@ class Orchestrator:
         if not selected:
             domain = analysis["domains"][0]
             domain_personas = self._index.by_category(domain)
-            locale_match = [p for p in domain_personas if p.locale == locale]
+            locale_match = [p for p in domain_personas if p.locale == locale or p.locale == "global"]
             pool = locale_match if locale_match else domain_personas
             selected = pool[:max_count]
 
