@@ -74,10 +74,15 @@ _RATE_LIMIT_PATTERNS = [
 ]
 
 # Complex task indicators — queries matching these use sonnet instead of haiku
-_COMPLEX_INDICATORS = [
-    "분석", "전략", "기획", "설계", "아키텍처", "리뷰", "비교", "상세", "심층",
-    "analyze", "strategy", "plan", "architect", "review", "compare",
-    "detailed", "comprehensive", "deep dive", "pros and cons",
+# Strong complexity signals: single match → sonnet
+_SONNET_STRONG = [
+    "심층", "상세", "종합", "아키텍처", "architecture",
+    "deep dive", "comprehensive", "in-depth", "pros and cons",
+]
+# Weak complexity signals: need 2+ matches for sonnet
+_SONNET_WEAK = [
+    "분석", "전략", "기획", "설계", "리뷰", "비교",
+    "analyze", "strategy", "plan", "review", "compare", "detailed",
 ]
 
 
@@ -86,6 +91,9 @@ def select_model(query: str, has_tools: bool = False) -> str:
 
     Returns 'haiku' for simple tasks, 'sonnet' for complex ones.
     Requires auto_model_enabled=true in config; otherwise returns config default.
+
+    Scoring: strong signal (1+) → sonnet, weak signals (2+) → sonnet,
+    long query (>200 chars) with any weak signal → sonnet, else → haiku.
     """
     if not cfg.get("auto_model_enabled", False):
         return cfg.get("claude_model", "sonnet")
@@ -96,16 +104,23 @@ def select_model(query: str, has_tools: bool = False) -> str:
 
     query_lower = query.lower()
 
-    # Complex task indicators → sonnet
-    if any(ind in query_lower for ind in _COMPLEX_INDICATORS):
+    # Strong indicators: single match → sonnet
+    if any(ind in query_lower for ind in _SONNET_STRONG):
         return "sonnet"
 
-    # Short-medium queries without complex indicators → haiku
-    if len(query) < 500:
-        return "haiku"
+    # Weak indicators: count matches
+    weak_count = sum(1 for ind in _SONNET_WEAK if ind in query_lower)
 
-    # Default: longer queries → sonnet
-    return "sonnet"
+    # 2+ weak signals → sonnet (multi-faceted task)
+    if weak_count >= 2:
+        return "sonnet"
+
+    # Long query with any weak signal → sonnet (detailed request)
+    if weak_count >= 1 and len(query) > 200:
+        return "sonnet"
+
+    # Default: haiku (single weak signal or no signals)
+    return "haiku"
 
 
 def _get_pool() -> ThreadPoolExecutor:
@@ -412,7 +427,7 @@ def run_agent(
               f"with {len(tools)} tools...", flush=True)
         result = call_xapi_with_tools(prompt, tools, model=model, user=user_tag)
     else:
-        print(f"[agent-runner] {callsign} calling xapi inference...", flush=True)
+        print(f"[agent-runner] {callsign} calling xapi inference (model={model})...", flush=True)
         result = call_xapi_inference(prompt, model=model, user=user_tag)
 
     duration_ms = int((time.time() - start) * 1000)

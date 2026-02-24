@@ -223,6 +223,13 @@
     - **After: SIGTERM → draining → 30초 대기 (완료 임박 요청 보호) → timeout 후 종료**
     - `mas/mas_state.py` + `mas/mas_server.py` 수정
 
+35. **Cycle #57 (2026-02-24)**: **Auto-model 복잡도 스코어링 개선** ⭐
+    - `_COMPLEX_INDICATORS` → strong/weak 분리, weak는 2+ match 요구
+    - **Before: "분석해줘" (weak×1) → sonnet ($0.056)**
+    - **After: "분석해줘" (weak×1) → haiku ($0.024) — 56% 절감**
+    - 복합 신호 "비교 분석" (weak×2) → sonnet 유지 (정상)
+    - `mas/mas_agent_runner.py` 수정
+
 32. **Cycle #49 (2026-02-24)**: **training keyword context-bound disambiguation** ⭐
     - Standalone `training` matched non-ML contexts (sales, employee, CX, strength training)
     - Replaced with compound patterns: `(model|data|pre)+training`, `training+(data|pipeline|loss|...)`
@@ -263,6 +270,7 @@
 34. `mas/mas_agent_runner.py` — inference concurrency semaphore (2026-02-24, Inconclusive → Cycle #52에서 배포 누락 확인 후 재배포, Confirmed)
 35. `mas/mas_agent_runner.py` — batch→ThreadPool fallback dead code fix (2026-02-24)
 36. `mas/mas_state.py` + `mas/mas_server.py` — graceful shutdown wait (2026-02-24)
+37. `mas/mas_agent_runner.py` — auto-model 복잡도 스코어링 개선 (2026-02-24)
 
 ## 미해결 가설
 
