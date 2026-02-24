@@ -51,12 +51,14 @@ software_testing:
 
 ml_training:
   patterns:
-    - "\\bML\\b|머신러닝|machine.{0,20}learn|학습|training|파인튜닝|fine.?tun|모델.{0,20}학습"
+    # Cycle #49: standalone training → context-bound (sales training 등 비기술 오탐 방지)
+    - "\\bML\\b|머신러닝|machine.{0,20}learn|학습|파인튜닝|fine.?tun|모델.{0,20}학습|(?:model|data|pre).{0,10}training|training.{0,10}(?:data|pipeline|loss|loop|epoch|batch|set|split|run|job)"
   priority: ["F1-08", "FC-03"]
 
 ai_compiler:
   patterns:
-    - "컴파일러|compiler|런타임|runtime|LLVM|코드.{0,20}생성|code.{0,20}gen|인터프리터|interpreter|JIT|바이트코드|bytecode|AST|파서|parser"
+    # Cycle #22: LLVM/JIT/AST → \b...(?![a-zA-Z]) — fast/broadcast/Elasticsearch 등 substring 오탐 방지
+    - "컴파일러|compiler|런타임|runtime|\\bLLVM(?![a-zA-Z])|코드.{0,20}생성|code.{0,20}gen|인터프리터|interpreter|\\bJIT(?![a-zA-Z])|바이트코드|bytecode|\\bAST(?![a-zA-Z])|파서|parser"
   priority: ["F1-09"]
 
 data_pipeline:
@@ -89,7 +91,8 @@ vision_multimodal:
 
 database_storage:
   patterns:
-    - "데이터베이스|database|DB|SQL|스토리지|storage|쿼리|query"
+    # Cycle #22: DB → \bDB(?![a-zA-Z]) — feedback/dBm 등 substring 오탐 방지
+    - "데이터베이스|database|\\bDB(?![a-zA-Z])|SQL|스토리지|storage|쿼리|query"
   priority: ["F1-14", "FC-02"]
 
 networking:
@@ -99,7 +102,8 @@ networking:
 
 cloud_container:
   patterns:
-    - "도커|docker|쿠버네티스|kubernetes|k8s|컨테이너|container|클라우드|cloud|AWS|GCP|Azure|파드|pod|헬름|helm"
+    # Cycle #22: AWS → \bAWS(?![a-zA-Z]) — jaws/laws/drawstring 등 substring 오탐 방지
+    - "도커|docker|쿠버네티스|kubernetes|k8s|컨테이너|container|클라우드|cloud|\\bAWS(?![a-zA-Z])|GCP|Azure|파드|pod|헬름|helm"
     # Cycle #71: 배포/deploy 키워드 추가 (bare "배포" 제외 — 마케팅 "배포" 오탐 방지)
     - "deploy|배포.{0,20}자동화|배포.{0,20}파이프|배포.{0,20}스크립트|코드.{0,20}배포|서비스.{0,20}배포|서버.{0,20}배포|앱.{0,20}배포|rollout|롤백|rollback"
   priority: ["F1-16", "FC-05"]
@@ -111,7 +115,8 @@ formal_verification:
 
 product_ux:
   patterns:
-    - "제품.{0,20}기획|product.{0,20}plan|PM|프로덕트|product.{0,20}manage|로드맵|roadmap"
+    # Cycle #22: PM → \bPM(?![a-zA-Z]) — npm/RPM 등 substring 오탐 방지
+    - "제품.{0,20}기획|product.{0,20}plan|\\bPM(?![a-zA-Z])|프로덕트|product.{0,20}manage|로드맵|roadmap"
   priority: ["F1-18", "FC-09", "FC-04"]
 
 quantum:

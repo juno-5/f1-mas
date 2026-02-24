@@ -27,7 +27,7 @@
 
 | Resource | URL | 비고 |
 |----------|-----|------|
-| [모델지원 포트폴리오](https://www.notion.so/mayacrew/) | Notion | 10+ 모델 프로필 (김수정, 밀라, 안나, 변다애, 고진주, 소솔, 장윤영, 조혜원, 리아나, 레나 등) — 프로필/사이즈/경력/인스타 |
+| [지원 모델 리스트](https://www.notion.so/30d983e32b3281f28c11f7ee5b280a48) | Notion DB | 10+ 모델 프로필 (김수정, 밀라, 안나, 변다애, 고진주, 소솔, 장윤영, 조혜원, 리아나, 레나 등) — 프로필/사이즈/경력/인스타 |
 
 ## 촬영 가이드 & 콘텐츠
 
@@ -52,4 +52,4 @@
 
 ---
 
-*Last updated: 2026-02-23 (auto-library scan: Notion workspace 검색 — 모델/촬영/콘텐츠 키워드 35페이지 발견)*
+*Last updated: 2026-02-24 (Cycle #27: broken URL 수정 — 지원 모델 리스트 DB URL 복구)*

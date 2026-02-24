@@ -16,7 +16,8 @@ developers:
     - "\\bML\\b|머신러닝|machine.?learn"
     - "서버|server|네트워크|network|컨테이너|container|클라우드|cloud"
     # Cycle #48: AI → \bAI(?=[^a-zA-Z]|$) — "against","maintain" 등 영문 substring 오탐 방지 + 한국어 조사(AI를,AI기반) 허용
-    - "\\bAI(?=[^a-zA-Z]|$)(?!.*(이미지|영상|아트|소재|크리에이티브|art\\b|image|video))|인공지능|모델학습|training"
+    # Cycle #49: training → context-bound (model/data/pre + training, training + data/pipeline/loss 등)
+    - "\\bAI(?=[^a-zA-Z]|$)(?!.*(이미지|영상|아트|소재|크리에이티브|art\\b|image|video))|인공지능|모델학습|(?:model|data|pre).{0,10}training|training.{0,10}(?:data|pipeline|loss|loop|epoch|batch|set|split|run|job)"
     - "python|파이썬|java|rust|golang|typescript|스레드|thread|멀티프로세스|child.?process|동시성|concurren"
     # 컨텍스트 한정 패턴 — 개발 맥락에서만 매칭
     - "시스템.*설계|시스템.*아키텍처|system.*design|system.*architect|분산.*시스템|distributed.*system"
