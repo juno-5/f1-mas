@@ -87,12 +87,22 @@
   - Patch 4: Auto-save results to file
 - **google-api-python-client** 서버 설치 완료 (GA4 서비스 계정만, 문서 접근 불가)
 
+## Bot Memory Collection (Cycle #46, 2026-02-24)
+
+- **34개 에이전트** 워크스페이스의 메모리 파일 전체 스캔
+- **1,750개 인사이트 카드** 수집 → 8개 도메인별 `memory-insights.md` 생성
+- 분류: developers 1,116 | marketers 145 | creatives 111 | sales 92 | cx 86 | uiux 80 | commerce 70 | models 50
+- 총 크기: ~899KB (10,556줄)
+- library-scanner.py에 `--mode=memory`, `--mode=memory-collect` 추가
+- auto-library.md 스킬에 소스 B (봇 메모리 스캔) 추가
+
 ## Unresolved / Future
 1. Notion 통합에 더 많은 페이지 공유 시 fetch 성공률 80%+ 달성 가능
 2. 99개 미참여 채널에 봇 초대 시 추가 문서 발견 가능 (수동 작업 필요)
 3. 주기적 증분 스캔으로 신규 문서 자동 발견 (cron 설정 가능)
 4. 남은 placeholder 섹션: Architecture & Standards (코딩 컨벤션 문서 팀 미작성), Research Methods, Agencies 등
 5. Notion 키워드 추가 탐색 가능하나 수확 체감 (Round #10에서 0건)
+6. memory-insights.md 도메인 분류 정확도 개선 가능 (dev personas의 비기술 연구 정밀 분류)
 
 ## Explored Data Sources
 
