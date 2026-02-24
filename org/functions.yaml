@@ -217,8 +217,11 @@ fashion_commercial:
   priority: ["KF03", "KM03", "JF04", "JM03", "USF03", "USM02", "EUF05"]
 
 fashion_beauty:
+  # Cycle #44: "뷰티|beauty" 단독 제거 → 마케팅 맥락 오분류 방지 (뷰티 브랜드 광고 전략→marketers)
+  # 뷰티+촬영/화보/모델/스타일 컨텍스트만 models 매칭. 화장품/메이크업/스킨케어는 단독 매칭 유지
   patterns:
-    - "뷰티|beauty|화장품|cosmetic|메이크업|makeup|K.?beauty|스킨케어|skincare|헤어|hair"
+    - "화장품|cosmetic|메이크업|makeup|K.?beauty|스킨케어|skincare|헤어|hair"
+    - "뷰티.{0,10}(촬영|화보|모델|룩|스타일|피팅)|beauty.{0,10}(shoot|model|look|style|fitting)"
   priority: ["KF08", "KF02", "JF02", "USF02", "USF12"]
 
 fashion_casting:

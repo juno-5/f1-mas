@@ -49,7 +49,9 @@ models:
   patterns:
     # Cycle #23: 모델|model → ML 컨텍스트 제외 (학습/추론/서빙/파인튜닝/파이프라인/최적화/아키텍처)
     - "모델(?!.{0,20}(학습|훈련|추론|서빙|배포|파인튜닝|최적화|파이프라인|아키텍처))|model(?!.{0,20}(router|train|deploy|inference|serv|fine.?tun|pre.?train|pipeline|optim|architect))|화보|lookbook|촬영|shooting|캐스팅|casting"
-    - "패션|fashion|뷰티|beauty|스타일링|styling|런웨이|runway"
+    # Cycle #44: "뷰티|beauty" 단독 제거 — 마케팅 맥락 오분류 방지 (뷰티 브랜드 광고→marketers)
+    # 뷰티 모델링 쿼리는 화장품/메이크업/촬영/화보 등 구체 키워드로 커버
+    - "패션|fashion|스타일링|styling|런웨이|runway"
     - "화장품|cosmetic|헤어|hair|메이크업|makeup|룩북"
 
 creatives:
