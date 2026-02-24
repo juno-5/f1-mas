@@ -310,6 +310,7 @@
 39. `mas/mas_orchestrator.py` — 함수 기반 도메인 추론 (2026-02-24)
 40. `mas/mas_orchestrator.py` + `mas/mas_state.py` + `routines/infra/system-health-check.yml` — 루틴 토큰 추적 + 트리거 확장 (2026-02-24)
 41. `org/domains.yaml` — creatives 에셋 + uiux 프레젠테이션 키워드 확장 (2026-02-24)
+42. `routines/marketing/video-production.yml` — 트리거 패턴 false positive 수정 (2026-02-24)
 
 ## 미해결 가설
 

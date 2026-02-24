@@ -1,0 +1,54 @@
+id: video-production
+name: "AI Video Production Pipeline"
+description: "AI 영상 제작 프롬프트 생성 (Soul 2.0 + Kling 3.0 워크플로우)"
+domain: marketing
+
+triggers:
+  - pattern: "(?:영상|비디오|video).{0,8}(?:제작|만들|생성|프롬프트)"
+    confidence: 0.9
+  # Cycle #65: 콘텐츠 제거 — "숏폼 콘텐츠 마케팅 트렌드" 오매칭 방지
+  - pattern: "(?:숏폼|리얼스?|틱톡|릴스).{0,8}(?:영상|제작)"
+    confidence: 0.85
+  - keywords: ["영상 프롬프트", "video prompt", "AI 영상 제작"]
+    confidence: 1.0
+
+config:
+  model: haiku
+  timeout: 60
+  max_tokens: 4096
+  fallback_to_pipeline: true
+
+steps:
+  - id: generate_prompt
+    type: inference
+    model: haiku
+    max_tokens: 4096
+    prompt: |
+      AI 영상 광고 프롬프트를 생성해주세요.
+
+      사용자 요청: {query}
+
+      아래 구조로 Kling 3.0 프롬프트를 작성하세요:
+
+      ### 프롬프트 구조
+      1. **Scene Description** (영문): 카메라 앵글, 조명, 배경, 인물 묘사
+      2. **Korean Dialogue**: 한국어 대사 (자연스러운 구어체)
+      3. **Visual Direction**: 카메라 무빙, 전환, 줌 등
+      4. **Technical Specs**: 9:16, 10초, 1080p
+
+      ### 참고 패턴
+      - Hook (2초): 강렬한 첫 인상, 텍스트 오버레이
+      - Story (5초): 문제→해결, 감정 변화
+      - CTA (3초): 행동 유도, 로고/브랜드
+
+      5개의 다른 각도의 프롬프트 변형을 만들어주세요.
+      각 프롬프트는 독립적으로 사용 가능해야 합니다.
+
+output:
+  format: |
+    ## AI Video Production Prompts
+
+    {steps.generate_prompt.output}
+
+    ---
+    _Routine: {routine.id} | {routine.duration_ms}ms_
