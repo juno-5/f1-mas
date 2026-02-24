@@ -52,7 +52,7 @@ def _get_http() -> httpx.Client:
     global _http
     if _http is None or _http.is_closed:
         _http = httpx.Client(
-            timeout=httpx.Timeout(120.0, connect=10.0),
+            timeout=httpx.Timeout(120.0, connect=5.0),
             limits=httpx.Limits(max_connections=10, max_keepalive_connections=5),
         )
     return _http
@@ -139,9 +139,27 @@ def _is_rate_limit_error(error_msg: str) -> bool:
     return any(p.lower() in lower for p in _RATE_LIMIT_PATTERNS)
 
 
+def _select_inference_endpoint(has_tools: bool = False) -> str:
+    """Select inference endpoint based on config.
+
+    Returns "chat" (Gateway) or "raw" (direct Anthropic API).
+    Tool-use always requires "chat" (Gateway handles tool execution context).
+    """
+    if has_tools:
+        return "chat"
+    mode = cfg.get("inference_mode", "gateway")
+    if mode == "direct":
+        return "raw"
+    return "chat"
+
+
 def call_xapi_inference(prompt: str, model: str = None, timeout: int = None,
-                        user: str = "mas:agent", max_tokens: int = 8192) -> dict:
-    """Call LLM via xapi /inference/chat (replaces claude -p subprocess).
+                        user: str = "mas:agent", max_tokens: int = 8192,
+                        force_direct: bool = False) -> dict:
+    """Call LLM via xapi — Gateway (/chat) or direct Anthropic (/raw).
+
+    When inference_mode="direct" in config (or force_direct=True), uses /inference/raw
+    which bypasses Gateway entirely → 96% token reduction for MAS inference.
 
     Returns {"text": str, "model": str, "error": str|None,
              "usage": {"input": int, "output": int, "cacheRead": int, "cacheWrite": int},
@@ -157,12 +175,14 @@ def call_xapi_inference(prompt: str, model: str = None, timeout: int = None,
     xapi_url = cfg.get("xapi_url", "http://localhost:7750")
     empty_usage = {"input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0}
 
+    endpoint = "raw" if force_direct else _select_inference_endpoint()
+
     max_retries = cfg.get("inference_max_retries", 3)
     last_error = ""
     for attempt in range(max_retries):
         try:
             resp = _get_http().post(
-                f"{xapi_url}/inference/chat",
+                f"{xapi_url}/inference/{endpoint}",
                 json={
                     "model": full_model,
                     "messages": [{"role": "user", "content": prompt}],

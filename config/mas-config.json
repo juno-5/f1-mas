@@ -26,6 +26,7 @@
   "xapi_url": "http://localhost:7750",
   "xapi_api_key": "0htFHzqn8sPpWoF8SZxlgRk6uthWqAIcKVI89pT5-4A",
   "use_batch_inference": true,
+  "inference_mode": "direct",
   "synthesis_timeout_seconds": 60,
   "amm_memory_injection": true,
   "amm_policy": "auto",
