@@ -30,7 +30,7 @@
   "synthesis_timeout_seconds": 60,
   "amm_memory_injection": true,
   "amm_policy": "auto",
-  "amm_timeout": 1.5,
+  "amm_timeout": 3.0,
   "amm_cb_fail_threshold": 3,
   "amm_cb_open_seconds": 300,
   "nas_context_injection": true,
