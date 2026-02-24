@@ -237,6 +237,12 @@
     - **After: → `marketers` → Ashley Yoo (브랜드 전략가)**
     - `org/domains.yaml` + `mas/mas_persona_index.py` 수정
 
+39. **Cycle #61 (2026-02-24)**: **루틴 결과 토큰/비용 추적 + 트리거 패턴 확장**
+    - `update_request()` 자동 집계가 루틴 결과 덮어씀 → 명시 전달 + 조건부 집계
+    - **Before: routine tokens=0, cost=0 → After: tokens=25453, cost=$0.012**
+    - 트리거 패턴에 `시스템.*상태|health.?check` 추가
+    - `mas/mas_orchestrator.py` + `mas/mas_state.py` + `routines/infra/system-health-check.yml` 수정
+
 38. **Cycle #60 (2026-02-24)**: **루틴 엔진 배포 누락 수정** ⭐
     - `mas_routines.py` + `routines/` 디렉토리 (4 YAML files) 서버 미배포 → 매 요청 에러 로그
     - 배포 후: 4 routines loaded, 매칭 쿼리 routine 파이프라인으로 처리
@@ -295,6 +301,7 @@
 
 38. `org/domains.yaml` + `mas/mas_persona_index.py` — 시장조사 패턴 + _find_org_yaml fallback (2026-02-24)
 39. `mas/mas_orchestrator.py` — 함수 기반 도메인 추론 (2026-02-24)
+40. `mas/mas_orchestrator.py` + `mas/mas_state.py` + `routines/infra/system-health-check.yml` — 루틴 토큰 추적 + 트리거 확장 (2026-02-24)
 
 ## 미해결 가설
 

@@ -334,7 +334,9 @@ class Orchestrator:
                     else:
                         state.update_request(request_id, status="completed",
                                              synthesis=routine_result["output"],
-                                             pattern="routine")
+                                             pattern="routine",
+                                             total_tokens_used=routine_result.get("tokens", 0),
+                                             total_cost_usd=routine_result.get("cost_usd", 0))
                     self._slack_notify_complete(request_id)
                     state.record_event("complete", f"Request {request_id} completed (routine: {routine_result.get('routine_id', '?')})", request_id)
                     return

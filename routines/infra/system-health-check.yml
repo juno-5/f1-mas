@@ -1,0 +1,79 @@
+id: system-health-check
+name: "System Health Check"
+description: "MAS/NAS/xapi/Gateway 전체 시스템 헬스 리포트"
+domain: infra
+
+triggers:
+  - pattern: "시스템.*헬스|시스템.*상태|전체.*상태.*확인|헬스.?체크|인프라.*상태|health.?check"
+    confidence: 0.9
+  - keywords: ["헬스체크", "health check", "시스템 상태"]
+    confidence: 1.0
+
+config:
+  model: haiku
+  timeout: 60
+  max_tokens: 2048
+  fallback_to_pipeline: true
+
+steps:
+  - id: check_services
+    type: tool
+    tool: infra_service_status
+    args: {}
+
+  - id: check_fas
+    type: tool
+    tool: infra_fas_status
+    args: {}
+
+  - id: check_mas_health
+    type: tool
+    tool: infra_health_check
+    args:
+      service: mas
+
+  - id: check_xapi_health
+    type: tool
+    tool: infra_health_check
+    args:
+      service: xapi
+
+  - id: check_nodes
+    type: tool
+    tool: nas_list_nodes
+    args: {}
+
+  - id: summarize
+    type: inference
+    model: haiku
+    max_tokens: 2048
+    prompt: |
+      인프라 상태 데이터를 분석하여 간결한 헬스 리포트를 작성해주세요.
+      정상이면 간단히, 이상이 있으면 상세히 설명해주세요.
+
+      ## 서비스 상태
+      {steps.check_services.output}
+
+      ## FAS Token Manager
+      {steps.check_fas.output}
+
+      ## MAS Health
+      {steps.check_mas_health.output}
+
+      ## xapi Health
+      {steps.check_xapi_health.output}
+
+      ## NAS 노드
+      {steps.check_nodes.output}
+
+      형식:
+      - 각 서비스의 상태를 한 줄로 요약 (정상/경고/장애)
+      - 이상이 있는 항목만 상세 설명
+      - 마지막에 전체 판정 (ALL GREEN / WARNING / CRITICAL)
+
+output:
+  format: |
+    {steps.summarize.output}
+
+    ---
+    _Routine: {routine.id} | {routine.duration_ms}ms_

@@ -221,10 +221,13 @@ def update_request(request_id: str, **kwargs):
             req.duration_ms = int((req.completed_at - req.created_at) * 1000)
 
         # Auto-compute total_cost_usd and total_tokens_used from agents
+        # (skip if explicitly provided — e.g. routine results)
         if kwargs.get("status") in (RequestStatus.COMPLETED, RequestStatus.FAILED,
                                     RequestStatus.CANCELLED):
-            req.total_cost_usd = sum(a.cost_usd for a in req.agents)
-            req.total_tokens_used = sum(a.tokens_used for a in req.agents)
+            if "total_cost_usd" not in kwargs and req.agents:
+                req.total_cost_usd = sum(a.cost_usd for a in req.agents)
+            if "total_tokens_used" not in kwargs and req.agents:
+                req.total_tokens_used = sum(a.tokens_used for a in req.agents)
 
 
 def add_agent(request_id: str, persona_id: str, callsign: str, role: str) -> str:
