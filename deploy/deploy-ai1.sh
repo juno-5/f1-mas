@@ -15,35 +15,43 @@ echo "=== MAS Deploy to ai1 ==="
 echo "Source: $SCRIPT_DIR"
 
 # 1. Python code → server scripts
-echo "[1/5] Deploying Python code..."
+echo "[1/9] Deploying Python code..."
 scp "$SCRIPT_DIR"/mas/*.py "$SERVER:~/.f1crew/scripts/mas/"
 
-# 2. Runtime config → server scripts
-echo "[2/5] Deploying runtime config..."
+# 2. Runtime config → server shared
+echo "[2/9] Deploying runtime config..."
 scp "$SCRIPT_DIR/config/mas-config.json" "$SERVER:~/.f1crew/shared/mas-config.json"
 
 # 3. Characters → server data
-echo "[3/5] Deploying characters..."
+echo "[3/9] Deploying characters..."
 rsync -az --delete "$SCRIPT_DIR/characters/" "$SERVER:~/projects/mayacrew-f1crew/f1-mas/characters/"
 
 # 4. Config MDs → server data
-echo "[4/6] Deploying config files..."
+echo "[4/9] Deploying config files..."
 rsync -az "$SCRIPT_DIR/config/persona-registry.md" \
           "$SCRIPT_DIR/config/selection-rules.md" \
           "$SCRIPT_DIR/config/task-templates.md" \
           "$SERVER:~/projects/mayacrew-f1crew/f1-mas/config/"
 
-# 5. Library → server data (insight capture target)
-echo "[5/7] Deploying library..."
+# 5. Org → server data (domains.yaml, functions.yaml — hot-reloaded)
+echo "[5/9] Deploying org..."
+rsync -az "$SCRIPT_DIR/org/" "$SERVER:~/projects/mayacrew-f1crew/f1-mas/org/"
+
+# 6. Routines → server data (routine YAML files — hot-reloaded)
+echo "[6/9] Deploying routines..."
+rsync -az "$SCRIPT_DIR/routines/" "$SERVER:~/projects/mayacrew-f1crew/f1-mas/routines/"
+
+# 7. Library → server data (insight capture target)
+echo "[7/9] Deploying library..."
 rsync -az "$SCRIPT_DIR/library/" "$SERVER:~/projects/mayacrew-f1crew/f1-mas/library/"
 
-# 6. Scripts → server (library-scanner, cleanup, etc.)
-echo "[6/7] Deploying scripts..."
+# 8. Scripts → server (library-scanner, cleanup, etc.)
+echo "[8/9] Deploying scripts..."
 scp "$SCRIPT_DIR"/scripts/*.py "$SERVER:~/.f1crew/scripts/mas/" 2>/dev/null || true
 scp "$SCRIPT_DIR"/scripts/*.sh "$SERVER:~/.f1crew/scripts/mas/" 2>/dev/null || true
 
-# 7. Systemd service
-echo "[7/7] Deploying systemd service..."
+# 9. Systemd service
+echo "[9/9] Deploying systemd service..."
 scp "$SCRIPT_DIR/systemd/mas.service" "$SERVER:~/.config/systemd/user/mas.service"
 ssh "$SERVER" 'systemctl --user daemon-reload'
 
