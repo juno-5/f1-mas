@@ -183,6 +183,18 @@
     - **After: creative query → CHROMA + ECHO + Yena Jang (color + sound + design)**
     - `mas/mas_orchestrator.py` 수정
 
+28. **Cycle #45 (2026-02-24)**: **Library injection domain verification for Five Senses**
+    - Five Senses 선택 후 `library/creatives/` 올바르게 주입 확인 (읽기 전용 검증)
+    - `_build_agent_prompt()` → `persona.category` 기반 라이브러리 선택 — 설계 올바름
+    - 부수 발견: creatives library(2748 chars) — 다른 도메인(6050+ chars) 절반 미만
+
+29. **Cycle #46 (2026-02-24)**: **Clean query propagation to execution pipeline** ⭐
+    - Cycle #43의 메타데이터 접두사 strip이 분석에만 적용, 실행 파이프라인에는 raw query 전달
+    - `analyze_request()` → `clean_query` 반환 → `execute_pattern(query=agent_query)`
+    - **Before AMM**: `[auto-debug] Cycle #28: React Native 앱에서 FlatList...`
+    - **After AMM**: `React Native 앱에서 FlatList 성능 최적화 방법 알려줘`
+    - `mas/mas_orchestrator.py` 수정 (+3 lines)
+
 ## 변경 이력
 
 7. `mas/mas_agent_runner.py` + `mas/mas_templates.py` + `mas/mas_conversation.py` — synthesis cap + truncation (2a8737c, 2026-02-23)
@@ -208,6 +220,7 @@
 27. `config/mas-config.json` + runtime config — synthesis_model sonnet→haiku (2026-02-24)
 28. `mas/mas_orchestrator.py` — metadata prefix stripping for detection accuracy (2026-02-24)
 29. `mas/mas_orchestrator.py` — global locale matching for Five Senses personas (2026-02-24)
+30. `mas/mas_orchestrator.py` — clean_query propagation to execution pipeline (2026-02-24)
 
 ## 미해결 가설
 

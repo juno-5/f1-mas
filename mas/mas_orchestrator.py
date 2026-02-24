@@ -116,6 +116,7 @@ class Orchestrator:
             "squad": resolved_squad or "",
             "_squad_explicit": bool(squad),
             "_tribe_explicit": bool(tribe),
+            "clean_query": clean_query,
         }
 
     def _default_function(self, domain: str) -> str:
@@ -356,11 +357,12 @@ class Orchestrator:
         state.update_request(request_id, pattern=conv_pattern)
         _log(f"[{request_id}] Pattern: {conv_pattern}")
 
-        # 5. Execute pattern
+        # 5. Execute pattern (use cleaned query for agent prompts, AMM, synthesis)
         state.update_request(request_id, status="running")
+        agent_query = analysis.get("clean_query", query)
         result = execute_pattern(
             request_id=request_id,
-            query=query,
+            query=agent_query,
             personas=personas,
             pattern=conv_pattern,
             index=self._index,
