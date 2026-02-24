@@ -49,6 +49,14 @@
 | [K뷰티 스터디 자료 (틱톡+틱톡샵)](https://supermembers.notion.site/K-1bfee0bcf38c8009aa1dea261550b86c) | growth | 틱톡+틱톡샵 정리 자료 |
 | [미국 뷰티 TOP MCNs](https://www.notion.so/mayacrew/TOP-MCNs-24f983e32b32808b8586e21e8f1deb9c) | cosduck-app | MOMENTiQ, 뷰티 강점 MCN 리스트 |
 
+## 광고 성과 분석 & 보고
+
+| Resource | URL | 비고 |
+|----------|-----|------|
+| [릴스 알고리즘 & 인플루언서 분석](https://www.notion.so/20f983e32b32809bb6fff486450520b5) | Notion | 릴스 알고리즘 핵심 — 후킹(첫 3초), 완시율, 인플루언서 성과 분석 |
+| [메타 광고 성과 하락 이슈 분석](https://www.notion.so/1d8983e32b32800ba39ae8e6a4da4b8e) | Notion | 25년 4월 submitLeadForm 비용 9만→20만원 급등, onboardLanding 비용 분석 |
+| [캠페인 성과 보고서 워크플로우](https://www.notion.so/262983e32b3281699651eac3da50835b) | Notion | 캠페인 종료 3주 후 성과보고서 — 대시보드 자동생성 → 인사이트 첨부 → 업체 전달 |
+
 ## Conferences & Learnings
 
 | Resource | Source | 비고 |
@@ -81,6 +89,12 @@
 | [Growth 특강 (황승욱 리더님)](https://www.notion.so/mayacrew/Growth-974e940eae994f0096cd5592216f9a46) | growth | 리더십 특강 정리 |
 | [릴스 캠페인 보고서](https://docs.google.com/spreadsheets/d/1HQAywbAoQFS9fw4EoNB_e5CUwXods1UF248Wmr2SLNE/) | 플랜핏-슈퍼차트-릴스 | 마케팅 보고서 |
 | [YouTube QA 시트](https://docs.google.com/spreadsheets/d/11RkicM99onfmvIz8NVp5qKH7y_K0AX0rNR8haqBbrbI/) | qa-youtube | 숏폼 수집 |
+
+## 인플루언서 마케팅
+
+| Resource | URL | 비고 |
+|----------|-----|------|
+| [인플루언서 마케팅 가이드](https://www.notion.so/161983e32b32800f9ca8cc996b2fb3eb) | Notion | 슈퍼멤버스 광고 진행 프로세스 — 유튜브 광고 (리스트업 → 컨택 → 진행) |
 
 ## 슈퍼멤버스 마케팅
 
@@ -129,4 +143,4 @@
 
 ---
 
-*Last updated: 2026-02-24 (Cycle #22: Slack pins — +1 entry)*
+*Last updated: 2026-02-24 (Cycle #42: 인플루언서 마케팅 가이드 +1)*

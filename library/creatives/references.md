@@ -62,8 +62,7 @@
 | Resource | URL | 비고 |
 |----------|-----|------|
 | [쉘랑 코리아 가이드 모음](https://www.notion.so/27e983e32b328004b0fffc85eac3ee7e) | Notion | 쉘랑 코리아 브랜드 콘텐츠 가이드 컬렉션 |
-| [틱톡 코리아 세미나 — 콘텐츠 최적화](https://www.notion.so/30d983e32b3281dbb356cccfdacce88b) | Notion | 틱톡 콘텐츠 최적화 세미나 노트 |
 
 ---
 
-*Last updated: 2026-02-24 (Cycle #26: Notion 검색 — 브랜드 가이드 +2 entries)*
+*Last updated: 2026-02-24 (Cycle #32: 틱톡 세미나 중복 제거)*

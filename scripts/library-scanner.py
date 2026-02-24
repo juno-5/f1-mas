@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
-"""library-scanner.py — Slack 히스토리에서 문서 링크 수집 → 도메인별 분류 → 라이브러리 정리.
+"""library-scanner.py — Slack 히스토리 + 에이전트 워크스페이스에서 문서 수집 → 도메인별 분류 → 라이브러리 정리.
 
 Modes:
-  --mode=status    스캔 상태, 채널 수, 링크 수
-  --mode=scan      Slack 히스토리 스캔 → 링크 추출
-  --mode=fetch     URL별 문서 내용 가져오기 (Notion API / HTTP)
-  --mode=classify  문서를 8개 도메인으로 분류
-  --mode=render    references.md 머지용 마크다운 생성
+  --mode=status              스캔 상태, 채널 수, 링크 수
+  --mode=scan                Slack 히스토리 스캔 → 링크 추출
+  --mode=fetch               URL별 문서 내용 가져오기 (Notion API / HTTP)
+  --mode=classify            문서를 8개 도메인으로 분류
+  --mode=render              references.md 머지용 마크다운 생성
+  --mode=workspace           에이전트 워크스페이스 스캔 → 생성 문서 발견·분류
+  --mode=workspace-collect   워크스페이스 문서를 library 디렉토리에 복사
 """
 
 import argparse
@@ -182,6 +184,127 @@ AGENT_DOMAIN_MAP = {
     "commerce-master": "commerce",
     "sales-master": "sales",
     "uiux-master": "uiux",
+    "cx-master": "cx",
+}
+
+# Agent workspace scanning — system files to exclude
+WORKSPACE_DIR = Path("~/.f1crew").expanduser()
+WORKSPACE_SYSTEM_FILES = {
+    "CLAUDE.md", "IDENTITY.md", "SOUL.md", "MEMORY.md",
+    "AGENTS.md", "HEARTBEAT.md", "TOOLS.md", "USER.md",
+}
+WORKSPACE_EXCLUDE_DIRS = {"memory", ".openclaw", ".pi"}
+
+# Memory file domain normalization — maps non-standard Domain fields to library domains
+MEMORY_DOMAIN_NORMALIZE = {
+    # English exact matches
+    "developers": "developers", "marketers": "marketers", "creatives": "creatives",
+    "commerce": "commerce", "sales": "sales", "uiux": "uiux", "cx": "cx", "models": "models",
+    # Korean domain names
+    "개발": "developers", "마케팅": "marketers", "크리에이티브": "creatives",
+    "커머스": "commerce", "세일즈": "sales", "디자인": "uiux", "고객경험": "cx", "모델": "models",
+}
+
+# Keyword patterns for normalizing memory Domain field to library domains
+MEMORY_DOMAIN_PATTERNS = [
+    (re.compile(r"dev|infra|hpc|gpu|server|backend|frontend|api|code|deploy|token.?econ", re.I), "developers"),
+    (re.compile(r"market|ads?|campaign|seo|brand|growth|advertis|social.?media", re.I), "marketers"),
+    (re.compile(r"creative|art|visual|design|video|photo|music|audio|color|motion|film", re.I), "creatives"),
+    (re.compile(r"commerce|shop|amazon|ecommerce|seller|fulfillment|logistics|물류", re.I), "commerce"),
+    (re.compile(r"sales|deal|pipeline|revenue|pricing|negotiat", re.I), "sales"),
+    (re.compile(r"ux|ui|usability|figma|prototype|wireframe|interaction|user.?research", re.I), "uiux"),
+    (re.compile(r"cx|cs|support|customer|service|healthcare|health|의료|환자", re.I), "cx"),
+    (re.compile(r"model|fashion|casting|shoot|runway|editorial|beauty", re.I), "models"),
+]
+
+# Workspace owner → default library domain (all agents)
+AGENT_LIBRARY_DOMAIN = {
+    **AGENT_DOMAIN_MAP,
+    "zero": "developers", "main": "developers",
+    # Dev personas — default to developers, but content-based override applies
+    **{name: "developers" for name in [
+        "anvil", "axiom", "blaze", "bridge", "chain", "cortex", "ember", "flux",
+        "forge", "hex", "kernel", "ledger", "luffy", "mint", "mirage", "nova",
+        "pixel", "prism", "pulse", "sage", "sentinel", "trace", "vault", "viper", "wire",
+    ]},
+}
+
+
+def _normalize_memory_domain(domain_field: str, tags: str = "", title: str = "") -> str | None:
+    """Normalize a memory file's Domain field to a library domain."""
+    if not domain_field:
+        return None
+    dl = domain_field.strip().lower()
+    # Exact match
+    if dl in MEMORY_DOMAIN_NORMALIZE:
+        return MEMORY_DOMAIN_NORMALIZE[dl]
+    # Pattern match on domain field + tags + title
+    combined = f"{domain_field} {tags} {title}"
+    for pattern, lib_domain in MEMORY_DOMAIN_PATTERNS:
+        if pattern.search(combined):
+            return lib_domain
+    return None
+
+
+def _parse_memory_file(filepath: Path) -> dict | None:
+    """Parse a structured memory .md file and extract metadata."""
+    try:
+        text = filepath.read_text(encoding="utf-8", errors="replace")
+    except Exception:
+        return None
+    lines = text.splitlines()
+    meta = {"title": "", "source": "", "date": "", "domain": "", "tags": "",
+            "relevance": 0.0, "type": "", "agent": "", "entities": "", "insight": ""}
+    for line in lines:
+        line = line.strip()
+        if line.startswith("# ") and not meta["title"]:
+            meta["title"] = line[2:].strip()
+        elif line.startswith("- **Source**:"):
+            meta["source"] = line.split(":", 1)[1].strip().lstrip("*").rstrip("*").strip()
+        elif line.startswith("- **Date**:"):
+            meta["date"] = line.split(":", 1)[1].strip()
+        elif line.startswith("- **Domain**:"):
+            meta["domain"] = line.split(":", 1)[1].strip()
+        elif line.startswith("- **Tags**:"):
+            meta["tags"] = line.split(":", 1)[1].strip()
+        elif line.startswith("- **Relevance**:"):
+            try:
+                meta["relevance"] = float(line.split(":", 1)[1].strip())
+            except ValueError:
+                pass
+        elif line.startswith("- **Type**:"):
+            meta["type"] = line.split(":", 1)[1].strip()
+        elif line.startswith("- **Agent**:"):
+            meta["agent"] = line.split(":", 1)[1].strip()
+        elif line.startswith("- **Entities**:"):
+            meta["entities"] = line.split(":", 1)[1].strip()
+    # Extract insight section
+    in_insight = False
+    insight_lines = []
+    for line in lines:
+        if line.strip().startswith("## 핵심 인사이트"):
+            in_insight = True
+            continue
+        if in_insight:
+            if line.strip().startswith("## "):
+                break
+            if line.strip():
+                insight_lines.append(line.strip())
+    meta["insight"] = " ".join(insight_lines)
+    return meta if meta["title"] else None
+
+
+# Product names that map to product-level library subdirectories
+PRODUCT_NAMES = ["supermembers", "superchart", "cosduck", "heeda", "kimchip", "mapda", "medihair"]
+
+# Agent domain → functional subdomain mapping for product paths
+_AGENT_FUNC_MAP = {
+    "art-master": "marketing",    # creatives work is marketing-adjacent for products
+    "mkt-master": "marketing",
+    "dev-master": "dev",
+    "commerce-master": "marketing",
+    "sales-master": "sales",
+    "uiux-master": "dev",
     "cx-master": "cx",
 }
 
@@ -738,14 +861,345 @@ def mode_render(args):
 
 
 # ---------------------------------------------------------------------------
+# Mode: workspace — scan agent workspace directories for generated docs
+# ---------------------------------------------------------------------------
+
+def mode_workspace(args):
+    """Scan master agent workspaces for generated documents, classify into library domains."""
+    state = _load_state()
+    processed = state.get("workspace_processed", {})
+    agent_filter = args.agent  # optional: scan specific agent only
+
+    agents = list(AGENT_DOMAIN_MAP.keys())
+    if agent_filter:
+        agents = [a for a in agents if a == agent_filter]
+
+    all_files = []
+    classified = {}
+
+    for agent_id in agents:
+        ws_dir = WORKSPACE_DIR / f"workspace-{agent_id}"
+        if not ws_dir.is_dir():
+            continue
+
+        default_domain = AGENT_DOMAIN_MAP.get(agent_id, "general")
+        func_subdomain = _AGENT_FUNC_MAP.get(agent_id, default_domain)
+
+        for md_file in ws_dir.rglob("*.md"):
+            # Skip system files
+            if md_file.name in WORKSPACE_SYSTEM_FILES:
+                continue
+            # Skip excluded directories
+            rel = md_file.relative_to(ws_dir)
+            if any(part in WORKSPACE_EXCLUDE_DIRS for part in rel.parts):
+                continue
+
+            rel_key = f"{agent_id}/{rel}"
+
+            # Read title (first heading line)
+            try:
+                first_lines = md_file.read_text(encoding="utf-8", errors="replace")[:500]
+                title_match = re.match(r"^#\s+(.+)", first_lines)
+                title = title_match.group(1).strip() if title_match else md_file.stem
+            except Exception:
+                title = md_file.stem
+
+            # Determine domain: product path takes priority
+            domain = default_domain
+            rel_lower = str(rel).lower()
+            product_match = None
+            for pname in PRODUCT_NAMES:
+                if pname in rel_lower:
+                    product_match = pname
+                    break
+
+            if product_match:
+                # Product document → library/{product}/{func}/
+                domain = f"{product_match}/{func_subdomain}"
+            else:
+                # Use content-based classification as secondary signal
+                try:
+                    content_sample = md_file.read_text(encoding="utf-8", errors="replace")[:2000]
+                    content_domain, score = classify_by_content(content_sample)
+                    if score >= 6 and content_domain != default_domain:
+                        # Strong content signal overrides agent default
+                        domain = content_domain
+                except Exception:
+                    pass
+
+            is_new = rel_key not in processed
+            file_size = md_file.stat().st_size
+            mtime = time.strftime("%Y-%m-%d", time.localtime(md_file.stat().st_mtime))
+
+            entry = {
+                "source": agent_id,
+                "path": str(rel),
+                "full_path": str(md_file),
+                "rel_key": rel_key,
+                "domain": domain,
+                "title": title[:100],
+                "size": file_size,
+                "mtime": mtime,
+                "is_new": is_new,
+            }
+            all_files.append(entry)
+            classified.setdefault(domain, []).append(str(rel))
+
+    # Summary
+    new_files = [f for f in all_files if f["is_new"]]
+    output = {
+        "scanned_agents": len(agents),
+        "total_files": len(all_files),
+        "new_files": len(new_files),
+        "classified": {d: files for d, files in sorted(classified.items())},
+        "files": all_files,
+    }
+    print(json.dumps(output, indent=2, ensure_ascii=False))
+
+
+def mode_workspace_collect(args):
+    """Copy new workspace documents into library directories."""
+    state = _load_state()
+    processed = state.get("workspace_processed", {})
+
+    # First run workspace scan to find files
+    import io
+    from contextlib import redirect_stdout
+    buf = io.StringIO()
+    with redirect_stdout(buf):
+        mode_workspace(args)
+    scan_result = json.loads(buf.getvalue())
+
+    new_files = [f for f in scan_result["files"] if f["is_new"]]
+    if not new_files:
+        print(json.dumps({"collected": 0, "message": "No new files to collect"}))
+        return
+
+    import shutil
+    collected = []
+    for entry in new_files:
+        src = Path(entry["full_path"])
+        domain = entry["domain"]
+
+        # Determine target directory
+        target_dir = LIBRARY_DIR / domain
+        target_dir.mkdir(parents=True, exist_ok=True)
+
+        # Use original filename
+        target = target_dir / src.name
+
+        # Avoid overwriting — append suffix if exists
+        if target.exists():
+            stem = target.stem
+            suffix = target.suffix
+            i = 1
+            while target.exists():
+                target = target_dir / f"{stem}-{i}{suffix}"
+                i += 1
+
+        shutil.copy2(str(src), str(target))
+
+        # Mark as processed
+        processed[entry["rel_key"]] = time.strftime("%Y-%m-%dT%H:%M:%SZ")
+        collected.append({
+            "source": entry["rel_key"],
+            "target": str(target.relative_to(LIBRARY_DIR)),
+            "domain": domain,
+            "title": entry["title"],
+        })
+
+    state["workspace_processed"] = processed
+    _save_state(state)
+
+    print(json.dumps({
+        "collected": len(collected),
+        "files": collected,
+    }, indent=2, ensure_ascii=False))
+
+
+# ---------------------------------------------------------------------------
+# Mode: memory — scan agent memory directories for insight cards
+# ---------------------------------------------------------------------------
+
+def mode_memory(args):
+    """Scan all agent memory directories for structured insight files, classify into library domains."""
+    state = _load_state()
+    processed = state.get("memory_processed", {})
+    agent_filter = args.agent
+    min_relevance = float(args.min_relevance) if hasattr(args, "min_relevance") and args.min_relevance else 0.0
+
+    # Discover all workspace-*/memory/ directories
+    agents = []
+    for ws in sorted(WORKSPACE_DIR.glob("workspace-*")):
+        agent_id = ws.name.replace("workspace-", "")
+        if agent_filter and agent_id != agent_filter:
+            continue
+        mem_dir = ws / "memory"
+        if mem_dir.is_dir():
+            agents.append((agent_id, mem_dir))
+
+    all_entries = []
+    domain_counts = {}
+
+    for agent_id, mem_dir in agents:
+        default_domain = AGENT_LIBRARY_DOMAIN.get(agent_id, "developers")
+
+        for md_file in mem_dir.rglob("*.md"):
+            rel_key = f"{agent_id}/memory/{md_file.relative_to(mem_dir)}"
+
+            meta = _parse_memory_file(md_file)
+            if not meta:
+                continue
+
+            # Skip low-relevance files
+            if meta["relevance"] < min_relevance:
+                continue
+
+            # Classify domain: normalize Domain field → fallback to agent default
+            lib_domain = _normalize_memory_domain(meta["domain"], meta["tags"], meta["title"])
+            if not lib_domain:
+                # Try content-based classification
+                content_text = f"{meta['title']} {meta['tags']} {meta['insight']}"
+                lib_domain, score = classify_by_content(content_text)
+                if score < 3:
+                    lib_domain = default_domain
+
+            is_new = rel_key not in processed
+
+            entry = {
+                "source_agent": agent_id,
+                "workspace_agent": meta.get("agent", agent_id),
+                "rel_key": rel_key,
+                "title": meta["title"][:120],
+                "source_url": meta["source"],
+                "date": meta["date"][:10] if meta["date"] else "",
+                "original_domain": meta["domain"],
+                "library_domain": lib_domain,
+                "tags": meta["tags"],
+                "relevance": meta["relevance"],
+                "type": meta["type"],
+                "insight": meta["insight"][:300],
+                "entities": meta["entities"],
+                "is_new": is_new,
+                "size": md_file.stat().st_size,
+            }
+            all_entries.append(entry)
+            domain_counts[lib_domain] = domain_counts.get(lib_domain, 0) + 1
+
+    new_entries = [e for e in all_entries if e["is_new"]]
+    output = {
+        "scanned_agents": len(agents),
+        "total_files": len(all_entries),
+        "new_files": len(new_entries),
+        "by_domain": dict(sorted(domain_counts.items())),
+        "domain_summary": {d: len([e for e in all_entries if e["library_domain"] == d])
+                          for d in sorted(set(e["library_domain"] for e in all_entries))},
+        "files": all_entries,
+    }
+    print(json.dumps(output, indent=2, ensure_ascii=False))
+
+
+def mode_memory_collect(args):
+    """Aggregate memory insights by domain into library/{domain}/memory-insights.md files."""
+    state = _load_state()
+    processed = state.get("memory_processed", {})
+
+    # Run memory scan first
+    import io
+    from contextlib import redirect_stdout
+    buf = io.StringIO()
+    with redirect_stdout(buf):
+        mode_memory(args)
+    scan_result = json.loads(buf.getvalue())
+
+    new_entries = [f for f in scan_result["files"] if f["is_new"]]
+    if not new_entries:
+        print(json.dumps({"collected": 0, "message": "No new memory files to collect"}))
+        return
+
+    # Group by library domain
+    by_domain = {}
+    for entry in new_entries:
+        d = entry["library_domain"]
+        by_domain.setdefault(d, []).append(entry)
+
+    collected_summary = {}
+    for domain, entries in sorted(by_domain.items()):
+        target_dir = LIBRARY_DIR / domain
+        target_dir.mkdir(parents=True, exist_ok=True)
+        target_file = target_dir / "memory-insights.md"
+
+        # Read existing content
+        existing = ""
+        if target_file.exists():
+            existing = target_file.read_text(encoding="utf-8", errors="replace")
+
+        # Build new entries (skip duplicates by source URL)
+        new_lines = []
+        for e in sorted(entries, key=lambda x: x.get("date", ""), reverse=True):
+            if e["source_url"] and e["source_url"] in existing:
+                continue
+            date_str = e["date"] or "N/A"
+            tags_str = e["tags"] if e["tags"] else ""
+            relevance_str = f"{e['relevance']:.2f}" if e["relevance"] else ""
+
+            new_lines.append(f"### {e['title'][:80]}")
+            new_lines.append(f"- **Source**: {e['source_url']}")
+            new_lines.append(f"- **Agent**: {e['source_agent']} | **Date**: {date_str} | **Relevance**: {relevance_str}")
+            if tags_str:
+                new_lines.append(f"- **Tags**: {tags_str}")
+            if e["insight"]:
+                new_lines.append(f"- **Insight**: {e['insight'][:200]}")
+            new_lines.append("")
+
+            # Mark as processed
+            processed[e["rel_key"]] = time.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+        if not new_lines:
+            continue
+
+        # Append to file (or create with header)
+        if not existing:
+            header = f"# {domain.title()} — Memory Insights\n\n"
+            header += f"> Bot memory에서 자동 수집된 인사이트 카드. 각 항목은 에이전트가 외부 소스에서 추출한 도메인 지식.\n\n"
+            header += f"*Last updated: {time.strftime('%Y-%m-%d')}*\n\n---\n\n"
+            content = header + "\n".join(new_lines)
+        else:
+            # Update timestamp in existing header
+            content = re.sub(
+                r"\*Last updated: \d{4}-\d{2}-\d{2}\*",
+                f"*Last updated: {time.strftime('%Y-%m-%d')}*",
+                existing
+            )
+            content = content.rstrip() + "\n\n" + "\n".join(new_lines)
+
+        target_file.write_text(content, encoding="utf-8")
+        collected_summary[domain] = len([l for l in new_lines if l.startswith("### ")])
+
+    state["memory_processed"] = processed
+    _save_state(state)
+
+    print(json.dumps({
+        "collected_domains": len(collected_summary),
+        "total_insights": sum(collected_summary.values()),
+        "by_domain": collected_summary,
+    }, indent=2, ensure_ascii=False))
+
+
+# ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
 
 def main():
-    parser = argparse.ArgumentParser(description="Library Scanner — Slack → Library")
+    parser = argparse.ArgumentParser(description="Library Scanner — Slack + Workspace → Library")
     parser.add_argument("--mode", required=True,
-                       choices=["status", "scan", "fetch", "classify", "render"])
+                       choices=["status", "scan", "fetch", "classify", "render",
+                                "workspace", "workspace-collect",
+                                "memory", "memory-collect"])
     parser.add_argument("--channel", help="Specific Slack channel ID")
+    parser.add_argument("--agent", help="Specific agent ID for workspace/memory scan (e.g. art-master)")
+    parser.add_argument("--min-relevance", dest="min_relevance", type=float, default=0.0,
+                       help="Minimum relevance score for memory mode (0.0-1.0)")
     parser.add_argument("--limit", type=int, default=200, help="Messages per channel")
     parser.add_argument("--since", help="UNIX timestamp for incremental scan")
     parser.add_argument("--urls", help="JSON array of URLs (for fetch)")
@@ -759,6 +1213,10 @@ def main():
         "fetch": mode_fetch,
         "classify": mode_classify,
         "render": mode_render,
+        "workspace": mode_workspace,
+        "workspace-collect": mode_workspace_collect,
+        "memory": mode_memory,
+        "memory-collect": mode_memory_collect,
     }
     modes[args.mode](args)
 

@@ -33,6 +33,14 @@
 | [틱톡코리아 미팅 요약](https://docs.google.com/document/d/1L3yXaLjdl5_KoDEnOEHWOznrFNLRsgPx4hGkFZ3hQNs/) | Google Docs | 틱톡샵 에이전시 스케일업, 맨파워 이슈 |
 | [Cosduck TikTok Rewards Campaign](https://docs.google.com/spreadsheets/d/1SVyDrsVcR49kvLIMQmBUrIfUsfDHj-MElQ1CMe22/) | Google Sheets | Express 캠페인 설정, 리뷰 기간 |
 
+## 콘텐츠 분석 & 전략
+
+| Resource | URL | 비고 |
+|----------|-----|------|
+| [틱톡샵 콘텐츠 분석 가이드 (인도네시아)](https://www.notion.so/2ff983e32b32809abb2ed2ef145e574e) | Notion | 인니 틱톡샵 콘텐츠 전체 스크립트 프로세스 + 프롬프트 |
+| [올리브영 GMV MAX 캠페인 분석](https://www.notion.so/2b7983e32b3280818eb2f55a90301568) | Notion | 누디블러 지표, Cost/Orders/ROI 분석 |
+| [핫 콘텐츠 분석 기획안](https://www.notion.so/232983e32b328075bc34da8344e7ea74) | Notion | 코스덕 2.0 피봇 — 캠페인당 영상 5개 기준, 콘텐츠 분석 프레임워크 |
+
 ## 시장 조사 & 데이터
 
 | Resource | URL | 비고 |
@@ -44,4 +52,4 @@
 
 ---
 
-*Last updated: 2026-02-24 (Cycle #16: top-level sync +4 entries)*
+*Last updated: 2026-02-24 (Cycle #39: 콘텐츠 분석 동기화 +3)*

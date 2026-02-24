@@ -42,6 +42,14 @@
 | 매일 09:00 | 전일 요약 (Meta + Mixpanel + GA4) | Slack C063WM4MVUH |
 | 매일 18:00 | 마감 점검 | Slack C063WM4MVUH |
 
+## 랜딩페이지 & 브랜딩
+
+| Resource | URL | 비고 |
+|----------|-----|------|
+| [경쟁사 랜딩 캡쳐](https://www.notion.so/2bf983e32b3280499a30da495c8f0f5c) | Notion | 경쟁사 랜딩 페이지 레퍼런스 (슈멤 서비스 이해도 향상 목적) |
+| [랜딩페이지 최적화 전략 설계](https://www.notion.so/292983e32b3280f59accdef858ce607a) | Notion | 랜딩페이지 병목 파악, 수치 분석, 도입 문의 CTA 클릭률 개선 |
+| [기존 SaaS 서비스 랜딩 레퍼런스](https://www.notion.so/7c361a28e0af449ab604aafc757d2002) | Notion | SaaS 랜딩 페이지 벤치마크 리서치 |
+
 ## 실험 & 프로모션
 
 | Resource | URL | 비고 |
@@ -59,4 +67,4 @@
 
 ---
 
-*Last updated: 2026-02-24 (Cycle #16: top-level sync +3 entries)*
+*Last updated: 2026-02-24 (Cycle #29: 랜딩페이지/브랜딩 +3 entries)*

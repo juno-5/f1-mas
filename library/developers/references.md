@@ -11,10 +11,13 @@
 
 ## Infrastructure
 
-- [ ] 서버 아키텍처 다이어그램
-- [ ] CI/CD 파이프라인 구성
-- [ ] 모니터링/알럿 설정 가이드
-- [ ] 배포 프로세스 SOP
+| Resource | URL | 비고 |
+|----------|-----|------|
+| [AWS API Server : 구서버](https://www.notion.so/2be983e32b32813088b7c60090efbb52) | Notion | Express.js 기반, /api 디렉토리 구조, bin/www 진입점 |
+| [API Server : 신서버](https://www.notion.so/2be983e32b32816e8eb8e20f110b816f) | Notion | 슈퍼멤버스/슈퍼차트 백엔드 Express.js API 서버 — 서비스 설명, 서버 정보 |
+| [TikTok API 서버 Observability 가이드](https://www.notion.so/239983e32b3280b3ba46f8d800f6fa97) | Notion | TikTok API 서버 모니터링 아키텍처 구현 가이드 |
+| [영상 업로드시 API서버 에러 코드 목록](https://www.notion.so/23f983e32b3280b7a140f0b3b5c71030) | Notion | 코스덕 리뷰 영상 업로드 에러 (CONTRACT_NOT_FOUND, PERMISSION_DENIED 등) |
+| [Cosduck Agency 페이지별 데이터 매핑](https://www.notion.so/2b5983e32b328059963af107f56edcfb) | Notion | TikTok Shop + Amazon 통합 대시보드 — CSV 컬럼→페이지 데이터 매핑 |
 
 ## Internal Tools
 
@@ -113,4 +116,4 @@
 
 ---
 
-*Last updated: 2026-02-24 (Cycle #20: Notion fetch → 비고 보강 3건)*
+*Last updated: 2026-02-24 (Cycle #41: Infrastructure 섹션 구축 +5)*

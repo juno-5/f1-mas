@@ -20,6 +20,12 @@
 | | US | | |
 | | EU | | |
 
+### 일본 MCN 리스트
+
+| Resource | URL | 비고 |
+|----------|-----|------|
+| [(인플루언서 마케팅) 일본 MCN](https://www.notion.so/2e0983e32b3281dfba58df844cdbd0f0) | Notion | 지퓨처스, Aiden Lab, Creatip, 시라시리 등 일본 MCN 리스트 |
+
 ## Model Management
 
 - [ ] 캐스팅 프로세스
@@ -55,4 +61,4 @@
 
 ---
 
-*Last updated: 2026-02-24 (Cycle #28: 촬영 가이드 +4 entries)*
+*Last updated: 2026-02-24 (Cycle #42: 일본 MCN +1)*

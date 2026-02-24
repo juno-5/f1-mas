@@ -16,6 +16,14 @@
 | [AE 추가 리드 시트 3](https://docs.google.com/spreadsheets/d/1HnUOniBMiM0EjdHH9LNL9rL6PGf_6wQjKixXSGts6SM/) | Google Sheets | AE 리드 관리 |
 | [상위노출 화면 캡쳐 가이드라인](https://www.notion.so/mayacrew/a246101b7d074215aaeb1ed8ab384c12) | Notion | PR방 캡쳐 가이드, 고객 유입 필수 |
 
+## 서비스 분석 & 경쟁사
+
+| Resource | URL | 비고 |
+|----------|-----|------|
+| [슈퍼차트/경쟁사 분석](https://www.notion.so/1c4983e32b328001aeffc6e532d70175) | Notion | 인플루언서 마케팅 대행사 경쟁 분석 |
+| [슈퍼차트 공유 시트](https://www.notion.so/1c4983e32b32804abb5ee73599fd54f9) | Notion | 세일즈 퍼널 시트, 광고주 리스트업, 세일즈 업체 리스트 |
+| [슈퍼차트 캠페인 이용 프로세스 (제품)](https://www.notion.so/83fe767c326b43e5b4e75740ce11f13d) | Notion | 슈퍼차트 접속 → 캠페인 등록 프로세스 |
+
 ---
 
-*Last updated: 2026-02-23*
+*Last updated: 2026-02-24 (Cycle #31: 경쟁사/세일즈 +3 entries)*

@@ -139,6 +139,33 @@
 | [CGETC 입고 프로세스](https://www.notion.so/2e0983e32b3281f1a708ed432793e7f2) | Notion | CGETC 입고 절차 |
 | [크리에이터 수집용 크롤링 방법](https://www.notion.so/2d8983e32b32801ca904e83de6889f8b) | Notion | 코스덕 크롤링 앱(확장 프로그램) 사용법 |
 
+| [FBT 입고 프로세스](https://www.notion.so/FBT-2e3983e32b3280d4a56fe296f3872aa7) | Notion | FBT 포털 접속 → 인바운드 오더 → SKU별 입고 |
+| [커머스 비용 정산](https://www.notion.so/2e9983e32b3280d189d9e1ff03af7e00) | Notion | 커머스 비용 기록 시트 연동 |
+
+### 광고 & 캠페인 프로세스
+
+| Resource | URL | 비고 |
+|----------|-----|------|
+| [광고 진행 프로세스](https://www.notion.so/303983e32b3280ab87c0eb4450fa341f) | Notion | 코스덕 광고 진행 절차 |
+| [Colorgram/KIMCHIP 대댓글 프로세스](https://www.notion.so/Colorgram-KIMCHIP-292983e32b3280f49b64e85f5d4ddf04) | Notion | 코스덕 대댓글 운영 프로세스 — ChatGPT 활용, 메시지 템플릿 |
+| [선정형(Ads.type=A) 광고 프로세스](https://www.notion.so/Ads-type-A-2be983e32b32817eb7eae323f268f9f3) | Notion | 선정형 광고 개요, 빠른 참조, 실행 일정 |
+| [MAPDA 전환율 분석](https://www.notion.so/MAPDA-257983e32b3280ecb432c0c03ad1b807) | Notion | 맵다 제품 전환율 분석 (Figma + GSheet 연동) |
+
+### 콘텐츠 분석 & 전략
+
+| Resource | URL | 비고 |
+|----------|-----|------|
+| [틱톡샵 콘텐츠 분석 가이드 (인도네시아)](https://www.notion.so/2ff983e32b32809abb2ed2ef145e574e) | Notion | 인니 틱톡샵 콘텐츠 전체 스크립트 프로세스 + 프롬프트 |
+| [올리브영 GMV MAX 캠페인 분석](https://www.notion.so/2b7983e32b3280818eb2f55a90301568) | Notion | 누디블러 지표, Cost/Orders/ROI 분석, 주요 변경 내역 |
+| [핫 콘텐츠 분석 기획안](https://www.notion.so/232983e32b328075bc34da8344e7ea74) | Notion | 코스덕 2.0 피봇 — 캠페인당 영상 5개 생산 기준, 콘텐츠 분석 프레임워크 |
+
+### 플랫폼 가이드 (Notion)
+
+| Resource | URL | 비고 |
+|----------|-----|------|
+| [아마존 가이드](https://www.notion.so/2d8983e32b3280e0874fdb3bb58e03f8) | Notion | 아마존 스터디 자료 모음, 마케팅(아마존 재팬 기준), 리스팅 최적화 |
+| [네이버 플레이스 키워드 세팅 가이드북](https://www.notion.so/259983e32b32804c9a20c5338039a61e) | Notion | 키워드 중요성, 네이버 검색 기반 매장 키워드 설정 가이드 |
+
 ### Slack 핀 (GDrive)
 
 | Resource | Source | 비고 |
@@ -148,4 +175,4 @@
 
 ---
 
-*Last updated: 2026-02-24 (Cycle #26: Notion 검색 — 물류/크리에이터 +6 entries)*
+*Last updated: 2026-02-24 (Cycle #38: 콘텐츠 분석 +3 entries)*

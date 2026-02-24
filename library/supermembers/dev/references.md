@@ -34,6 +34,13 @@
 | [슈퍼멤버스 앱 구 서버 API → 새 서버 API 교체 (2건)](https://www.notion.so/API-API-2-22a983e32b3281c5b6aff27b12ad14f2) | Notion | API 마이그레이션 #1 |
 | [슈퍼멤버스 앱 구 서버 API → 새 서버 API 교체](https://www.notion.so/API-API-238983e32b3280478d10e8ffa48dcf90) | Notion | API 마이그레이션 #2 |
 
+## 서버 인프라
+
+| Resource | URL | 비고 |
+|----------|-----|------|
+| [AWS API Server : 구서버](https://www.notion.so/2be983e32b32813088b7c60090efbb52) | Notion | Express.js 기반, /api 디렉토리 구조 |
+| [API Server : 신서버](https://www.notion.so/2be983e32b32816e8eb8e20f110b816f) | Notion | 슈퍼멤버스/슈퍼차트 백엔드 Express.js API 서버 |
+
 ## Slack 파일 업로드 (GDrive)
 
 | Resource | URL | 비고 |
@@ -52,4 +59,4 @@
 
 ---
 
-*Last updated: 2026-02-24 (Cycle #18: Ads_Payment snippets +4 entries)*
+*Last updated: 2026-02-24 (Cycle #41: 서버 인프라 동기화 +2)*

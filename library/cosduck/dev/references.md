@@ -24,6 +24,14 @@
 | [이메일 유효성 검사 방법](https://mayacrew.notion.site/176983e32b32803ea9f8e3f252d68b2a) | Notion | 이메일 주소 validation 가이드 |
 | [0516 QA 논의 문서](https://www.notion.so/mayacrew/0516-QA-1f5983e32b32803cb594e410ffe6e742) | Notion | QA 논의사항 |
 
+## API & 인프라
+
+| Resource | URL | 비고 |
+|----------|-----|------|
+| [TikTok API 서버 Observability 가이드](https://www.notion.so/239983e32b3280b3ba46f8d800f6fa97) | Notion | TikTok API 서버 모니터링 아키텍처 |
+| [영상 업로드시 API서버 에러 코드 목록](https://www.notion.so/23f983e32b3280b7a140f0b3b5c71030) | Notion | 리뷰 영상 업로드 에러 코드 참조 |
+| [Cosduck Agency 페이지별 데이터 매핑](https://www.notion.so/2b5983e32b328059963af107f56edcfb) | Notion | TikTok Shop + Amazon 대시보드 CSV→페이지 데이터 매핑 |
+
 ## 크리에이터 & 자동화
 
 | Resource | URL | 비고 |
@@ -32,4 +40,4 @@
 
 ---
 
-*Last updated: 2026-02-24 (Cycle #27: 크리에이터 크롤링 +1)*
+*Last updated: 2026-02-24 (Cycle #41: API 인프라 동기화 +3)*

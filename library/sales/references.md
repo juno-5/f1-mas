@@ -32,7 +32,6 @@
 | Resource | Source | 비고 |
 |----------|--------|------|
 | [리드 온도 체계](https://www.notion.so/mayacrew/2bf983e32b3280dcb9ffc973cc8acc06) | 슈퍼멤버스 | 통화 리드 온도 정의 및 운영 기준, 세일즈팀 공통 기준 |
-| [CX 멘토링 (와이즐리)](https://www.notion.so/mayacrew/CX-1d9983e32b3280d59627f02485a95e93) | growth | 와이즐리 CX 김지수 팀장 멘토링 |
 
 ## AE (Account Executive) 운영 시트
 
@@ -65,12 +64,19 @@
 | [사전 이탈 방어 - 저효율 광고 매장 라벨링 기준](https://www.notion.so/1d6983e32b3280b78f59f5530c146a0e) | Notion | 이탈 위험 매장 라벨링 |
 | [슈멤 1번 사용할 때 마다 리워드 제공](https://www.notion.so/1-223983e32b3280bd9d2dffe2bab59d7c) | Notion | 리워드 기반 리텐션 |
 
+### 이탈 분석
+
+| Resource | URL | 비고 |
+|----------|-----|------|
+| [이탈 데이터 분석](https://www.notion.so/2ee983e32b328031a16ae988c347b8ee) | Notion | 1월 신규 광고주 이탈 패턴 (1개월 플랜 유지 기간), 블랙등급 이용자 분석 |
+
 ### 퍼널 & 전환 최적화
 
 | Resource | URL | 비고 |
 |----------|-----|------|
 | [슈퍼멤버스 2차 퍼널 개선](https://www.notion.so/2-29c983e32b3280cca92ff4cf31547c25) | Notion | 2차 퍼널 전환율 개선 |
 | [슈퍼멤버스 랜딩 페이지 히어로 섹션 개선 - CTA 클릭률 개선 실험](https://www.notion.so/CTA-264983e32b328031ad04eb2f05b4d060) | Notion | CTA 실험 결과 |
+| [도입 문의 퍼널 개선 — 혜택 소구를 통한 전환율 개선](https://www.notion.so/277983e32b3280d796f1da16a424c20c) | Notion | 1차 히어로 섹션 실험 결과 기반, 혜택 소구 전환율 개선 |
 
 ### 경쟁사 분석
 
@@ -78,6 +84,7 @@
 |----------|-----|------|
 | [경쟁사와 슈퍼멤버스의 비교](https://www.notion.so/2ff983e32b3281bb86fee65163ae09ed) | Notion | 신규 입사자 온보딩 과제 — 경쟁사 비교 분석 + 서비스 이해도 검증 (2026-02~) |
 | [슈퍼멤버스 및 경쟁사 분석](https://www.notion.so/175983e32b32808f87a2e38084d36a9e) | Notion | 시장 분석 |
+| [슈퍼차트/경쟁사 분석](https://www.notion.so/1c4983e32b328001aeffc6e532d70175) | Notion | 인플루언서 마케팅 대행사 경쟁 분석 (슈퍼차트) |
 
 ### 고객 성공 사례
 
@@ -95,4 +102,4 @@
 
 ---
 
-*Last updated: 2026-02-24 (Cycle #22: Slack pins — +2 entries)*
+*Last updated: 2026-02-24 (Cycle #38: 이탈 분석 +1)*

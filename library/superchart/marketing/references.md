@@ -28,6 +28,18 @@
 | [데이터바우처 슈퍼차트 초안](https://docs.google.com/document/d/1--JfE0hOqJOUQu7oi4WL3UefOlcUxScbcrEiUPnJHHI/) | 데이바우처 | 데이터바우처 정부지원사업 소개 문서 |
 | [데이터 바우처 진행 업체](https://docs.google.com/spreadsheets/d/15MyASfEMtkOt5B2P9QlemQ4KI2zZlU72pjqi9xR8HmE/) | 데이바우처 | 데이터바우처 진행 업체 및 아이템 리스트 |
 
+## 콘텐츠 제작 가이드
+
+| Resource | URL | 비고 |
+|----------|-----|------|
+| [시그널플래너x슈퍼차트 제작 가이드라인 (NEW)](https://www.notion.so/x-NEW-279983e32b3281ddbe20c91cf9253150) | Notion | 시그널플래너 장점 소개, 보험 점검 앱 콘텐츠 제작 가이드 |
+
+## 캠페인 성과 보고
+
+| Resource | URL | 비고 |
+|----------|-----|------|
+| [캠페인 성과 보고서 워크플로우](https://www.notion.so/262983e32b3281699651eac3da50835b) | Notion | 캠페인 종료 3주 후 — 대시보드 자동생성 → 인사이트 첨부 → 업체 전달 |
+
 ---
 
-*Last updated: 2026-02-24 (Cycle #16: top-level sync +4 entries)*
+*Last updated: 2026-02-24 (Cycle #39: 캠페인 보고서 +1)*

@@ -25,6 +25,12 @@
 | [사전 이탈 방어 - 저효율 광고 매장 라벨링 기준](https://www.notion.so/1d6983e32b3280b78f59f5530c146a0e) | Notion | 이탈 위험 매장 라벨링 |
 | [슈멤 1번 사용할 때 마다 리워드 제공](https://www.notion.so/1-223983e32b3280bd9d2dffe2bab59d7c) | Notion | 리워드 기반 리텐션 |
 
+## 이탈 분석
+
+| Resource | URL | 비고 |
+|----------|-----|------|
+| [이탈 데이터 분석](https://www.notion.so/2ee983e32b328031a16ae988c347b8ee) | Notion | 1월 신규 광고주 이탈 패턴 (1개월 플랜 유지 기간), 블랙등급 이용자 분석 |
+
 ## 퍼널 & 전환 최적화
 
 | Resource | URL | 비고 |
@@ -48,4 +54,4 @@
 
 ---
 
-*Last updated: 2026-02-24 (Cycle #21: 비고 동기화 3건)*
+*Last updated: 2026-02-24 (Cycle #39: 이탈 분석 동기화 +1)*

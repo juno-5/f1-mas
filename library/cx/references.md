@@ -4,10 +4,11 @@
 
 ## CS Operations
 
-- [ ] CS 응대 매뉴얼
-- [ ] 에스컬레이션 프로세스
-- [ ] SLA 기준 & 모니터링
-- [ ] FAQ 마스터 문서
+| Resource | URL | 비고 |
+|----------|-----|------|
+| [SOP (프로세스 작성 양식)](https://www.notion.so/SOP-1df983e32b32808cad91c1d8b9e87cb5) | Notion | CX 프로세스 작성 양식 가이드 |
+| [CX SOP 백업 목록](https://www.notion.so/CX-SOP-2ea983e32b32809e9065fd1380a58682) | Notion | 도입문의(표준/프리미엄), 결제실패, 일시중지/해지, 광고 종료, 리뷰/후기, 블로거 불만족 등 전체 SOP |
+| [결제 실패 대응 프로세스](https://www.notion.so/New-1f3983e32b3280ed93f3ce5fbc1cf65d) | Notion | 카드 삭제/한도 초과/거래 정지 등 결제 실패 원인별 대응 안내 |
 
 ## VoC & Analytics
 
@@ -65,6 +66,7 @@
 |----------|-----|------|
 | [슈퍼멤버스 전화 스크립트 (매장)](https://www.notion.so/1a1983e32b32816bb6d7c1f31b298d72) | Notion | 매장 대상 전화 응대 스크립트 |
 | [슈퍼멤버스 전화 스크립트 (제품)](https://www.notion.so/1a1983e32b32819693d6e0ede5b8fadb) | Notion | 제품 대상 전화 응대 스크립트 |
+| [리텐션 발송 템플릿](https://www.notion.so/305983e32b32813d969efbcd3b813a44) | Notion | 회신/확인/진행확정 등 리텐션 응대 이메일 템플릿 |
 
 ### 블로거 관리
 
@@ -88,4 +90,4 @@
 
 ---
 
-*Last updated: 2026-02-24 (Cycle #22: Slack pins — +1 entry)*
+*Last updated: 2026-02-24 (Cycle #35: 리텐션 발송 템플릿 +1)*
