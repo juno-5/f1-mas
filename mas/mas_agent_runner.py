@@ -573,12 +573,14 @@ def _run_agents_batch(
                     print(f"[agent-runner] Batch connect error, retrying in {wait}s (attempt {attempt + 1}/{max_retries})...", flush=True)
                     time.sleep(wait)
                     continue
-                return _fail_all(f"xapi unreachable at {xapi_url} (after {max_retries} attempts)")
+                # Raise so caller can fallback to ThreadPool (individual calls may succeed)
+                raise RuntimeError(f"xapi unreachable at {xapi_url} (after {max_retries} attempts)")
             except Exception as e:
-                return _fail_all(str(e))
+                # Systemic failure (timeout, etc.) — raise for ThreadPool fallback
+                raise RuntimeError(str(e)) from e
 
         if resp.status_code != 200:
-            return _fail_all(f"xapi batch {resp.status_code}: {resp.text[:300]}")
+            raise RuntimeError(f"xapi batch {resp.status_code}: {resp.text[:300]}")
 
         batch_data = resp.json()
         batch_results = batch_data.get("results", [])

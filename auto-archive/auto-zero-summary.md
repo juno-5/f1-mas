@@ -210,6 +210,13 @@
     - **After: → `domains: ['marketers']`** (developers removed, Korean `AI를`/`AI기반` still work)
     - `org/domains.yaml` 수정
 
+33. **Cycle #53 (2026-02-24)**: **Batch→ThreadPool fallback dead code fix** ⭐
+    - `_run_agents_batch`가 systemic failure 시 `_fail_all()` return → caller의 `except` 절 미도달 → ThreadPool fallback이 dead code
+    - 3곳 `return _fail_all(...)` → `raise RuntimeError(...)` 변경
+    - **Before: batch 실패 시 전체 에이전트 즉시 실패 (fallback 0%)**
+    - **After: batch 실패 시 ThreadPool 개별 호출로 부분 성공 가능**
+    - `mas/mas_agent_runner.py` 수정
+
 32. **Cycle #49 (2026-02-24)**: **training keyword context-bound disambiguation** ⭐
     - Standalone `training` matched non-ML contexts (sales, employee, CX, strength training)
     - Replaced with compound patterns: `(model|data|pre)+training`, `training+(data|pipeline|loss|...)`
@@ -248,6 +255,7 @@
 32. `org/domains.yaml` — AI domain regex word boundary fix (2026-02-24)
 33. `org/domains.yaml` + `org/functions.yaml` — training context-bound disambiguation (2026-02-24)
 34. `mas/mas_agent_runner.py` — inference concurrency semaphore (2026-02-24, Inconclusive → Cycle #52에서 배포 누락 확인 후 재배포, Confirmed)
+35. `mas/mas_agent_runner.py` — batch→ThreadPool fallback dead code fix (2026-02-24)
 
 ## 미해결 가설
 
