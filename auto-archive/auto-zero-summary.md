@@ -265,6 +265,13 @@
     - **After: → `domains: ['sales']`, `functions: ['enterprise_sales']`**
     - `org/domains.yaml` + `org/functions.yaml` 수정
 
+40. **Cycle #64 (2026-02-24)**: **도메인 패턴 확장 (creatives 에셋 + uiux 프레젠테이션)**
+    - creatives: 로고/일러스트/포스터/썸네일 키워드 추가
+    - uiux: 프레젠테이션/슬라이드/PPT/키노트/피치덱 키워드 추가
+    - **Before: "로고 색상 분석" → developers (function inference 경유)**
+    - **After: → creatives (직접 도메인 매칭)**
+    - 4/4 신규 + 3/3 회귀 테스트 통과
+
 ## 변경 이력
 
 7. `mas/mas_agent_runner.py` + `mas/mas_templates.py` + `mas/mas_conversation.py` — synthesis cap + truncation (2a8737c, 2026-02-23)
@@ -302,6 +309,7 @@
 38. `org/domains.yaml` + `mas/mas_persona_index.py` — 시장조사 패턴 + _find_org_yaml fallback (2026-02-24)
 39. `mas/mas_orchestrator.py` — 함수 기반 도메인 추론 (2026-02-24)
 40. `mas/mas_orchestrator.py` + `mas/mas_state.py` + `routines/infra/system-health-check.yml` — 루틴 토큰 추적 + 트리거 확장 (2026-02-24)
+41. `org/domains.yaml` — creatives 에셋 + uiux 프레젠테이션 키워드 확장 (2026-02-24)
 
 ## 미해결 가설
 

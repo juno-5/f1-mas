@@ -61,6 +61,8 @@ creatives:
     # Cycle #23: 크리에이티브 디렉션 키워드 추가 (marketers 오분류 방지)
     - "비주얼|visual|비주얼.*컨셉|visual.*concept|비주얼.*디렉션"
     - "톤앤매너|톤.*매너|tone.*manner|무드보드|moodboard|mood.?board|룩.*앤.*필|look.*and.*feel"
+    # Cycle #64: 크리에이티브 에셋 키워드 추가 (로고, 일러스트, 포스터)
+    - "로고|logo|일러스트|illustration|포스터|poster|썸네일|thumbnail"
 
 commerce:
   patterns:
@@ -94,6 +96,8 @@ uiux:
     # Cycle #23: 디자인 도구 + UX 활동 키워드 추가 (commerce 오분류 방지)
     - "Figma|figma|Sketch|sketch|Adobe.?XD|Zeplin|zeplin|Framer|framer"
     - "\\bUX\\b.*개선|\\bUX\\b.*최적화|\\bUX\\b.*리디자인|\\bUX\\b.*설계|\\bUX\\b.*개편|\\bUX\\b.*진단"
+    # Cycle #64: 프레젠테이션/슬라이드 디자인 키워드 추가
+    - "프레젠테이션|presentation|슬라이드|slide|\\bPPT\\b|키노트|keynote|덱.?디자인|deck.?design|피치.?덱|pitch.?deck"
 
 cx:
   patterns:
