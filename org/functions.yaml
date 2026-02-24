@@ -18,11 +18,13 @@ system_architecture:
 security_audit:
   patterns:
     - "보안|security|취약점|vulnerability|침투.{0,20}테스트|pentest|audit|사이버.{0,20}해킹|해킹.{0,20}(?:시도|공격|방어|탐지|차단)"
+    # Cycle #13: 인증 프로토콜 키워드 추가 — F1-01/F1-06 (보안 전문) 라우팅
+    - "\\bOAuth\\b|\\bJWT\\b|\\bSSO\\b|\\bSAML\\b|\\bMFA\\b|\\b2FA\\b|\\bOIDC\\b|인증.{0,4}(구현|설계|시스템|플로우|아키텍처)"
   priority: ["F1-01", "F1-06", "FC-06"]
 
 performance:
   patterns:
-    - "성능|performance|성능.{0,20}최적화|코드.{0,20}최적화|쿼리.{0,20}최적화|속도.{0,20}최적화|벤치마크|benchmark|프로파일|profil|레이턴시|latency"
+    - "성능|성능.{0,20}최적화|코드.{0,20}최적화|쿼리.{0,20}최적화|속도.{0,20}최적화|벤치마크|benchmark|프로파일|profil|레이턴시|latency|(?:code|app|server|api|query|render|page|load).{0,20}performance|performance.{0,20}(?:optim|test|bench|tun|profil|issue|bottleneck|improv|monitor|degrad)"
   priority: ["F1-03", "FC-08"]
 
 algorithm:
@@ -33,7 +35,19 @@ algorithm:
 debugging:
   patterns:
     - "디버그|debug|버그|bug|에러|error.{0,20}찾|root.{0,20}cause|원인.{0,20}분석"
+    # Cycle #13: 메모리 릭/누수 키워드 추가 — F1-05 (Trace, 디버그 전문) 라우팅
+    - "메모리.{0,20}릭|memory.{0,20}leak|메모리.{0,20}누수|힙.{0,20}메모리|heap.{0,20}dump|가비지.{0,20}컬렉|garbage.{0,20}collect|\\bGC\\b.{0,20}튜닝"
   priority: ["F1-05"]
+
+software_testing:
+  # Cycle #15: 소프트웨어 테스팅 전용 함수 — bare "테스트" 제외 (A/B 테스트 오탐 방지)
+  patterns:
+    - "단위.{0,4}테스트|unit.{0,4}test|통합.{0,4}테스트|integration.{0,4}test|E2E.{0,4}테스트|e2e.{0,4}test"
+    - "부하.{0,4}테스트|load.{0,4}test|스트레스.{0,4}테스트|stress.{0,4}test|성능.{0,4}테스트|perf.{0,4}test"
+    - "테스트.{0,8}커버리지|test.{0,8}coverage|테스트.{0,8}자동화|test.{0,8}automat|\\bTDD\\b|\\bBDD\\b"
+    - "테스트.{0,8}전략|test.{0,8}strateg|테스트.{0,8}프레임워크|test.{0,8}framework|CI.{0,4}테스트|CI.{0,4}파이프"
+    - "모킹|mocking|mock.{0,4}(서버|데이터|객체|API)|stub|테스트.{0,8}더블|test.{0,8}double|test.{0,4}fixture|pytest|jest|vitest|\\bTDD|\\bBDD"
+  priority: ["F1-05", "F1-03", "FC-04", "F1-11"]
 
 ml_training:
   patterns:
@@ -155,8 +169,10 @@ tiktok_shortform:
   priority: ["TIK-KR-01", "TIK-KR-02", "TIK-US-01", "TIK-US-02"]
 
 brand_strategy:
+  # Cycle #16: \bCI\b|\bBI\b → 컨텍스트 한정 (CI/CD, BI 대시보드 오탐 방지)
   patterns:
-    - "브랜딩|branding|브랜드.{0,20}전략|brand.{0,20}strateg|네이밍|naming|\\bBI\\b|\\bCI\\b"
+    - "브랜딩|branding|브랜드.{0,20}전략|brand.{0,20}strateg|네이밍|naming"
+    - "CI.{0,4}(가이드|매뉴얼|디자인|리뉴얼|체계|규정)|BI.{0,4}(가이드|매뉴얼|디자인|리뉴얼|체계|규정)"
   priority: ["BRD-KR-01", "BRD-KR-02", "BRD-US-01", "BRD-US-02"]
 
 marketing_automation:
@@ -373,8 +389,9 @@ ux_engineering:
   priority: ["UX-05", "UX-04", "UX-10"]
 
 information_architecture:
+  # Cycle #18: IA → \bIA\b — "Pinia" 등 substring 오탐 방지
   patterns:
-    - "정보.{0,20}설계|information.{0,20}architect|IA|네비게이션|navigation|사이트맵|sitemap|분류.{0,20}체계|taxonomy|카드.{0,20}소팅|card.{0,20}sort"
+    - "정보.{0,20}설계|information.{0,20}architect|\\bIA\\b|네비게이션|navigation|사이트맵|sitemap|분류.{0,20}체계|taxonomy|카드.{0,20}소팅|card.{0,20}sort"
   priority: ["UX-06", "UX-01", "UX-03"]
 
 content_design:

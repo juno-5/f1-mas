@@ -195,6 +195,14 @@
     - **After AMM**: `React Native 앱에서 FlatList 성능 최적화 방법 알려줘`
     - `mas/mas_orchestrator.py` 수정 (+3 lines)
 
+30. **Cycle #47 (2026-02-24)**: **Performance function regex disambiguation** ⭐
+    - Standalone `performance` matched non-technical contexts (brand, campaign, sales)
+    - Replaced with compound patterns requiring technical context words
+    - Korean `성능` kept standalone (unambiguous)
+    - **Before: "brand strategy...performance" → `['performance', 'brand_strategy']` → Core + Ashley Yoo**
+    - **After: → `['brand_strategy']` → Ashley Yoo only**
+    - `org/functions.yaml` 수정
+
 ## 변경 이력
 
 7. `mas/mas_agent_runner.py` + `mas/mas_templates.py` + `mas/mas_conversation.py` — synthesis cap + truncation (2a8737c, 2026-02-23)
@@ -221,6 +229,7 @@
 28. `mas/mas_orchestrator.py` — metadata prefix stripping for detection accuracy (2026-02-24)
 29. `mas/mas_orchestrator.py` — global locale matching for Five Senses personas (2026-02-24)
 30. `mas/mas_orchestrator.py` — clean_query propagation to execution pipeline (2026-02-24)
+31. `org/functions.yaml` — performance regex disambiguation (compound pattern, 2026-02-24)
 
 ## 미해결 가설
 
