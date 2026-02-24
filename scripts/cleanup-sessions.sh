@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 #
-# cleanup-sessions.sh — Remove expired MAS session files from Gateway
+# cleanup-sessions.sh — Remove expired session files from Gateway
 #
-# MAS sessions are single-use (one per request, never revisited).
-# This script cleans up session files older than MAX_AGE_HOURS
-# and removes corresponding entries from sessions.json.
+# Three cleanup phases:
+#   Phase 1: MAS session keys in sessions.json (single-use, 24h TTL)
+#   Phase 2: Non-MAS session keys in sessions.json (conversation, 72h TTL)
+#   Phase 3: Orphan .jsonl files on disk (no sessions.json entry, 24h TTL)
 #
 # Usage: cleanup-sessions.sh [--dry-run]
 # Cron:  0 4 * * * /home/mayacrew/.f1crew/scripts/mas/scripts/cleanup-sessions.sh >> /home/mayacrew/.f1crew/logs/session-cleanup.log 2>&1
@@ -13,7 +14,9 @@ set -euo pipefail
 
 export SESSIONS_DIR="${HOME}/.f1crew/agents/main/sessions"
 SESSIONS_JSON="${SESSIONS_DIR}/sessions.json"
-export MAX_AGE_HOURS=24
+export MAS_MAX_AGE_HOURS=24
+export CONV_MAX_AGE_HOURS=72
+export ORPHAN_MAX_AGE_HOURS=24
 export DRY_RUN=false
 
 [[ "${1:-}" == "--dry-run" ]] && export DRY_RUN=true
@@ -25,19 +28,19 @@ if [[ ! -f "$SESSIONS_JSON" ]]; then
     exit 0
 fi
 
-# Find MAS session entries and their file ages
-echo "$(ts) Starting MAS session cleanup (max_age=${MAX_AGE_HOURS}h, dry_run=${DRY_RUN})"
-
 BEFORE_SIZE=$(stat -c%s "$SESSIONS_JSON" 2>/dev/null || stat -f%z "$SESSIONS_JSON")
 BEFORE_COUNT=$(ls "$SESSIONS_DIR"/*.jsonl 2>/dev/null | wc -l)
 
-# Use Python for atomic sessions.json update + file cleanup
+echo "$(ts) Starting session cleanup (mas=${MAS_MAX_AGE_HOURS}h, conv=${CONV_MAX_AGE_HOURS}h, orphan=${ORPHAN_MAX_AGE_HOURS}h, dry_run=${DRY_RUN})"
+
 python3 << 'PYEOF'
-import json, os, sys, time, shutil
+import json, os, sys, time
 
 sessions_dir = os.environ.get("SESSIONS_DIR", os.path.expanduser("~/.f1crew/agents/main/sessions"))
 sessions_json = os.path.join(sessions_dir, "sessions.json")
-max_age_sec = int(os.environ.get("MAX_AGE_HOURS", "24")) * 3600
+mas_max_age = int(os.environ.get("MAS_MAX_AGE_HOURS", "24")) * 3600
+conv_max_age = int(os.environ.get("CONV_MAX_AGE_HOURS", "72")) * 3600
+orphan_max_age = int(os.environ.get("ORPHAN_MAX_AGE_HOURS", "24")) * 3600
 dry_run = os.environ.get("DRY_RUN", "false") == "true"
 
 now = time.time()
@@ -49,54 +52,99 @@ original_count = len(data)
 to_remove_keys = []
 to_remove_files = []
 
-for key, val in data.items():
-    # Only clean up MAS sessions (user field contains "mas:")
-    if "mas:" not in key:
-        continue
-
-    # Get session ID to find the .jsonl file
+# Collect all referenced session IDs for orphan detection
+referenced_sids = set()
+for val in data.values():
     if isinstance(val, dict):
         sid = val.get("sessionId", "")
-    else:
+        if sid:
+            referenced_sids.add(sid)
+
+# ── Phase 1: MAS sessions (24h TTL) ──
+mas_removed = 0
+for key, val in data.items():
+    if "mas:" not in key:
         continue
-
+    if not isinstance(val, dict):
+        continue
+    sid = val.get("sessionId", "")
     session_file = os.path.join(sessions_dir, f"{sid}.jsonl")
-    lock_file = f"{session_file}.lock"
-
-    # Check file age
     if os.path.exists(session_file):
-        file_age = now - os.path.getmtime(session_file)
-        if file_age > max_age_sec:
+        if (now - os.path.getmtime(session_file)) > mas_max_age:
             to_remove_keys.append(key)
             to_remove_files.append(session_file)
-            if os.path.exists(lock_file):
-                to_remove_files.append(lock_file)
+            lock = f"{session_file}.lock"
+            if os.path.exists(lock):
+                to_remove_files.append(lock)
+            mas_removed += 1
     else:
-        # Session file already gone — clean up orphan key
         to_remove_keys.append(key)
+        mas_removed += 1
 
-if not to_remove_keys:
-    print(f"No expired MAS sessions found (checked {original_count} keys)")
+# ── Phase 2: Non-MAS conversation sessions (72h TTL) ──
+conv_removed = 0
+for key, val in data.items():
+    if "mas:" in key:
+        continue
+    if not isinstance(val, dict):
+        continue
+    sid = val.get("sessionId", "")
+    session_file = os.path.join(sessions_dir, f"{sid}.jsonl")
+    if os.path.exists(session_file):
+        if (now - os.path.getmtime(session_file)) > conv_max_age:
+            to_remove_keys.append(key)
+            to_remove_files.append(session_file)
+            lock = f"{session_file}.lock"
+            if os.path.exists(lock):
+                to_remove_files.append(lock)
+            conv_removed += 1
+    else:
+        to_remove_keys.append(key)
+        conv_removed += 1
+
+# ── Phase 3: Orphan .jsonl files (no sessions.json entry, 24h TTL) ──
+orphan_removed = 0
+orphan_size = 0
+for fname in os.listdir(sessions_dir):
+    if not fname.endswith(".jsonl"):
+        continue
+    sid = fname[:-6]  # strip .jsonl
+    if sid in referenced_sids:
+        continue
+    fpath = os.path.join(sessions_dir, fname)
+    file_age = now - os.path.getmtime(fpath)
+    if file_age > orphan_max_age:
+        orphan_size += os.path.getsize(fpath)
+        to_remove_files.append(fpath)
+        lock = f"{fpath}.lock"
+        if os.path.exists(lock):
+            to_remove_files.append(lock)
+        orphan_removed += 1
+
+print(f"Phase 1 (MAS keys): {mas_removed} expired")
+print(f"Phase 2 (conv keys): {conv_removed} expired")
+print(f"Phase 3 (orphan files): {orphan_removed} files ({orphan_size/1024:.0f}KB)")
+
+if not to_remove_keys and not orphan_removed:
+    print("Nothing to clean up")
     sys.exit(0)
-
-print(f"Found {len(to_remove_keys)} expired MAS sessions to clean up")
 
 if dry_run:
     for k in to_remove_keys:
-        print(f"  [dry-run] Would remove: {k}")
+        print(f"  [dry-run] Remove key: {k[:40]}...")
+    print(f"  [dry-run] Would delete {len(to_remove_files)} files")
     sys.exit(0)
 
 # Remove entries from sessions.json
 for key in to_remove_keys:
     del data[key]
 
-# Atomic write: write temp file, then rename
 tmp_path = sessions_json + ".tmp"
 with open(tmp_path, "w") as f:
     json.dump(data, f)
 os.replace(tmp_path, sessions_json)
 
-# Remove session files
+# Remove files
 removed_files = 0
 for fpath in to_remove_files:
     try:

@@ -149,8 +149,8 @@ def _reload_loop():
         time.sleep(get("hot_reload_interval", 30))
         try:
             load_config()
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"[ERROR] [config] Hot reload failed: {e}", flush=True)
 
 
 def start_hot_reload():

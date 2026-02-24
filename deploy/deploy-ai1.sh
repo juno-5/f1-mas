@@ -41,9 +41,12 @@ rsync -az "$SCRIPT_DIR/org/" "$SERVER:~/projects/mayacrew-f1crew/f1-mas/org/"
 echo "[6/9] Deploying routines..."
 rsync -az "$SCRIPT_DIR/routines/" "$SERVER:~/projects/mayacrew-f1crew/f1-mas/routines/"
 
-# 7. Library → server data (insight capture target)
-echo "[7/9] Deploying library..."
-rsync -az "$SCRIPT_DIR/library/" "$SERVER:~/projects/mayacrew-f1crew/f1-mas/library/"
+# 7. Library → server data (references only — exclude generated data)
+# CAUTION: insights.md and memory-insights.md are generated at runtime.
+# Overwriting them will destroy accumulated production knowledge.
+echo "[7/9] Deploying library (excluding insights)..."
+rsync -az --exclude='insights.md' --exclude='memory-insights.md' \
+    "$SCRIPT_DIR/library/" "$SERVER:~/projects/mayacrew-f1crew/f1-mas/library/"
 
 # 8. Scripts → server (library-scanner, cleanup, etc.)
 echo "[8/9] Deploying scripts..."

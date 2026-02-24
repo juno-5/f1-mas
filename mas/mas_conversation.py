@@ -16,6 +16,7 @@ from .mas_templates import (
     build_prompt, build_synthesis_prompt, select_template,
 )
 from .mas_agent_runner import run_agent, run_agents_parallel, run_synthesis
+from .mas_insight_capture import strip_insights
 from .mas_tools import get_tools_for_query
 
 
@@ -527,9 +528,12 @@ def _execute_parallel(
     if amm_context:
         synth_query = query + amm_context
 
+    # Strip [INSIGHT] blocks from agent outputs before synthesis —
+    # agent insights are captured separately; including them causes duplicates.
     synth_prompt = build_synthesis_prompt(
         synth_query,
-        [{"callsign": ai["callsign"], "role": ai["role"], "output": r["text"]}
+        [{"callsign": ai["callsign"], "role": ai["role"],
+          "output": strip_insights(r["text"])}
          for ai, r in successful],
         max_chars_per_agent=max_input_chars,
     )

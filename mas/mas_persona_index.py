@@ -688,8 +688,13 @@ class PersonaIndex:
                     results.append(e)
         return results
 
-    def detect_domain(self, text: str) -> list[str]:
-        """Detect domain categories from user text using regex."""
+    def detect_domain(self, text: str, return_default_flag: bool = False
+                      ) -> list[str] | tuple[list[str], bool]:
+        """Detect domain categories from user text using regex.
+
+        When return_default_flag=True, returns (domains, is_default) tuple.
+        is_default=True means no pattern matched (fallback to developers).
+        """
         compiled = self._get_domain_compiled()
         matches = {}
         for cat, patterns in compiled.items():
@@ -697,8 +702,10 @@ class PersonaIndex:
             if score > 0:
                 matches[cat] = score
         if not matches:
-            return ["developers"]  # default
-        return sorted(matches, key=matches.get, reverse=True)
+            result = ["developers"]  # default
+            return (result, True) if return_default_flag else result
+        result = sorted(matches, key=matches.get, reverse=True)
+        return (result, False) if return_default_flag else result
 
     def _get_domain_compiled(self) -> dict[str, list[re.Pattern]]:
         """Load and cache domain keyword patterns from org/domains.yaml."""
@@ -1169,8 +1176,8 @@ def _reload_loop(index: PersonaIndex):
         time.sleep(cfg.get("hot_reload_interval", 30))
         try:
             index.load()
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"[ERROR] [persona_index] Hot reload failed: {e}", flush=True)
 
 
 # Module-level singleton

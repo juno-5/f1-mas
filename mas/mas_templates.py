@@ -47,15 +47,15 @@ _TEMPLATES = {
 ### Recommendations
 1. [priority order]
 
-### Team Insight (선택)
-답변 중 팀에 유용한 실무 노하우나 의사결정 근거가 있다면:
+### Team Insight
+답변에 팀이 재활용할 수 있는 실무 노하우, 구체적 수치/데이터, 의사결정 근거가 있다면 반드시 아래 형식으로 기록하세요:
 [INSIGHT]
 Title: (인사이트 제목)
 Context: (어떤 맥락에서 도출)
 Insight: (핵심 발견 2-3문장)
 Tags: #tag1 #tag2
 [/INSIGHT]
-일상적이거나 일반적인 내용은 태깅하지 마세요.""",
+교과서적이거나 누구나 아는 기본 지식은 제외. 실무에서만 알 수 있는 구체적 지식만 기록합니다.""",
 
     MARKETING_CAMPAIGN: """# Persona
 {character_content}
@@ -86,15 +86,15 @@ Tags: #tag1 #tag2
 |--------|--------|
 | [metric] | [target] |
 
-### Team Insight (선택)
-답변 중 팀에 유용한 실무 노하우나 의사결정 근거가 있다면:
+### Team Insight
+답변에 팀이 재활용할 수 있는 실무 노하우, 구체적 수치/데이터, 의사결정 근거가 있다면 반드시 아래 형식으로 기록하세요:
 [INSIGHT]
 Title: (인사이트 제목)
 Context: (어떤 맥락에서 도출)
 Insight: (핵심 발견 2-3문장)
 Tags: #tag1 #tag2
 [/INSIGHT]
-일상적이거나 일반적인 내용은 태깅하지 마세요.""",
+교과서적이거나 누구나 아는 기본 지식은 제외. 실무에서만 알 수 있는 구체적 지식만 기록합니다.""",
 
     CONTENT_MODEL: """# Persona
 {character_content}
@@ -123,15 +123,15 @@ Tags: #tag1 #tag2
 ### References
 - [reference links/descriptions]
 
-### Team Insight (선택)
-답변 중 팀에 유용한 실무 노하우나 의사결정 근거가 있다면:
+### Team Insight
+답변에 팀이 재활용할 수 있는 실무 노하우, 구체적 수치/데이터, 의사결정 근거가 있다면 반드시 아래 형식으로 기록하세요:
 [INSIGHT]
 Title: (인사이트 제목)
 Context: (어떤 맥락에서 도출)
 Insight: (핵심 발견 2-3문장)
 Tags: #tag1 #tag2
 [/INSIGHT]
-일상적이거나 일반적인 내용은 태깅하지 마세요.""",
+교과서적이거나 누구나 아는 기본 지식은 제외. 실무에서만 알 수 있는 구체적 지식만 기록합니다.""",
 
     CREATIVE_DIRECTION: """# Persona
 {character_content}
@@ -157,15 +157,15 @@ Tags: #tag1 #tag2
 ### Integration Notes
 [다른 감각과의 조화 포인트]
 
-### Team Insight (선택)
-답변 중 팀에 유용한 실무 노하우나 의사결정 근거가 있다면:
+### Team Insight
+답변에 팀이 재활용할 수 있는 실무 노하우, 구체적 수치/데이터, 의사결정 근거가 있다면 반드시 아래 형식으로 기록하세요:
 [INSIGHT]
 Title: (인사이트 제목)
 Context: (어떤 맥락에서 도출)
 Insight: (핵심 발견 2-3문장)
 Tags: #tag1 #tag2
 [/INSIGHT]
-일상적이거나 일반적인 내용은 태깅하지 마세요.""",
+교과서적이거나 누구나 아는 기본 지식은 제외. 실무에서만 알 수 있는 구체적 지식만 기록합니다.""",
 
     SYNTHESIS: """# Multi-Perspective Synthesis
 
@@ -187,8 +187,8 @@ Tags: #tag1 #tag2
 한국어로 작성하되, 전문 용어는 영어 병기 가능.
 각 전문가의 관점이 균형있게 반영되도록 합성해주세요.
 
-5. **Team Insight** (선택): 전문가 토론에서 팀에 유용한 실무 노하우가 도출되었다면 아래 형식으로 태깅.
-   일상적이거나 일반적인 내용은 태깅하지 마세요. 구체적이고 즉시 적용 가능한 지식만.
+5. **Team Insight**: 전문가 토론에서 팀이 재활용할 수 있는 실무 노하우, 구체적 수치, 의사결정 근거가 도출되었다면 반드시 아래 형식으로 기록.
+   교과서적이거나 누구나 아는 기본 지식은 제외. 실무에서만 알 수 있는 구체적 지식만.
 
 [INSIGHT]
 Title: (인사이트 제목)
@@ -221,15 +221,15 @@ Tags: #tag1 #tag2
 ### Quality Assurance
 [품질 검증 기준]
 
-### Team Insight (선택)
-답변 중 팀에 유용한 실무 노하우나 의사결정 근거가 있다면:
+### Team Insight
+답변에 팀이 재활용할 수 있는 실무 노하우, 구체적 수치/데이터, 의사결정 근거가 있다면 반드시 아래 형식으로 기록하세요:
 [INSIGHT]
 Title: (인사이트 제목)
 Context: (어떤 맥락에서 도출)
 Insight: (핵심 발견 2-3문장)
 Tags: #tag1 #tag2
 [/INSIGHT]
-일상적이거나 일반적인 내용은 태깅하지 마세요.""",
+교과서적이거나 누구나 아는 기본 지식은 제외. 실무에서만 알 수 있는 구체적 지식만 기록합니다.""",
 
     COMMERCE_TASK: """# Persona
 {character_content}
@@ -257,15 +257,15 @@ Tags: #tag1 #tag2
 |------|------|----------|
 | [metric] | [target] | [how] |
 
-### Team Insight (선택)
-답변 중 팀에 유용한 실무 노하우나 의사결정 근거가 있다면:
+### Team Insight
+답변에 팀이 재활용할 수 있는 실무 노하우, 구체적 수치/데이터, 의사결정 근거가 있다면 반드시 아래 형식으로 기록하세요:
 [INSIGHT]
 Title: (인사이트 제목)
 Context: (어떤 맥락에서 도출)
 Insight: (핵심 발견 2-3문장)
 Tags: #tag1 #tag2
 [/INSIGHT]
-일상적이거나 일반적인 내용은 태깅하지 마세요.""",
+교과서적이거나 누구나 아는 기본 지식은 제외. 실무에서만 알 수 있는 구체적 지식만 기록합니다.""",
 
     SALES_TASK: """# Persona
 {character_content}
@@ -291,15 +291,15 @@ Tags: #tag1 #tag2
 ### Expected Outcomes
 [예상 결과 및 리스크]
 
-### Team Insight (선택)
-답변 중 팀에 유용한 실무 노하우나 의사결정 근거가 있다면:
+### Team Insight
+답변에 팀이 재활용할 수 있는 실무 노하우, 구체적 수치/데이터, 의사결정 근거가 있다면 반드시 아래 형식으로 기록하세요:
 [INSIGHT]
 Title: (인사이트 제목)
 Context: (어떤 맥락에서 도출)
 Insight: (핵심 발견 2-3문장)
 Tags: #tag1 #tag2
 [/INSIGHT]
-일상적이거나 일반적인 내용은 태깅하지 마세요.""",
+교과서적이거나 누구나 아는 기본 지식은 제외. 실무에서만 알 수 있는 구체적 지식만 기록합니다.""",
 
     UIUX_TASK: """# Persona
 {character_content}
@@ -325,15 +325,15 @@ Tags: #tag1 #tag2
 ### Rationale
 [설계 근거 및 사용성 고려사항]
 
-### Team Insight (선택)
-답변 중 팀에 유용한 실무 노하우나 의사결정 근거가 있다면:
+### Team Insight
+답변에 팀이 재활용할 수 있는 실무 노하우, 구체적 수치/데이터, 의사결정 근거가 있다면 반드시 아래 형식으로 기록하세요:
 [INSIGHT]
 Title: (인사이트 제목)
 Context: (어떤 맥락에서 도출)
 Insight: (핵심 발견 2-3문장)
 Tags: #tag1 #tag2
 [/INSIGHT]
-일상적이거나 일반적인 내용은 태깅하지 마세요.""",
+교과서적이거나 누구나 아는 기본 지식은 제외. 실무에서만 알 수 있는 구체적 지식만 기록합니다.""",
 
     CX_TASK: """# Persona
 {character_content}
@@ -359,15 +359,15 @@ Tags: #tag1 #tag2
 ### Impact & Measurement
 [기대 효과 및 측정 방법]
 
-### Team Insight (선택)
-답변 중 팀에 유용한 실무 노하우나 의사결정 근거가 있다면:
+### Team Insight
+답변에 팀이 재활용할 수 있는 실무 노하우, 구체적 수치/데이터, 의사결정 근거가 있다면 반드시 아래 형식으로 기록하세요:
 [INSIGHT]
 Title: (인사이트 제목)
 Context: (어떤 맥락에서 도출)
 Insight: (핵심 발견 2-3문장)
 Tags: #tag1 #tag2
 [/INSIGHT]
-일상적이거나 일반적인 내용은 태깅하지 마세요.""",
+교과서적이거나 누구나 아는 기본 지식은 제외. 실무에서만 알 수 있는 구체적 지식만 기록합니다.""",
 }
 
 # Domain → template mapping

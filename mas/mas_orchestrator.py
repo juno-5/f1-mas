@@ -42,14 +42,17 @@ class Orchestrator:
         clean_query = self._METADATA_PREFIX_RE.sub("", query).strip() or query
 
         # Domain detection
-        domains = self._index.detect_domain(clean_query)
+        domains, domain_is_default = self._index.detect_domain(
+            clean_query, return_default_flag=True)
 
         # Function detection (from org/functions.yaml)
         functions = self._index.detect_function(clean_query)
 
-        # Cycle #59: When domain defaults to ["developers"] but functions matched,
+        # Cycle #59: When domain detection found NO matches (true default),
         # infer domain from function candidates' categories.
-        if domains == ["developers"] and functions:
+        # Cycle #15-fix: Only trigger when domain_is_default=True, NOT when
+        # developers actually matched via patterns (e.g. React/컴포넌트).
+        if domain_is_default and functions:
             inferred = self._infer_domain_from_functions(functions)
             if inferred:
                 domains = inferred
