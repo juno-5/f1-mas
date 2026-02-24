@@ -15,7 +15,8 @@ developers:
     - "포털|portal|IDP|developer.*portal|개발자.*포털|DevOps|devops|CI.?CD|SRE|내부.*개발"
     - "\\bML\\b|머신러닝|machine.?learn"
     - "서버|server|네트워크|network|컨테이너|container|클라우드|cloud"
-    - "AI(?!.*(이미지|영상|아트|소재|크리에이티브|art\\b|image|video))|인공지능|모델학습|training"
+    # Cycle #48: AI → \bAI(?=[^a-zA-Z]|$) — "against","maintain" 등 영문 substring 오탐 방지 + 한국어 조사(AI를,AI기반) 허용
+    - "\\bAI(?=[^a-zA-Z]|$)(?!.*(이미지|영상|아트|소재|크리에이티브|art\\b|image|video))|인공지능|모델학습|training"
     - "python|파이썬|java|rust|golang|typescript|스레드|thread|멀티프로세스|child.?process|동시성|concurren"
     # 컨텍스트 한정 패턴 — 개발 맥락에서만 매칭
     - "시스템.*설계|시스템.*아키텍처|system.*design|system.*architect|분산.*시스템|distributed.*system"
@@ -24,6 +25,8 @@ developers:
     - "성능.*최적화|성능.*튜닝|performance.*tun|performance.*optim|코드.*최적화|쿼리.*최적화"
     - "테스트.*자동화|단위.*테스트|unit.*test|통합.*테스트|integration.*test|E2E.*테스트|부하.*테스트|load.*test"
     - "플랫폼.*개발|플랫폼.*구축|platform.*develop|platform.*engineer|개발.*플랫폼"
+    # Cycle #20: 웹 프론트엔드 기술 키워드 (CSS 스타일링→models 오분류 방지)
+    - "\\bCSS\\b|\\bSCSS\\b|\\bHTML\\b|\\bDOM\\b|React|Vue|Angular|Svelte|webpack|vite|\\bSPA\\b|styled.?component|컴포넌트|렌더링"
 
 marketers:
   patterns:
@@ -69,7 +72,8 @@ sales:
 
 uiux:
   patterns:
-    - "UI|UX|사용자.?경험|user.?experience|인터페이스|interface"
+    # Cycle #18: \bUI\b|\bUX\b — "Redux", "Linux", "GUI" 등 substring 오탐 방지
+    - "\\bUI\\b|\\bUX\\b|사용자.?경험|user.?experience|인터페이스|interface"
     - "와이어프레임|wireframe|프로토타입|prototype|디자인.?시스템|design.?system"
     - "접근성|accessibility|사용성|usability|인터랙션|interaction"
     # Cycle #67: 새 UIUX 전문분야 키워드 추가
@@ -81,11 +85,12 @@ uiux:
     - "사용자.?리서치|user.?research|퍼소나|persona.?design|여정.?맵|journey.?map"
     # Cycle #23: 디자인 도구 + UX 활동 키워드 추가 (commerce 오분류 방지)
     - "Figma|figma|Sketch|sketch|Adobe.?XD|Zeplin|zeplin|Framer|framer"
-    - "UX.*개선|UX.*최적화|UX.*리디자인|UX.*설계|UX.*개편|UX.*진단"
+    - "\\bUX\\b.*개선|\\bUX\\b.*최적화|\\bUX\\b.*리디자인|\\bUX\\b.*설계|\\bUX\\b.*개편|\\bUX\\b.*진단"
 
 cx:
   patterns:
-    - "고객.?경험|customer.?experience|CX|CS|고객.?서비스|customer.?service"
+    # Cycle #18: \bCX\b|\bCS\b — "CSS", "CXO" 등 substring 오탐 방지
+    - "고객.?경험|customer.?experience|\\bCX\\b|\\bCS\\b|고객.?서비스|customer.?service"
     - "VoC|고객.?의견|NPS|만족도|satisfaction|서포트|support"
     - "옴니채널|omnichannel|컨택센터|contact.?center"
     - "고객.?불만|불만.?처리|고객.?응대|고객.?관리|고객.?여정|customer.?journey|complaint|이탈|churn"

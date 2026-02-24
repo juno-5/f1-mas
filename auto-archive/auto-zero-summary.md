@@ -203,6 +203,13 @@
     - **After: → `['brand_strategy']` → Ashley Yoo only**
     - `org/functions.yaml` 수정
 
+31. **Cycle #48 (2026-02-24)**: **AI domain regex substring false positive fix** ⭐
+    - `AI(?!...)` matched "ai" in "against", "maintain", "available" due to `re.IGNORECASE`
+    - Fixed: `\bAI(?=[^a-zA-Z]|$)(?!...)` — word boundary + lookahead blocks English, allows Korean particles
+    - **Before: "brand strategy against..." → `domains: ['developers', 'marketers']`**
+    - **After: → `domains: ['marketers']`** (developers removed, Korean `AI를`/`AI기반` still work)
+    - `org/domains.yaml` 수정
+
 ## 변경 이력
 
 7. `mas/mas_agent_runner.py` + `mas/mas_templates.py` + `mas/mas_conversation.py` — synthesis cap + truncation (2a8737c, 2026-02-23)
@@ -230,6 +237,7 @@
 29. `mas/mas_orchestrator.py` — global locale matching for Five Senses personas (2026-02-24)
 30. `mas/mas_orchestrator.py` — clean_query propagation to execution pipeline (2026-02-24)
 31. `org/functions.yaml` — performance regex disambiguation (compound pattern, 2026-02-24)
+32. `org/domains.yaml` — AI domain regex word boundary fix (2026-02-24)
 
 ## 미해결 가설
 
