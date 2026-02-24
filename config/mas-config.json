@@ -1,6 +1,7 @@
 {
   "port": 7720,
   "claude_model": "sonnet",
+  "auto_model_enabled": true,
   "synthesis_model": "haiku",
   "max_agents": 5,
   "agent_timeout_seconds": 180,
@@ -41,6 +42,7 @@
   "log_level": "info",
   "insight_capture_enabled": true,
   "library_injection": true,
+  "library_max_refs_chars": 6000,
   "library_base_dir": "/home/mayacrew/projects/mayacrew-f1crew/f1-mas/library",
   "character_extract_sections": ["Quick Reference", "Communication", "Thinking", "Strengths", "AI Interaction"],
   "character_extract_max_chars": 8000

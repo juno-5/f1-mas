@@ -49,6 +49,40 @@ _RATE_LIMIT_PATTERNS = [
     "Not logged in",   # token revoked/expired
 ]
 
+# Complex task indicators — queries matching these use sonnet instead of haiku
+_COMPLEX_INDICATORS = [
+    "분석", "전략", "기획", "설계", "아키텍처", "리뷰", "비교", "상세", "심층",
+    "analyze", "strategy", "plan", "architect", "review", "compare",
+    "detailed", "comprehensive", "deep dive", "pros and cons",
+]
+
+
+def select_model(query: str, has_tools: bool = False) -> str:
+    """Auto-select model based on query complexity.
+
+    Returns 'haiku' for simple tasks, 'sonnet' for complex ones.
+    Requires auto_model_enabled=true in config; otherwise returns config default.
+    """
+    if not cfg.get("auto_model_enabled", False):
+        return cfg.get("claude_model", "sonnet")
+
+    # Tool-use requires more capable model (multi-turn reasoning)
+    if has_tools:
+        return "sonnet"
+
+    query_lower = query.lower()
+
+    # Complex task indicators → sonnet
+    if any(ind in query_lower for ind in _COMPLEX_INDICATORS):
+        return "sonnet"
+
+    # Short-medium queries without complex indicators → haiku
+    if len(query) < 500:
+        return "haiku"
+
+    # Default: longer queries → sonnet
+    return "sonnet"
+
 
 def _get_pool() -> ThreadPoolExecutor:
     global _pool
@@ -327,12 +361,14 @@ def run_agent(
     persona_id: str,
     callsign: str,
     tools: list[dict] | None = None,
+    query: str = "",
 ) -> dict:
     """Execute a single agent via xapi inference.
 
     Args:
         tools: Optional OpenAI function-calling tool definitions. When provided,
             uses tool-use loop (LLM → tool_calls → execute → feed back → repeat).
+        query: Original user query (for auto model selection).
 
     Returns {"text": str, "tokens_used": int, "model": str, "duration_ms": int}.
     """
@@ -340,7 +376,7 @@ def run_agent(
     state.update_agent(request_id, agent_id,
                        status="running", started_at=start)
 
-    model = cfg.get("claude_model", "sonnet")
+    model = select_model(query, has_tools=bool(tools)) if query else cfg.get("claude_model", "sonnet")
     # Include request_id in user field to ensure each MAS request gets a fresh
     # Gateway session (prevents session history accumulation across requests).
     # Use persona_id (always ASCII) instead of callsign to avoid HTTP header
@@ -441,22 +477,29 @@ def _run_agents_batch(
     agents: list[dict],
 ) -> list[dict]:
     """Run agents via xapi /inference/batch — single HTTP call, xapi handles parallelism."""
-    model = cfg.get("claude_model", "sonnet")
-    full_model = _MODEL_MAP.get(model, model)
     xapi_url = cfg.get("xapi_url", "http://localhost:7750")
     timeout = cfg.get("agent_timeout_seconds", 120)
     agent_max_tokens = cfg.get("agent_max_tokens", 8192)
     empty_usage = {"input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0}
 
-    # Mark all agents as running
+    # Per-agent model selection
+    agent_models = []
     for a in agents:
+        query = a.get("query", "")
+        has_tools = bool(a.get("tools"))
+        a_model = select_model(query, has_tools) if query else cfg.get("claude_model", "sonnet")
+        agent_models.append(a_model)
+
+    # Mark all agents as running
+    for i, a in enumerate(agents):
         state.update_agent(request_id, a["agent_id"],
                            status="running", started_at=time.time())
-        print(f"[agent-runner] {a['callsign']} calling xapi batch...", flush=True)
+        print(f"[agent-runner] {a['callsign']} calling xapi batch (model={agent_models[i]})...", flush=True)
 
     # Build batch request — include request_id in user for fresh Gateway sessions
     batch_requests = []
-    for a in agents:
+    for i, a in enumerate(agents):
+        full_model = _MODEL_MAP.get(agent_models[i], agent_models[i])
         batch_requests.append({
             "model": full_model,
             "messages": [{"role": "user", "content": a["prompt"]}],
@@ -469,10 +512,10 @@ def _run_agents_batch(
         print(f"[agent-runner] Batch failed: {error_msg}", flush=True)
         return [
             (state.update_agent(request_id, a["agent_id"],
-                                status="failed", error=error_msg, model=model),
-             {"text": "", "tokens_used": 0, "model": model,
+                                status="failed", error=error_msg, model=agent_models[i]),
+             {"text": "", "tokens_used": 0, "model": agent_models[i],
               "duration_ms": 0, "error": error_msg})[1]
-            for a in agents
+            for i, a in enumerate(agents)
         ]
 
     max_retries = cfg.get("inference_max_retries", 3)
@@ -510,6 +553,7 @@ def _run_agents_batch(
 
     results = []
     for i, a in enumerate(agents):
+        model = agent_models[i]
         item = batch_results[i] if i < len(batch_results) else {}
         error = item.get("error")
         duration_ms = int(item.get("duration_ms", 0))
@@ -551,7 +595,7 @@ def _run_agents_batch(
             continue
 
         print(f"[agent-runner] {a['callsign']} completed ({duration_ms}ms, {len(text)} chars, "
-              f"{tokens_used} tokens, ${cost_usd:.4f})", flush=True)
+              f"{tokens_used} tokens, ${cost_usd:.4f}, model={model})", flush=True)
 
         state.update_agent(request_id, a["agent_id"],
                            status="completed",
@@ -597,6 +641,7 @@ def run_agent_on_worker(
     persona_id: str,
     callsign: str,
     worker: dict,
+    query: str = "",
 ) -> dict:
     """Execute a single agent on a remote worker node.
 
@@ -612,7 +657,7 @@ def run_agent_on_worker(
     worker_ip = worker["ip_address"]
     worker_port = worker.get("worker_port", 7731)
     worker_timeout = cfg.get("worker_timeout", 180)
-    model = cfg.get("claude_model", "sonnet")
+    model = select_model(query) if query else cfg.get("claude_model", "sonnet")
     full_model = _MODEL_MAP.get(model, model)
     xapi_url = cfg.get("xapi_url", "http://localhost:7750")
 
@@ -704,6 +749,7 @@ def _run_agents_distributed(
                 run_agent_on_worker,
                 request_id, a["agent_id"], a["prompt"],
                 a["persona_id"], a["callsign"], workers[i],
+                a.get("query", ""),
             )
         else:
             # Fallback to local execution
@@ -712,6 +758,7 @@ def _run_agents_distributed(
                 run_agent,
                 request_id, a["agent_id"], a["prompt"],
                 a["persona_id"], a["callsign"], a.get("tools"),
+                a.get("query", ""),
             )
         futures.append((a, f))
 
@@ -782,6 +829,7 @@ def run_agents_parallel(
             a["persona_id"],
             a["callsign"],
             a.get("tools"),
+            a.get("query", ""),
         )
         futures.append((a, f))
 

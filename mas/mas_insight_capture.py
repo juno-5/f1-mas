@@ -136,7 +136,7 @@ def save_insights(domain: str, insights: list[dict], request_id: str = "",
             return 0
 
 
-def fetch_library_context(domain: str, max_refs_chars: int = 2000,
+def fetch_library_context(domain: str, max_refs_chars: int = None,
                           max_insights: int = 5) -> str:
     """Read library references + recent insights for a domain.
 
@@ -145,6 +145,9 @@ def fetch_library_context(domain: str, max_refs_chars: int = 2000,
     """
     if not cfg.get("library_injection", True):
         return ""
+
+    if max_refs_chars is None:
+        max_refs_chars = cfg.get("library_max_refs_chars", 6000)
 
     lib_domain = _CATEGORY_DOMAIN_MAP.get(domain, domain)
     library_dir = _get_library_dir()
@@ -156,7 +159,7 @@ def fetch_library_context(domain: str, max_refs_chars: int = 2000,
         try:
             content = refs_file.read_text(encoding="utf-8").strip()
             # Skip if only template (no real content filled in)
-            if content and "| |" not in content and len(content) > 100:
+            if content and len(content) > 200:
                 if len(content) > max_refs_chars:
                     content = content[:max_refs_chars] + "\n[... truncated ...]"
                 sections.append(content)
