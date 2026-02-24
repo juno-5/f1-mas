@@ -1,7 +1,7 @@
 {
   "port": 7720,
   "claude_model": "sonnet",
-  "synthesis_model": "sonnet",
+  "synthesis_model": "haiku",
   "max_agents": 5,
   "agent_timeout_seconds": 180,
   "thread_pool_workers": 5,

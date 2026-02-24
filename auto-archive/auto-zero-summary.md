@@ -161,6 +161,13 @@
     - **Before: 3/51 requests "no suitable personas found" → After: guard prevents all transient failures**
     - `mas/mas_persona_index.py` 수정, 커밋 `b12b3c7`
 
+25. **Cycle #42 (2026-02-24)**: **Haiku synthesis model — 75.8% synthesis cost reduction** ⭐
+    - Synthesis uses sonnet ($0.075 avg) for structured summarization — over-provisioned
+    - `synthesis_model: "haiku"` — same quality (all sections, tables, formatting preserved)
+    - **Before: $0.075/synthesis (sonnet) → After: $0.018/synthesis (haiku) — 75.8% reduction**
+    - Config-only change, no code modification
+    - 부수 발견: MAS runtime config path = `~/.f1crew/shared/mas-config.json` ≠ source `config/mas-config.json`
+
 ## 변경 이력
 
 7. `mas/mas_agent_runner.py` + `mas/mas_templates.py` + `mas/mas_conversation.py` — synthesis cap + truncation (2a8737c, 2026-02-23)
@@ -183,6 +190,7 @@
 24. `mas/mas_tools.py` — tool injection compound 패턴 강화 2차 (64e75ce, 2026-02-23)
 25. `org/functions.yaml` — regex distance bound .{0,20} + 리드 lookbehind (52b951f, 2026-02-23)
 26. `mas/mas_persona_index.py` — hot reload empty index guard (b12b3c7, 2026-02-24)
+27. `config/mas-config.json` + runtime config — synthesis_model sonnet→haiku (2026-02-24)
 
 ## 미해결 가설
 
