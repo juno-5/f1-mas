@@ -32,6 +32,7 @@ class PerformanceRecord:
     duration_ms: int
     output_length: int
     model: str
+    model_reason: str = ""
     # Request context
     request_status: str
     agent_count: int
@@ -75,6 +76,7 @@ def record_outcome(request_id: str, analysis: dict):
             duration_ms=agent.duration_ms,
             output_length=len(agent.output) if agent.output else 0,
             model=agent.model,
+            model_reason=getattr(agent, "model_reason", ""),
             request_status=req.status,
             agent_count=len(req.agents),
         )

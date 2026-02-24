@@ -47,6 +47,7 @@ class AgentState:
     error: str = ""
     tokens_used: int = 0
     model: str = ""
+    model_reason: str = ""
     cost_usd: float = 0.0
 
 

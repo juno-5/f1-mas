@@ -92,51 +92,57 @@ _RATE_LIMIT_PATTERNS = [
 # Complex task indicators — queries matching these use sonnet instead of haiku
 # Strong complexity signals: single match → sonnet
 _SONNET_STRONG = [
-    "심층", "상세", "종합", "아키텍처", "architecture",
+    "심층", "상세", "종합",
     "deep dive", "comprehensive", "in-depth", "pros and cons",
 ]
 # Weak complexity signals: need 2+ matches for sonnet
+# "아키텍처"/"architecture" are topics (not complexity), so they're weak signals —
+# "아키텍처 설계" (architecture + design) → sonnet, "아키텍처 보여줘" → haiku.
 _SONNET_WEAK = [
     "분석", "전략", "기획", "설계", "리뷰", "비교",
+    "아키텍처", "architecture",
     "analyze", "strategy", "plan", "review", "compare", "detailed",
 ]
 
 
-def select_model(query: str, has_tools: bool = False) -> str:
+def select_model(query: str, has_tools: bool = False) -> tuple[str, str]:
     """Auto-select model based on query complexity.
 
-    Returns 'haiku' for simple tasks, 'sonnet' for complex ones.
+    Returns (model, reason) — 'haiku' for simple tasks, 'sonnet' for complex ones.
     Requires auto_model_enabled=true in config; otherwise returns config default.
 
     Scoring: strong signal (1+) → sonnet, weak signals (2+) → sonnet,
     long query (>200 chars) with any weak signal → sonnet, else → haiku.
     """
     if not cfg.get("auto_model_enabled", False):
-        return cfg.get("claude_model", "sonnet")
+        model = cfg.get("claude_model", "sonnet")
+        return model, "config_default"
 
     # Tool-use requires more capable model (multi-turn reasoning)
     if has_tools:
-        return "sonnet"
+        return "sonnet", "tools"
 
     query_lower = query.lower()
 
     # Strong indicators: single match → sonnet
-    if any(ind in query_lower for ind in _SONNET_STRONG):
-        return "sonnet"
+    for ind in _SONNET_STRONG:
+        if ind in query_lower:
+            return "sonnet", f"strong:{ind}"
 
     # Weak indicators: count matches
-    weak_count = sum(1 for ind in _SONNET_WEAK if ind in query_lower)
+    matched_weak = [ind for ind in _SONNET_WEAK if ind in query_lower]
+    weak_count = len(matched_weak)
 
     # 2+ weak signals → sonnet (multi-faceted task)
     if weak_count >= 2:
-        return "sonnet"
+        return "sonnet", f"weak:{weak_count}:{'+'.join(matched_weak[:3])}"
 
     # Long query with any weak signal → sonnet (detailed request)
     if weak_count >= 1 and len(query) > 200:
-        return "sonnet"
+        return "sonnet", f"long+weak:{matched_weak[0]}"
 
     # Default: haiku (single weak signal or no signals)
-    return "haiku"
+    return "haiku", "default"
 
 
 def _get_pool() -> ThreadPoolExecutor:
@@ -451,7 +457,10 @@ def run_agent(
     state.update_agent(request_id, agent_id,
                        status="running", started_at=start)
 
-    model = select_model(query, has_tools=bool(tools)) if query else cfg.get("claude_model", "sonnet")
+    if query:
+        model, model_reason = select_model(query, has_tools=bool(tools))
+    else:
+        model, model_reason = cfg.get("claude_model", "sonnet"), "no_query"
     # Include request_id in user field to ensure each MAS request gets a fresh
     # Gateway session (prevents session history accumulation across requests).
     # Use persona_id (always ASCII) instead of callsign to avoid HTTP header
@@ -460,10 +469,10 @@ def run_agent(
 
     if tools:
         print(f"[agent-runner] {callsign} calling xapi inference "
-              f"with {len(tools)} tools...", flush=True)
+              f"with {len(tools)} tools (model={model}, reason={model_reason})...", flush=True)
         result = call_xapi_with_tools(prompt, tools, model=model, user=user_tag)
     else:
-        print(f"[agent-runner] {callsign} calling xapi inference (model={model})...", flush=True)
+        print(f"[agent-runner] {callsign} calling xapi inference (model={model}, reason={model_reason})...", flush=True)
         result = call_xapi_inference(prompt, model=model, user=user_tag)
 
     duration_ms = int((time.time() - start) * 1000)
@@ -484,7 +493,7 @@ def run_agent(
                                status="completed",
                                output=partial_text,
                                tokens_used=tokens_used,
-                               model=model,
+                               model=model, model_reason=model_reason,
                                cost_usd=cost_usd)
             return {
                 "text": partial_text,
@@ -500,7 +509,8 @@ def run_agent(
             print(f"[agent-runner] Rate limit detected for {callsign}", flush=True)
 
         state.update_agent(request_id, agent_id,
-                           status="failed", error=error_msg, model=model)
+                           status="failed", error=error_msg,
+                           model=model, model_reason=model_reason)
         return {
             "text": "",
             "tokens_used": 0,
@@ -518,7 +528,8 @@ def run_agent(
         error_msg = "empty response from inference"
         print(f"[agent-runner] {callsign} empty response ({duration_ms}ms)", flush=True)
         state.update_agent(request_id, agent_id,
-                           status="failed", error=error_msg, model=model)
+                           status="failed", error=error_msg,
+                           model=model, model_reason=model_reason)
         return {
             "text": "",
             "tokens_used": tokens_used,
@@ -534,7 +545,7 @@ def run_agent(
                        status="completed",
                        output=text,
                        tokens_used=tokens_used,
-                       model=model,
+                       model=model, model_reason=model_reason,
                        cost_usd=cost_usd)
 
     return {
@@ -562,7 +573,10 @@ def _run_agents_batch(
     for a in agents:
         query = a.get("query", "")
         has_tools = bool(a.get("tools"))
-        a_model = select_model(query, has_tools) if query else cfg.get("claude_model", "sonnet")
+        if query:
+            a_model, _ = select_model(query, has_tools)
+        else:
+            a_model = cfg.get("claude_model", "sonnet")
         agent_models.append(a_model)
 
     # Mark all agents as running
@@ -746,7 +760,10 @@ def run_agent_on_worker(
     worker_ip = worker["ip_address"]
     worker_port = worker.get("worker_port", 7731)
     worker_timeout = cfg.get("worker_timeout", 180)
-    model = select_model(query) if query else cfg.get("claude_model", "sonnet")
+    if query:
+        model, _ = select_model(query)
+    else:
+        model = cfg.get("claude_model", "sonnet")
     full_model = _MODEL_MAP.get(model, model)
     xapi_url = cfg.get("xapi_url", "http://localhost:7750")
 
