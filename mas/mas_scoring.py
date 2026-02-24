@@ -163,7 +163,18 @@ class Scorer:
 
         Personas with sufficient data are sorted by efficiency_score desc.
         Personas without data keep their original position.
+
+        Epsilon-greedy exploration: with configurable probability (default 10%),
+        skip reranking and return original priority order. This prevents
+        positive feedback loops where high-volume personas dominate scoring.
         """
+        import random
+
+        # Epsilon-greedy: sometimes skip reranking to explore alternatives
+        epsilon = cfg.get("scoring_explore_rate", 0.1)
+        if random.random() < epsilon:
+            return candidates
+
         self._ensure_computed()
         min_samples = cfg.get("scoring_min_samples", 3)
 

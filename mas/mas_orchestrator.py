@@ -461,35 +461,45 @@ class Orchestrator:
             synthesis = result.get("synthesis", "")
 
             # 6a. Insight capture — extract [INSIGHT] blocks, save to library, strip from output
+            # Skip insight capture for test/auto queries to prevent library pollution
+            req_user = state.get_request(request_id).user or ""
+            skip_insights = any(req_user.startswith(p) for p in ("auto-mas:", "auto-debug:", "auto-zero:", "test:"))
+            if skip_insights:
+                _log(f"[{request_id}] Skipping insight capture (source: {req_user})")
             try:
-                from .mas_insight_capture import process_synthesis, extract_insights, save_insights
+                from .mas_insight_capture import process_synthesis, extract_insights, save_insights, strip_insights
                 primary_domain = analysis["domains"][0]
 
-                # Capture insights from individual agent outputs (multi-agent)
-                agent_outputs = result.get("agent_outputs", [])
-                for i, ao in enumerate(agent_outputs):
-                    ao_text = ao.get("text", "")
-                    if not ao_text or "[INSIGHT]" not in ao_text:
-                        continue
-                    ao_callsign = personas[i].callsign if i < len(personas) else "unknown"
-                    ao_insights = extract_insights(ao_text)
-                    if ao_insights:
-                        from .mas_insight_capture import _CATEGORY_DOMAIN_MAP
-                        lib_domain = _CATEGORY_DOMAIN_MAP.get(primary_domain, primary_domain)
-                        saved = save_insights(lib_domain, ao_insights,
-                                              request_id=request_id,
-                                              source_agent=ao_callsign)
-                        if saved:
-                            _log(f"[{request_id}] Agent insight: {ao_callsign} → {saved} insight(s)")
+                if skip_insights:
+                    # Test/auto queries: strip [INSIGHT] blocks but don't save
+                    synthesis = strip_insights(synthesis)
+                else:
+                    # Capture insights from individual agent outputs (multi-agent)
+                    agent_outputs = result.get("agent_outputs", [])
+                    for i, ao in enumerate(agent_outputs):
+                        ao_text = ao.get("text", "")
+                        if not ao_text or "[INSIGHT]" not in ao_text:
+                            continue
+                        ao_callsign = ao.get("callsign") or (personas[i].callsign if i < len(personas) else "unknown")
+                        ao_insights = extract_insights(ao_text)
+                        if ao_insights:
+                            from .mas_insight_capture import _CATEGORY_DOMAIN_MAP
+                            ao_domain = ao.get("category", primary_domain)
+                            lib_domain = _CATEGORY_DOMAIN_MAP.get(ao_domain, ao_domain)
+                            saved = save_insights(lib_domain, ao_insights,
+                                                  request_id=request_id,
+                                                  source_agent=ao_callsign)
+                            if saved:
+                                _log(f"[{request_id}] Agent insight: {ao_callsign} → {saved} insight(s)")
 
-                # Capture insights from synthesis output + strip
-                agent_names = ", ".join(p.callsign for p in personas)
-                synthesis = process_synthesis(
-                    synthesis,
-                    domain=primary_domain,
-                    request_id=request_id,
-                    source_agent=agent_names,
-                )
+                    # Capture insights from synthesis output + strip
+                    agent_names = ", ".join(p.callsign for p in personas)
+                    synthesis = process_synthesis(
+                        synthesis,
+                        domain=primary_domain,
+                        request_id=request_id,
+                        source_agent=agent_names,
+                    )
             except Exception as e:
                 _log(f"[{request_id}] Insight capture failed: {e}")
 

@@ -431,6 +431,9 @@ def _execute_single(request_id: str, query: str, persona: PersonaEntry, index: P
     _slack_agent_progress(request_id, persona.callsign, "running")
 
     result = run_agent(request_id, agent_id, prompt, persona.id, persona.callsign, tools=tools, query=query)
+    result["callsign"] = persona.callsign
+    result["role"] = persona.role
+    result["category"] = persona.category
 
     _slack_agent_progress(request_id, persona.callsign,
                           "completed" if not result.get("error") else "failed")
@@ -484,6 +487,12 @@ def _execute_parallel(
 
     # Run in parallel (AMM fetch also running concurrently)
     results = run_agents_parallel(request_id, agents_info)
+
+    # Annotate results with callsign/role/category for insight attribution
+    for ai, r, p in zip(agents_info, results, personas):
+        r["callsign"] = ai["callsign"]
+        r["role"] = ai["role"]
+        r["category"] = p.category
 
     # Notify completion
     for ai, r in zip(agents_info, results):
@@ -580,6 +589,9 @@ def _execute_relay(
 
         _slack_agent_progress(request_id, persona.callsign, "running")
         result = run_agent(request_id, agent_id, prompt, persona.id, persona.callsign, tools=tools, query=query)
+        result["callsign"] = persona.callsign
+        result["role"] = persona.role
+        result["category"] = persona.category
         all_results.append(result)
 
         status = "completed" if not result.get("error") else "failed"

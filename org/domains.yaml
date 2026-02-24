@@ -27,7 +27,8 @@ developers:
     - "테스트.*자동화|단위.*테스트|unit.*test|통합.*테스트|integration.*test|E2E.*테스트|부하.*테스트|load.*test"
     - "플랫폼.*개발|플랫폼.*구축|platform.*develop|platform.*engineer|개발.*플랫폼"
     # Cycle #20: 웹 프론트엔드 기술 키워드 (CSS 스타일링→models 오분류 방지)
-    - "\\bCSS\\b|\\bSCSS\\b|\\bHTML\\b|\\bDOM\\b|React|Vue|Angular|Svelte|webpack|vite|\\bSPA\\b|styled.?component|컴포넌트|렌더링"
+    # Cycle #61: Next.js/Nuxt/Remix/Gatsby 등 메타프레임워크 추가 (Next.js App Router→uiux 오라우팅 방지)
+    - "\\bCSS\\b|\\bSCSS\\b|\\bHTML\\b|\\bDOM\\b|React|Vue|Angular|Svelte|webpack|vite|\\bSPA\\b|styled.?component|컴포넌트|렌더링|Next\\.?js|Nuxt|Remix|Gatsby|App.?Router|Pages.?Router|\\bSSR\\b|\\bSSG\\b|\\bISR\\b|hydration"
     # Cycle #23: ML 모델 키워드 (모델 학습/추론/서빙/파인튜닝 → developers, models 도메인 오분류 방지)
     - "모델.{0,4}(학습|훈련|추론|서빙|배포|파인튜닝|최적화|파이프라인|아키텍처)|model.{0,4}(train|deploy|inference|serv|fine.?tun|pre.?train|pipeline|optim|architect)|딥러닝|deep.?learn|파인튜닝|fine.?tun|\\bGPT\\b|\\bLLM\\b"
 
