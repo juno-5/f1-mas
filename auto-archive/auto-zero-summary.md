@@ -247,8 +247,11 @@
 31. `org/functions.yaml` — performance regex disambiguation (compound pattern, 2026-02-24)
 32. `org/domains.yaml` — AI domain regex word boundary fix (2026-02-24)
 33. `org/domains.yaml` + `org/functions.yaml` — training context-bound disambiguation (2026-02-24)
+34. `mas/mas_agent_runner.py` — inference concurrency semaphore (2026-02-24, Inconclusive)
 
 ## 미해결 가설
+
+- Cycle #51: inference semaphore "acquired" 로그 미출력 — 코드 경로 도달 여부 확인 필요
 
 - ~~MAS 페르소나 선택 정확도 검증~~ → **해결** (Cycle #26: frontend_ui/system_architecture 패턴 + priority 개선)
 - xapi 시맨틱 캐시 hit/miss/error 3-state 반환

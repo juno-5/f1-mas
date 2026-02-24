@@ -8,6 +8,7 @@ Supports tool-use: when agents are given tools, the runner executes a multi-turn
 """
 
 import json
+import threading
 import time
 from concurrent.futures import ThreadPoolExecutor, Future
 
@@ -18,6 +19,29 @@ from . import mas_state as state
 from .mas_constitution import filter_output
 
 _pool: ThreadPoolExecutor | None = None
+
+# Global inference concurrency limiter — prevents xapi overload when multiple
+# requests burst simultaneously.  Each slot = 1 concurrent inference call
+# (batch or individual).
+# Cycle #51: backpressure mechanism for burst protection.
+_inference_semaphore: threading.Semaphore | None = None
+_inference_sem_size: int = 0
+_inference_sem_lock = threading.Lock()
+
+
+def _get_inference_semaphore() -> threading.Semaphore:
+    """Return global inference semaphore (lazy init, thread-safe).
+
+    max_concurrent_inferences (default 3): how many concurrent inference calls
+    (batch or individual) can run at once across all requests.
+    """
+    global _inference_semaphore, _inference_sem_size
+    target = cfg.get("max_concurrent_inferences", 3)
+    with _inference_sem_lock:
+        if _inference_semaphore is None or _inference_sem_size != target:
+            _inference_semaphore = threading.Semaphore(target)
+            _inference_sem_size = target
+        return _inference_semaphore
 
 # Shared httpx client — connection pooling for xapi calls
 _http: httpx.Client | None = None
@@ -518,103 +542,115 @@ def _run_agents_batch(
             for i, a in enumerate(agents)
         ]
 
+    # Acquire inference semaphore — backpressure when too many concurrent calls
+    sem = _get_inference_semaphore()
+    sem_timeout = timeout + 60  # generous: wait up to agent_timeout + 60s for a slot
+    if not sem.acquire(timeout=sem_timeout):
+        return _fail_all(f"inference queue full (waited {sem_timeout}s)")
+    print(f"[agent-runner] [{request_id[:8]}] Batch acquired inference slot "
+          f"({len(agents)} agents)", flush=True)
+
     max_retries = cfg.get("inference_max_retries", 3)
     start = time.time()
     resp = None
-    for attempt in range(max_retries):
-        try:
-            resp = _get_http().post(
-                f"{xapi_url}/inference/batch",
-                json={"requests": batch_requests},
-                timeout=timeout + 30,  # extra margin for batch overhead
-            )
-            if resp.status_code in (502, 503) and attempt < max_retries - 1:
-                wait = 5 * (attempt + 1)
-                print(f"[agent-runner] Batch xapi {resp.status_code}, retrying in {wait}s (attempt {attempt + 1}/{max_retries})...", flush=True)
-                time.sleep(wait)
+    try:  # try/finally ensures semaphore is always released
+        for attempt in range(max_retries):
+            try:
+                resp = _get_http().post(
+                    f"{xapi_url}/inference/batch",
+                    json={"requests": batch_requests},
+                    timeout=timeout + 30,  # extra margin for batch overhead
+                )
+                if resp.status_code in (502, 503) and attempt < max_retries - 1:
+                    wait = 5 * (attempt + 1)
+                    print(f"[agent-runner] Batch xapi {resp.status_code}, retrying in {wait}s (attempt {attempt + 1}/{max_retries})...", flush=True)
+                    time.sleep(wait)
+                    continue
+                break
+            except (httpx.ConnectError, httpx.RemoteProtocolError):
+                if attempt < max_retries - 1:
+                    wait = 5 * (attempt + 1)
+                    print(f"[agent-runner] Batch connect error, retrying in {wait}s (attempt {attempt + 1}/{max_retries})...", flush=True)
+                    time.sleep(wait)
+                    continue
+                return _fail_all(f"xapi unreachable at {xapi_url} (after {max_retries} attempts)")
+            except Exception as e:
+                return _fail_all(str(e))
+
+        if resp.status_code != 200:
+            return _fail_all(f"xapi batch {resp.status_code}: {resp.text[:300]}")
+
+        batch_data = resp.json()
+        batch_results = batch_data.get("results", [])
+        total_ms = int((time.time() - start) * 1000)
+
+        results = []
+        for i, a in enumerate(agents):
+            model = agent_models[i]
+            item = batch_results[i] if i < len(batch_results) else {}
+            error = item.get("error")
+            duration_ms = int(item.get("duration_ms", 0))
+
+            if error:
+                print(f"[agent-runner] {a['callsign']} error: {error}", flush=True)
+                if _is_rate_limit_error(error):
+                    print(f"[agent-runner] Rate limit detected for {a['callsign']}", flush=True)
+                state.update_agent(request_id, a["agent_id"],
+                                   status="failed", error=error, model=model)
+                results.append({"text": "", "tokens_used": 0, "model": model,
+                                "duration_ms": duration_ms, "error": error})
                 continue
-            break
-        except (httpx.ConnectError, httpx.RemoteProtocolError):
-            if attempt < max_retries - 1:
-                wait = 5 * (attempt + 1)
-                print(f"[agent-runner] Batch connect error, retrying in {wait}s (attempt {attempt + 1}/{max_retries})...", flush=True)
-                time.sleep(wait)
+
+            text = filter_output(item.get("content", ""))
+            raw_usage = item.get("usage", {})
+            b_cache_read = raw_usage.get("cache_read_input_tokens", 0)
+            b_cache_write = raw_usage.get("cache_creation_input_tokens", 0)
+            if not b_cache_read:
+                b_details = raw_usage.get("prompt_tokens_details", {}) or {}
+                b_cache_read = b_details.get("cached_tokens", 0)
+                b_cache_write = b_cache_write or b_details.get("cache_creation_tokens", 0)
+            usage = {
+                "input": raw_usage.get("input_tokens", raw_usage.get("prompt_tokens", 0)),
+                "output": raw_usage.get("output_tokens", raw_usage.get("completion_tokens", 0)),
+                "cacheRead": b_cache_read,
+                "cacheWrite": b_cache_write,
+            }
+            tokens_used = usage.get("input", 0) + usage.get("output", 0)
+            cost_usd = item.get("cost_usd", 0.0)
+
+            if not text.strip():
+                empty_err = "empty response from inference"
+                print(f"[agent-runner] {a['callsign']} empty response ({duration_ms}ms)", flush=True)
+                state.update_agent(request_id, a["agent_id"],
+                                   status="failed", error=empty_err, model=model)
+                results.append({"text": "", "tokens_used": tokens_used, "model": model,
+                                "duration_ms": duration_ms, "error": empty_err})
                 continue
-            return _fail_all(f"xapi unreachable at {xapi_url} (after {max_retries} attempts)")
-        except Exception as e:
-            return _fail_all(str(e))
 
-    if resp.status_code != 200:
-        return _fail_all(f"xapi batch {resp.status_code}: {resp.text[:300]}")
+            print(f"[agent-runner] {a['callsign']} completed ({duration_ms}ms, {len(text)} chars, "
+                  f"{tokens_used} tokens, ${cost_usd:.4f}, model={model})", flush=True)
 
-    batch_data = resp.json()
-    batch_results = batch_data.get("results", [])
-    total_ms = int((time.time() - start) * 1000)
-
-    results = []
-    for i, a in enumerate(agents):
-        model = agent_models[i]
-        item = batch_results[i] if i < len(batch_results) else {}
-        error = item.get("error")
-        duration_ms = int(item.get("duration_ms", 0))
-
-        if error:
-            print(f"[agent-runner] {a['callsign']} error: {error}", flush=True)
-            if _is_rate_limit_error(error):
-                print(f"[agent-runner] Rate limit detected for {a['callsign']}", flush=True)
             state.update_agent(request_id, a["agent_id"],
-                               status="failed", error=error, model=model)
-            results.append({"text": "", "tokens_used": 0, "model": model,
-                            "duration_ms": duration_ms, "error": error})
-            continue
+                               status="completed",
+                               output=text,
+                               tokens_used=tokens_used,
+                               model=model,
+                               cost_usd=cost_usd)
 
-        text = filter_output(item.get("content", ""))
-        raw_usage = item.get("usage", {})
-        b_cache_read = raw_usage.get("cache_read_input_tokens", 0)
-        b_cache_write = raw_usage.get("cache_creation_input_tokens", 0)
-        if not b_cache_read:
-            b_details = raw_usage.get("prompt_tokens_details", {}) or {}
-            b_cache_read = b_details.get("cached_tokens", 0)
-            b_cache_write = b_cache_write or b_details.get("cache_creation_tokens", 0)
-        usage = {
-            "input": raw_usage.get("input_tokens", raw_usage.get("prompt_tokens", 0)),
-            "output": raw_usage.get("output_tokens", raw_usage.get("completion_tokens", 0)),
-            "cacheRead": b_cache_read,
-            "cacheWrite": b_cache_write,
-        }
-        tokens_used = usage.get("input", 0) + usage.get("output", 0)
-        cost_usd = item.get("cost_usd", 0.0)
+            results.append({
+                "text": text,
+                "tokens_used": tokens_used,
+                "model": model,
+                "duration_ms": duration_ms,
+                "usage": usage,
+                "cost_usd": cost_usd,
+            })
 
-        if not text.strip():
-            empty_err = "empty response from inference"
-            print(f"[agent-runner] {a['callsign']} empty response ({duration_ms}ms)", flush=True)
-            state.update_agent(request_id, a["agent_id"],
-                               status="failed", error=empty_err, model=model)
-            results.append({"text": "", "tokens_used": tokens_used, "model": model,
-                            "duration_ms": duration_ms, "error": empty_err})
-            continue
-
-        print(f"[agent-runner] {a['callsign']} completed ({duration_ms}ms, {len(text)} chars, "
-              f"{tokens_used} tokens, ${cost_usd:.4f}, model={model})", flush=True)
-
-        state.update_agent(request_id, a["agent_id"],
-                           status="completed",
-                           output=text,
-                           tokens_used=tokens_used,
-                           model=model,
-                           cost_usd=cost_usd)
-
-        results.append({
-            "text": text,
-            "tokens_used": tokens_used,
-            "model": model,
-            "duration_ms": duration_ms,
-            "usage": usage,
-            "cost_usd": cost_usd,
-        })
-
-    print(f"[agent-runner] Batch completed: {len(agents)} agents in {total_ms}ms", flush=True)
-    return results
+        print(f"[agent-runner] Batch completed: {len(agents)} agents in {total_ms}ms", flush=True)
+        return results
+    finally:
+        sem.release()
+        print(f"[agent-runner] [{request_id[:8]}] Released inference slot", flush=True)
 
 
 def get_worker_nodes(count: int = 1) -> list[dict]:
@@ -817,34 +853,49 @@ def run_agents_parallel(
         print(f"[agent-runner] Using ThreadPool (agents have tools)", flush=True)
 
     # Fallback: ThreadPoolExecutor (individual calls, supports tool-use)
-    pool = _get_pool()
-    futures: list[tuple[dict, Future]] = []
+    # Acquire inference semaphore for ThreadPool path too
+    sem = _get_inference_semaphore()
+    tp_timeout = cfg.get("agent_timeout_seconds", 120) + 60
+    if not sem.acquire(timeout=tp_timeout):
+        print(f"[agent-runner] [{request_id[:8]}] ThreadPool inference queue full", flush=True)
+        return [{"text": "", "tokens_used": 0, "model": "", "duration_ms": 0,
+                 "error": f"inference queue full (waited {tp_timeout}s)"}
+                for _ in agents]
+    print(f"[agent-runner] [{request_id[:8]}] ThreadPool acquired inference slot "
+          f"({len(agents)} agents)", flush=True)
 
-    for a in agents:
-        f = pool.submit(
-            run_agent,
-            request_id,
-            a["agent_id"],
-            a["prompt"],
-            a["persona_id"],
-            a["callsign"],
-            a.get("tools"),
-            a.get("query", ""),
-        )
-        futures.append((a, f))
+    try:
+        pool = _get_pool()
+        futures: list[tuple[dict, Future]] = []
 
-    results = []
-    for a, f in futures:
-        try:
-            result = f.result(timeout=cfg.get("agent_timeout_seconds", 120) + 10)
-        except Exception as e:
-            result = {"text": "", "tokens_used": 0, "model": "", "duration_ms": 0,
-                      "error": str(e)}
-            state.update_agent(request_id, a["agent_id"],
-                               status="failed", error=str(e))
-        results.append(result)
+        for a in agents:
+            f = pool.submit(
+                run_agent,
+                request_id,
+                a["agent_id"],
+                a["prompt"],
+                a["persona_id"],
+                a["callsign"],
+                a.get("tools"),
+                a.get("query", ""),
+            )
+            futures.append((a, f))
 
-    return results
+        results = []
+        for a, f in futures:
+            try:
+                result = f.result(timeout=cfg.get("agent_timeout_seconds", 120) + 10)
+            except Exception as e:
+                result = {"text": "", "tokens_used": 0, "model": "", "duration_ms": 0,
+                          "error": str(e)}
+                state.update_agent(request_id, a["agent_id"],
+                                   status="failed", error=str(e))
+            results.append(result)
+
+        return results
+    finally:
+        sem.release()
+        print(f"[agent-runner] [{request_id[:8]}] ThreadPool released inference slot", flush=True)
 
 
 def run_synthesis(request_id: str, prompt: str) -> dict:
