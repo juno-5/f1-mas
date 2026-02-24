@@ -237,6 +237,13 @@
     - **After: → `marketers` → Ashley Yoo (브랜드 전략가)**
     - `org/domains.yaml` + `mas/mas_persona_index.py` 수정
 
+38. **Cycle #60 (2026-02-24)**: **루틴 엔진 배포 누락 수정** ⭐
+    - `mas_routines.py` + `routines/` 디렉토리 (4 YAML files) 서버 미배포 → 매 요청 에러 로그
+    - 배포 후: 4 routines loaded, 매칭 쿼리 routine 파이프라인으로 처리
+    - **"시스템 헬스체크" → routine: 16s, 16K tokens, $0.012** (일반 $0.06~0.15 대비 80% 절감)
+    - 비루틴 쿼리 에러 로그 완전 제거
+    - 서버 배포만 (코드 변경 없음)
+
 37. **Cycle #59 (2026-02-24)**: **함수 기반 도메인 추론 (function→domain inference)** ⭐
     - 도메인 감지 실패(developers 기본값) + 함수 감지 성공 시, 함수 후보 카테고리에서 도메인 추론
     - **Before: "로고 색상 분석" → developers → Nexus (시스템 아키텍트)**
