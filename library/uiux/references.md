@@ -4,9 +4,13 @@
 
 ## Design System
 
-- [ ] 디자인 시스템 문서 (컴포넌트, 토큰)
-- [ ] Storybook URL
-- [ ] 아이콘 & 일러스트레이션 라이브러리
+| Resource | URL | 비고 |
+|----------|-----|------|
+| [코스덕 디자인 가이드 수립](https://www.notion.so/225983e32b32800da80fc6f2ee56ef02) | Notion | 코스덕 앱 디자인 컴포넌트 정의 & 버전 관리 — 작업자간 소통 효율화, 사용성 개선 목표 |
+| [디자인 시스템](https://www.notion.so/dca9482dc7fb4d17b1cfe4140f235a43) | Notion | 폰트(Font) 등 공통 디자인 시스템 가이드 |
+| [디자인 레퍼런스 공통](https://www.notion.so/28f66403ebb046cd8cb271fa61804874) | Notion | 공통 디자인 레퍼런스 라이브러리 |
+| [Cosduck 앱 디자인 시스템 및 컴포넌트](https://www.notion.so/Cosduck-22b983e32b3281cc8907e7e28f6f3df1) | Notion | 코스덕 앱 컴포넌트 시스템 |
+| [Cosduck 아이콘, 뱃지 등 기타 디자인 파일](https://www.notion.so/Cosduck-22b983e32b328159a79fe2280e007b1b) | Notion | 코스덕 아이콘/뱃지 디자인 파일 |
 
 ## Research Methods
 
@@ -65,4 +69,4 @@
 
 ---
 
-*Last updated: 2026-02-24 (Cycle #20: Notion fetch → 비고 보강 4건)*
+*Last updated: 2026-02-24 (Cycle #28: Design System 섹션 구축 +5 entries)*

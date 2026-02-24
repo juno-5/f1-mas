@@ -2,11 +2,14 @@
 
 > 마케팅팀 참조 문서, 플랫폼 정책, 브랜드 가이드
 
-## Brand Guidelines
+## Brand Guidelines & 랜딩페이지
 
-- [ ] 브랜드 아이덴티티 가이드 (BI/CI)
-- [ ] 톤앤매너 가이드
-- [ ] 로고 & 에셋 사용 규정
+| Resource | URL | 비고 |
+|----------|-----|------|
+| [경쟁사 랜딩 캡쳐](https://www.notion.so/2bf983e32b3280499a30da495c8f0f5c) | Notion | 경쟁사 랜딩 페이지 레퍼런스 (슈멤 서비스 이해도 향상 목적) |
+| [랜딩페이지 최적화 전략 설계](https://www.notion.so/292983e32b3280f59accdef858ce607a) | Notion | 랜딩페이지 병목 파악, 수치 분석, 도입 문의 CTA 클릭률 개선 |
+| [브랜딩 카피](https://www.notion.so/f0af04a12a7f43a89bcccfe1b21992db) | Notion | 슈퍼랩스 브랜드 카피 — 퍼포먼스 스포츠웨어 톤앤매너 가이드 |
+| [기존 SaaS 서비스 랜딩 레퍼런스](https://www.notion.so/7c361a28e0af449ab604aafc757d2002) | Notion | SaaS 랜딩 페이지 벤치마크 리서치 |
 
 ## Platform Policies & Guides
 

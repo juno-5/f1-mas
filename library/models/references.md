@@ -4,9 +4,12 @@
 
 ## Shooting Guidelines
 
-- [ ] 촬영 스타일 가이드 (룩북, 화보, 영상)
-- [ ] 라이팅 세팅 레퍼런스
-- [ ] 포즈 & 무드보드 라이브러리
+| Resource | URL | 비고 |
+|----------|-----|------|
+| [인터뷰 촬영 운영 계획](https://www.notion.so/2cc983e32b328014975fd763487accd0) | Notion | 매장 현장 촬영 원칙, 예외 처리, 콘텐츠 제작 방식 |
+| [촬영 관련 모음](https://www.notion.so/9f4e49c4e69949d3b2f09c08870994d9) | Notion | 촬영 관련 자료 통합 허브 |
+| [NEW 상세페이지 촬영 가이드 및 레퍼런스](https://www.notion.so/d549f250519647b5afccc9af5d827ec9) | Notion | 상세페이지 대표사진/디테일 촬영 가이드 |
+| [촬영 이미지 레퍼런스](https://www.notion.so/da23c0f9fb4642b189f95b32b9b97aa9) | Notion | 상세페이지 구성 레퍼런스, 추가 이미지 기획 |
 
 ## Agencies & Contacts
 
@@ -52,4 +55,4 @@
 
 ---
 
-*Last updated: 2026-02-24 (Cycle #27: broken URL 수정 — 지원 모델 리스트 DB URL 복구)*
+*Last updated: 2026-02-24 (Cycle #28: 촬영 가이드 +4 entries)*
