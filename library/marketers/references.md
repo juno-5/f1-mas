@@ -95,6 +95,7 @@
 | Resource | URL | 비고 |
 |----------|-----|------|
 | [인플루언서 마케팅 가이드](https://www.notion.so/161983e32b32800f9ca8cc996b2fb3eb) | Notion | 슈퍼멤버스 광고 진행 프로세스 — 유튜브 광고 (리스트업 → 컨택 → 진행) |
+| [TikTok 250만 팔로워 달성 — AI 인플루언서 제작 가이드](biggie-ai-tiktok-influencer-guide.md) | art-master | 3.8KB, AI 인플루언서 운영 전략 |
 
 ## 슈퍼멤버스 마케팅
 

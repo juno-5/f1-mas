@@ -115,7 +115,7 @@ def save_insights(domain: str, insights: list[dict], request_id: str = "",
                   source_agent: str = "") -> int:
     """Append insights to library/{domain}/insights.md.
 
-    Returns number of insights saved.
+    Returns number of insights saved.  Skips duplicates by title similarity.
     """
     if not insights:
         return 0
@@ -128,28 +128,46 @@ def save_insights(domain: str, insights: list[dict], request_id: str = "",
         return 0
 
     date_str = time.strftime("%Y-%m-%d")
-    entries = []
-
-    for ins in insights:
-        title = ins.get("title", "Untitled Insight")
-        context = ins.get("context", "")
-        insight_text = ins.get("insight", ins.get("raw", ""))
-        tags = ins.get("tags", "")
-
-        source = source_agent or f"request:{request_id[:8]}" if request_id else "unknown"
-
-        entry_lines = [f"\n### [{date_str}] {title}"]
-        entry_lines.append(f"- **Source**: {source}")
-        if context:
-            entry_lines.append(f"- **Context**: {context}")
-        entry_lines.append(f"- **Insight**: {insight_text}")
-        if tags:
-            entry_lines.append(f"- **Tags**: {tags}")
-        entry_lines.append("")
-
-        entries.append("\n".join(entry_lines))
 
     with _write_lock:
+        # Load existing titles for dedup (inside lock to prevent TOCTOU race)
+        existing_titles: set[str] = set()
+        if insights_file.exists():
+            try:
+                content = insights_file.read_text(encoding="utf-8")
+                for line in content.split("\n"):
+                    if line.startswith("### ["):
+                        title_part = re.sub(r"^### \[\d{4}-\d{2}-\d{2}\]\s*", "", line).strip()
+                        existing_titles.add(title_part.lower())
+            except Exception:
+                pass
+
+        entries = []
+        for ins in insights:
+            title = ins.get("title", "Untitled Insight")
+
+            # Dedup: skip if title already exists (case-insensitive exact match)
+            if title.strip().lower() in existing_titles:
+                _log(f"Skipping duplicate insight: {title[:60]}")
+                continue
+            context = ins.get("context", "")
+            insight_text = ins.get("insight", ins.get("raw", ""))
+            tags = ins.get("tags", "")
+
+            source = source_agent or f"request:{request_id[:8]}" if request_id else "unknown"
+
+            entry_lines = [f"\n### [{date_str}] {title}"]
+            entry_lines.append(f"- **Source**: {source}")
+            if context:
+                entry_lines.append(f"- **Context**: {context}")
+            entry_lines.append(f"- **Insight**: {insight_text}")
+            if tags:
+                entry_lines.append(f"- **Tags**: {tags}")
+            entry_lines.append("")
+
+            entries.append("\n".join(entry_lines))
+            existing_titles.add(title.strip().lower())  # prevent intra-batch duplicates
+
         try:
             with open(insights_file, "a", encoding="utf-8") as f:
                 for entry in entries:

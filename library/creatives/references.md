@@ -25,6 +25,13 @@
 - [ ] 영상 생성 프롬프트 가이드
 - [ ] 스타일 레퍼런스 프롬프트 템플릿
 
+## AI 영상 제작 (워크스페이스 문서)
+
+| Resource | Source | 비고 |
+|----------|--------|------|
+| [AI 영상 제작 자동화 워크플로우 설계](ai-video-automation-workflow.md) | art-master | 10KB, 영상 자동화 파이프라인 설계 |
+| [Sequencer Academy 튜토리얼 — 전체 요약 & 분석](sequencer-tutorials-analysis.md) | art-master | 23KB, 튜토리얼 분석 + 활용 가이드 |
+
 ## Production Resources
 
 | Resource | URL | 비고 |

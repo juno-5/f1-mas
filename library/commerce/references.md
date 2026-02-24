@@ -17,6 +17,13 @@
 | [Supabase Dashboard](https://supabase.com/dashboard) | Supabase | 커머스 분석 DB — `$SUPABASE_URL`, `$SUPABASE_SERVICE_KEY` |
 | [Development 스프레드시트](https://docs.google.com/spreadsheets/d/1Pct6TMAW1dQsU3dZBg9EFW6kRTW1ZQRzaaRWAf77Is8/) | Google Sheets | 개발 트래킹 |
 
+## Amazon Seller Central (워크스페이스 문서)
+
+| Resource | Source | 비고 |
+|----------|--------|------|
+| [Amazon Seller Central — 완전 메뉴 가이드 (최종판)](amazon-seller-central-final-menu-guide.md) | mkt-master | 14KB, 전체 메뉴 구조 + 기능 설명 |
+| [Amazon Seller Central — 완전 메뉴 구조 맵](amazon-seller-central-complete-menu-structure.md) | mkt-master | 21KB, 메뉴 계층 구조 상세 맵 |
+
 ## Operations
 
 - [ ] 주문 처리 SOP

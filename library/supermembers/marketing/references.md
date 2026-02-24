@@ -19,6 +19,23 @@
 | [Creative Boost & GMV MAX 실험 노트](https://docs.google.com/spreadsheets/d/1pPAkkAO2Bm) | Google Sheets | 크리에이티브 성과 실험 데이터 |
 | [META 광고 영상 소스](https://www.notion.so/META-2f4983e32b3281a09636ed81a89a93aa) | Notion | 이미지/영상 GDrive 폴더, 밈 템플릿 |
 
+## 광고 소재 분석 & 기획 (워크스페이스 문서)
+
+| Resource | Source | 비고 |
+|----------|--------|------|
+| [슈퍼멤버스 광고 프로젝트](PROJECT.md) | art-master | 5.7KB, 광고 프로젝트 전체 개요 |
+| [슈퍼멤버스 서비스 이해](service-understanding.md) | art-master | 5.3KB, 서비스 이해 가이드 |
+| [슈퍼멤버스 AI 이미지 제작 팁](ai-image-tips.md) | art-master | 2.6KB, AI 이미지 생성 팁 |
+| [슈퍼멤버스 세일즈 스크립트](sales-script.md) | art-master | 7.1KB, 세일즈 스크립트 |
+| [슈퍼멤버스 상위 광고 소재 딥 분석](deep-analysis.md) | art-master | 9.1KB, 상위 소재 심층 분석 |
+| [슈퍼멤버스 Meta 광고 소재 분석 리포트](meta-ads-analysis.md) | art-master | 7.9KB, Meta 광고 성과 분석 |
+| [슈퍼멤버스 신규 광고 영상 기획안](video-planning.md) | art-master | 11KB, 영상 기획안 v1 |
+| [슈퍼멤버스 영상 기획 v2](video-planning-v2.md) | art-master | 9.9KB, 영상 기획안 v2 |
+| [슈퍼멤버스 광고 영상 — 프로덕션 레디 스크립트](production-ready-scripts.md) | art-master | 18KB, 촬영 스크립트 |
+| [슈퍼멤버스 광고 카피 v2](ad-copies-v2.md) | art-master | 5.7KB, 광고 카피 모음 |
+| [슈퍼멤버스 광고 소재 자동 베리에이션 워크플로우](variation-workflow.md) | art-master | 13KB, 소재 자동화 워크플로우 |
+| [슈퍼멤버스 광고 영상 소스 모음](ad-video-sources.md) | art-master | 0.6KB, 영상 소스 목록 |
+
 ## K-Beauty & 틱톡
 
 | Resource | URL | 비고 |
