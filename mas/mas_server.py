@@ -19,6 +19,7 @@ Endpoints:
   GET  /requests            — List all requests
 """
 
+import hashlib
 import http.server
 import json
 import os
@@ -51,6 +52,40 @@ def _get_orchestrator():
 PORT = cfg.get("port", 7720)
 _start_time = time.time()
 _draining = False  # Set True on SIGTERM to reject new requests
+
+# Request dedup — prevent duplicate query floods within a time window
+_recent_queries: dict[str, tuple[str, float]] = {}  # hash -> (request_id, timestamp)
+_recent_lock = threading.Lock()
+_DEDUP_WINDOW = cfg.get("dedup_window_sec", 10)  # seconds
+
+
+def _dedup_key(query: str, user: str) -> str:
+    """Hash (query, user) for dedup lookup."""
+    return hashlib.md5(f"{user}:{query}".encode()).hexdigest()
+
+
+def _dedup_check(query: str, user: str) -> str | None:
+    """Return existing request_id if same query was submitted within window, else None."""
+    now = time.time()
+    key = _dedup_key(query, user)
+    with _recent_lock:
+        # Cleanup expired entries
+        expired = [k for k, (_, ts) in _recent_queries.items() if now - ts > _DEDUP_WINDOW]
+        for k in expired:
+            del _recent_queries[k]
+        # Check for duplicate
+        if key in _recent_queries:
+            req_id, ts = _recent_queries[key]
+            if now - ts <= _DEDUP_WINDOW:
+                return req_id
+    return None
+
+
+def _dedup_register(query: str, user: str, request_id: str) -> None:
+    """Register a new query for dedup tracking."""
+    key = _dedup_key(query, user)
+    with _recent_lock:
+        _recent_queries[key] = (request_id, time.time())
 
 
 def log(msg):
@@ -462,13 +497,25 @@ class MASHandler(http.server.BaseHTTPRequestHandler):
             self._send_json(400, {"error": "missing 'query' field"})
             return
 
+        user = body.get("user", "")         # caller identification
+
+        # Dedup check — reject identical query from same user within time window
+        existing_id = _dedup_check(query, user)
+        if existing_id:
+            log(f"[DEDUP] query already processing as {existing_id}: {query[:80]}")
+            self._send_json(200, {
+                "request_id": existing_id,
+                "status": "dedup",
+                "message": f"Duplicate request — already processing as {existing_id}",
+            })
+            return
+
         # Optional overrides
         persona_ids = body.get("personas")  # force specific personas
         pattern = body.get("pattern")       # force specific pattern
         tribe = body.get("tribe")           # tribe constraint
         squad = body.get("squad")           # squad constraint
         max_personas = body.get("max_personas")  # cap agent count
-        user = body.get("user", "")         # caller identification
 
         orch = _get_orchestrator()
 
@@ -487,8 +534,23 @@ class MASHandler(http.server.BaseHTTPRequestHandler):
             })
             return
 
+        # P1 refusal — refuse with helpful message instead of spawning agents
+        if reason:
+            req = state.create_request(query, user=user)
+            state.update_request(req.request_id, status="refused", error=reason)
+            state.record_event("refuse", f"P1 refused: {reason}", req.request_id)
+            log(f"[REFUSED] {reason}")
+            self._send_json(200, {
+                "request_id": req.request_id,
+                "status": "refused",
+                "reason": reason,
+                "message": "이 주제에 대해서는 전문가 상담을 권장합니다. AI 시스템은 의료, 법률, 금융 등 전문 분야의 조언을 제공할 수 없습니다.",
+            })
+            return
+
         # Start async execution
         req = state.create_request(query, user=user)
+        _dedup_register(query, user, req.request_id)
         log(f"[REQUEST] {req.request_id}: {query[:80]}")
 
         def _run():
