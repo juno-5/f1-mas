@@ -237,6 +237,13 @@
     - **After: → `marketers` → Ashley Yoo (브랜드 전략가)**
     - `org/domains.yaml` + `mas/mas_persona_index.py` 수정
 
+37. **Cycle #59 (2026-02-24)**: **함수 기반 도메인 추론 (function→domain inference)** ⭐
+    - 도메인 감지 실패(developers 기본값) + 함수 감지 성공 시, 함수 후보 카테고리에서 도메인 추론
+    - **Before: "로고 색상 분석" → developers → Nexus (시스템 아키텍트)**
+    - **After: → marketers,creatives → Yena Jang + CHROMA (디자이너 + 색상 전문가)**
+    - 함수 감지 성공 케이스 3/3 정확 추론, 기존 직접 매칭 regression 없음
+    - `mas/mas_orchestrator.py` 수정
+
 32. **Cycle #49 (2026-02-24)**: **training keyword context-bound disambiguation** ⭐
     - Standalone `training` matched non-ML contexts (sales, employee, CX, strength training)
     - Replaced with compound patterns: `(model|data|pre)+training`, `training+(data|pipeline|loss|...)`
@@ -280,6 +287,7 @@
 37. `mas/mas_agent_runner.py` — auto-model 복잡도 스코어링 개선 (2026-02-24)
 
 38. `org/domains.yaml` + `mas/mas_persona_index.py` — 시장조사 패턴 + _find_org_yaml fallback (2026-02-24)
+39. `mas/mas_orchestrator.py` — 함수 기반 도메인 추론 (2026-02-24)
 
 ## 미해결 가설
 

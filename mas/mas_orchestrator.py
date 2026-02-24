@@ -47,6 +47,13 @@ class Orchestrator:
         # Function detection (from org/functions.yaml)
         functions = self._index.detect_function(clean_query)
 
+        # Cycle #59: When domain defaults to ["developers"] but functions matched,
+        # infer domain from function candidates' categories.
+        if domains == ["developers"] and functions:
+            inferred = self._infer_domain_from_functions(functions)
+            if inferred:
+                domains = inferred
+
         # Locale detection
         locale = self._index.detect_locale(clean_query)
 
@@ -122,6 +129,26 @@ class Orchestrator:
     def _default_function(self, domain: str) -> str:
         """Get default function for a domain (from org/functions.yaml)."""
         return self._index.default_function(domain)
+
+    def _infer_domain_from_functions(self, functions: list[str]) -> list[str] | None:
+        """Infer domain from function candidates when domain detection failed.
+
+        Counts which category appears most across all function candidates.
+        Returns sorted domain list or None if no candidates.
+        """
+        from collections import Counter
+        cat_counter: Counter = Counter()
+        for func in functions:
+            candidates = self._index.by_function(func)
+            for c in candidates:
+                cat_counter[c.category] += 1
+        if not cat_counter:
+            return None
+        # Exclude developers — it was already the default we're trying to override
+        non_dev = {k: v for k, v in cat_counter.items() if k != "developers"}
+        if non_dev:
+            return sorted(non_dev, key=non_dev.get, reverse=True)
+        return None
 
     def select_personas(self, analysis: dict) -> list[PersonaEntry]:
         """Select optimal personas based on analysis.
@@ -295,6 +322,25 @@ class Orchestrator:
 
         This runs synchronously (called from a background thread).
         """
+        # [0] Routine check — intercept before expensive pipeline
+        if not persona_ids:
+            try:
+                from .mas_routines import try_routine
+                routine_result = try_routine(request_id, query)
+                if routine_result is not None:
+                    if routine_result.get("error"):
+                        state.update_request(request_id, status="failed",
+                                             error=routine_result["error"])
+                    else:
+                        state.update_request(request_id, status="completed",
+                                             synthesis=routine_result["output"],
+                                             pattern="routine")
+                    self._slack_notify_complete(request_id)
+                    state.record_event("complete", f"Request {request_id} completed (routine: {routine_result.get('routine_id', '?')})", request_id)
+                    return
+            except Exception as e:
+                _log(f"[{request_id}] Routine check failed: {e}, continuing with pipeline")
+
         # 1. Analyze
         state.update_request(request_id, status="analyzing")
         analysis = self.analyze_request(query, pattern=pattern, tribe=tribe, squad=squad)
