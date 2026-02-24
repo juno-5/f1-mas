@@ -154,6 +154,13 @@
     - **Before: React 쿼리 → 5 agents/$0.59 → After: 2 agents/$0.30 (-49% 비용)**
     - `org/functions.yaml` 수정, 커밋 `52b951f`
 
+24. **Cycle #41 (2026-02-24)**: **Hot reload empty index guard** ⭐
+    - `load()` clears ALL index dicts before repopulating — if entries=[] (partial file during SCP), index becomes empty for ~30s
+    - 동시 요청 2개 중 1개만 실패 (race condition evidence at 11:15:18)
+    - `load()`: entries 빈 경우 기존 인덱스 유지 + `_load_functions_yaml()`: 빈 patterns 캐시 안 함
+    - **Before: 3/51 requests "no suitable personas found" → After: guard prevents all transient failures**
+    - `mas/mas_persona_index.py` 수정, 커밋 `b12b3c7`
+
 ## 변경 이력
 
 7. `mas/mas_agent_runner.py` + `mas/mas_templates.py` + `mas/mas_conversation.py` — synthesis cap + truncation (2a8737c, 2026-02-23)
@@ -175,6 +182,7 @@
 23. `mas/mas_agent_runner.py` — agent max_tokens 4096→8192 configurable (450e1ff, 2026-02-23)
 24. `mas/mas_tools.py` — tool injection compound 패턴 강화 2차 (64e75ce, 2026-02-23)
 25. `org/functions.yaml` — regex distance bound .{0,20} + 리드 lookbehind (52b951f, 2026-02-23)
+26. `mas/mas_persona_index.py` — hot reload empty index guard (b12b3c7, 2026-02-24)
 
 ## 미해결 가설
 
