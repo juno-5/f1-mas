@@ -20,6 +20,22 @@ from .mas_constitution import filter_output
 
 _pool: ThreadPoolExecutor | None = None
 
+
+def _fmt_tokens(usage: dict) -> str:
+    """Format token usage with cache breakdown for logging.
+
+    Returns e.g. '12326 tokens (in=8200 out=4126 cr=6100 cw=0)'
+    or '12326 tokens' if no cache data.
+    """
+    inp = usage.get("input", 0)
+    out = usage.get("output", 0)
+    cr = usage.get("cacheRead", 0)
+    cw = usage.get("cacheWrite", 0)
+    total = inp + out
+    if cr or cw:
+        return f"{total} tokens (in={inp} out={out} cr={cr} cw={cw})"
+    return f"{total} tokens"
+
 # Global inference concurrency limiter — prevents xapi overload when multiple
 # requests burst simultaneously.  Each slot = 1 concurrent inference call
 # (batch or individual).
@@ -463,7 +479,7 @@ def run_agent(
             tokens_used = usage.get("input", 0) + usage.get("output", 0)
             cost_usd = result.get("cost_usd", 0.0)
             print(f"[agent-runner] {callsign} partial ({duration_ms}ms, {len(partial_text)} chars, "
-                  f"{tokens_used} tokens, ${cost_usd:.4f}) — {error_msg}", flush=True)
+                  f"{_fmt_tokens(usage)}, ${cost_usd:.4f}) — {error_msg}", flush=True)
             state.update_agent(request_id, agent_id,
                                status="completed",
                                output=partial_text,
@@ -512,7 +528,7 @@ def run_agent(
         }
 
     print(f"[agent-runner] {callsign} completed ({duration_ms}ms, {len(text)} chars, "
-          f"{tokens_used} tokens, ${cost_usd:.4f})", flush=True)
+          f"{_fmt_tokens(usage)}, ${cost_usd:.4f})", flush=True)
 
     state.update_agent(request_id, agent_id,
                        status="completed",
@@ -665,7 +681,7 @@ def _run_agents_batch(
                 continue
 
             print(f"[agent-runner] {a['callsign']} completed ({duration_ms}ms, {len(text)} chars, "
-                  f"{tokens_used} tokens, ${cost_usd:.4f}, model={model})", flush=True)
+                  f"{_fmt_tokens(usage)}, ${cost_usd:.4f}, model={model})", flush=True)
 
             state.update_agent(request_id, a["agent_id"],
                                status="completed",
@@ -785,7 +801,7 @@ def run_agent_on_worker(
     usage = data.get("usage", {"input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0})
 
     print(f"[agent-runner] {callsign} worker completed ({duration_ms}ms, {len(text)} chars, "
-          f"{tokens_used} tokens, ${cost_usd:.4f}, tools={data.get('tool_calls_count', 0)})",
+          f"{_fmt_tokens(usage)}, ${cost_usd:.4f}, tools={data.get('tool_calls_count', 0)})",
           flush=True)
 
     state.update_agent(request_id, agent_id,
@@ -976,7 +992,7 @@ def run_synthesis(request_id: str, prompt: str) -> dict:
     cost_usd = result.get("cost_usd", 0.0)
 
     print(f"[agent-runner] MAS-Synth completed ({duration_ms}ms, {len(text)} chars, "
-          f"{tokens_used} tokens, ${cost_usd:.4f})", flush=True)
+          f"{_fmt_tokens(usage)}, ${cost_usd:.4f})", flush=True)
 
     state.update_agent(request_id, agent_id,
                        status="completed",
