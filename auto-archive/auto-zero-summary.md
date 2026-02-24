@@ -168,6 +168,14 @@
     - Config-only change, no code modification
     - 부수 발견: MAS runtime config path = `~/.f1crew/shared/mas-config.json` ≠ source `config/mas-config.json`
 
+26. **Cycle #43 (2026-02-24)**: **Metadata prefix stripping for detection accuracy** ⭐
+    - `[auto-debug]` prefix in query caused `debugging` false positive → wrong persona (Trace instead of Apex)
+    - `_METADATA_PREFIX_RE` strips `[auto-*] Cycle #N:` before domain/function/locale detection
+    - `query_len` now uses cleaned query for complexity estimation
+    - **Before: functions=`['debugging', 'payment_checkout', 'mobile_ux']` → Touch + Trace (wrong)**
+    - **After: functions=`['payment_checkout', 'mobile_ux']` → Touch + Apex (correct)**
+    - `mas/mas_orchestrator.py` 수정
+
 ## 변경 이력
 
 7. `mas/mas_agent_runner.py` + `mas/mas_templates.py` + `mas/mas_conversation.py` — synthesis cap + truncation (2a8737c, 2026-02-23)
@@ -191,6 +199,7 @@
 25. `org/functions.yaml` — regex distance bound .{0,20} + 리드 lookbehind (52b951f, 2026-02-23)
 26. `mas/mas_persona_index.py` — hot reload empty index guard (b12b3c7, 2026-02-24)
 27. `config/mas-config.json` + runtime config — synthesis_model sonnet→haiku (2026-02-24)
+28. `mas/mas_orchestrator.py` — metadata prefix stripping for detection accuracy (2026-02-24)
 
 ## 미해결 가설
 

@@ -1,5 +1,6 @@
 """MAS Orchestrator — analyze request → select personas → spawn agents → synthesize."""
 
+import re
 import time
 
 from . import mas_config as cfg
@@ -22,6 +23,14 @@ class Orchestrator:
     def __init__(self):
         self._index = get_index()
 
+    # Metadata prefixes to strip before function/domain detection.
+    # These are non-content tags that can trigger false positives.
+    _METADATA_PREFIX_RE = re.compile(
+        r"^\[auto[-\w]*\]\s*"          # [auto-debug], [auto-zero], etc.
+        r"(?:Cycle\s*#\d+[:\s]*)?",    # optional "Cycle #N:"
+        re.IGNORECASE,
+    )
+
     def analyze_request(self, query: str, pattern: str = None,
                         tribe: str = None, squad: str = None) -> dict:
         """Analyze user request: detect domain, function, locale, complexity.
@@ -29,18 +38,21 @@ class Orchestrator:
         Returns {"domains": [...], "functions": [...], "locale": str,
                  "complexity": str, "agent_count": int}.
         """
+        # Strip metadata prefixes to avoid false positives in detection
+        clean_query = self._METADATA_PREFIX_RE.sub("", query).strip() or query
+
         # Domain detection
-        domains = self._index.detect_domain(query)
+        domains = self._index.detect_domain(clean_query)
 
         # Function detection (from org/functions.yaml)
-        functions = self._index.detect_function(query)
+        functions = self._index.detect_function(clean_query)
 
         # Locale detection
-        locale = self._index.detect_locale(query)
+        locale = self._index.detect_locale(clean_query)
 
         # Complexity estimation — use domain-relevant function count to avoid
         # unrelated cross-domain functions inflating agent count
-        query_len = len(query)
+        query_len = len(clean_query)
         primary_domain = domains[0]
         domain_set = set(domains)
         domain_func_count = 0
