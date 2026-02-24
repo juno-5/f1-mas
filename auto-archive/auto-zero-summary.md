@@ -312,6 +312,7 @@
 41. `org/domains.yaml` — creatives 에셋 + uiux 프레젠테이션 키워드 확장 (2026-02-24)
 42. `routines/marketing/video-production.yml` — 트리거 패턴 false positive 수정 (2026-02-24)
 43. `deploy/deploy-ai1.sh` — org/ + routines/ 배포 단계 추가, 넘버링 통일 (2026-02-24)
+44. `org/domains.yaml` — uiux(정보구조) + commerce(상품추천/재고) + marketers(소셜플랫폼) 키워드 확장 (2026-02-24)
 
 ## 미해결 가설
 

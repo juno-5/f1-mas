@@ -38,6 +38,8 @@ marketers:
     - "그로스|growth|성장|\\bUA\\b|유저.?획득|acquisition|리텐션|retention"
     - "아마존|amazon|tiktok|틱톡|커머스|commerce|이커머스|e.?commerce"
     - "SNS|소셜|social|인플루언서|influencer|콘텐츠|content.?marketing"
+    # Cycle #67: 소셜 플랫폼 키워드 추가 (인스타그램 등 → marketers)
+    - "인스타그램|instagram|페이스북|facebook|유튜브|youtube|네이버.?블로그|naver.?blog"
     - "\\bCRO\\b|전환율|conversion|AB테스트|그래픽.?디자인|광고.?디자인|배너.?디자인"
     # Cycle #58: 시장조사/경쟁분석 — marketers 도메인으로 라우팅
     - "시장.*조사|시장.*분석|시장.*리서치|market.*research|market.*analysis|경쟁사|competitor|경쟁.*분석|competitive.*analysis"
@@ -71,6 +73,8 @@ commerce:
     - "전환율|conversion|\\bCRO\\b|마켓플레이스|marketplace|리텐션|retention"
     - "개인화|personalization|로열티|loyalty|가격|pricing"
     - "풀필먼트|fulfillment|물류|logistics|배송|shipping|구독|subscription"
+    # Cycle #67: 상품 추천/카탈로그 키워드 추가
+    - "상품.?추천|product.?recommend|추천.?시스템|recommendation|카탈로그|catalog|재고|inventory"
 
 sales:
   patterns:
@@ -87,7 +91,7 @@ uiux:
     - "와이어프레임|wireframe|프로토타입|prototype|디자인.?시스템|design.?system"
     - "접근성|accessibility|사용성|usability|인터랙션|interaction"
     # Cycle #67: 새 UIUX 전문분야 키워드 추가
-    - "정보.?설계|information.?architecture|\\bIA\\b|네비게이션|navigation|사이트.?맵|sitemap"
+    - "정보.?설계|정보.?구조|information.?architecture|information.?structure|\\bIA\\b|네비게이션|navigation|사이트.?맵|sitemap"
     - "UX.?라이팅|UX.?writing|콘텐츠.?디자인|content.?design|마이크로카피|microcopy"
     - "서비스.?디자인|service.?design|블루프린트|blueprint|터치포인트|touchpoint"
     - "데이터.?시각화|data.?visual|대시보드.?디자인|dashboard.?design|차트|chart.?design"
