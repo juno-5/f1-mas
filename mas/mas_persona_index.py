@@ -177,6 +177,12 @@ class PersonaIndex:
         ]:
             entries.extend(self._parse_generic_team(content, section, category))
 
+        # Guard: don't clear existing index if parsing returned empty
+        # (protects against partial file reads during SCP/hot-reload)
+        if not entries and self._loaded:
+            print(f"[WARN] [persona_index] Hot reload parsed 0 entries — keeping existing index", flush=True)
+            return
+
         with self._lock:
             self._by_id.clear()
             self._by_callsign.clear()
@@ -971,7 +977,12 @@ class PersonaIndex:
                 "cx": "cx_strategy",
             }
 
-        self._function_compiled = compiled  # {} if YAML unavailable
+        # Don't cache empty compiled — let next call retry (protects against
+        # partial file reads during SCP/deployment)
+        if not compiled:
+            print(f"[WARN] [persona_index] functions.yaml parsed 0 patterns — will retry", flush=True)
+            return
+        self._function_compiled = compiled
         self._function_priority = priority
         self._function_defaults = defaults
 
