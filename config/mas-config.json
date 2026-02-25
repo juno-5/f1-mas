@@ -11,6 +11,7 @@
   "characters_base_dir": "/home/mayacrew/projects/mayacrew-f1crew/f1-mas/characters",
   "selection_rules_path": "/home/mayacrew/projects/mayacrew-f1crew/f1-mas/config/selection-rules.md",
   "task_templates_path": "/home/mayacrew/projects/mayacrew-f1crew/f1-mas/config/task-templates.md",
+  "tribe_registry_path": "/home/mayacrew/projects/mayacrew-f1crew/f1-mas/config/tribe-registry.md",
   "state_file": "/home/mayacrew/.f1crew/shared/mas-state.json",
   "slack": {
     "enabled": false,

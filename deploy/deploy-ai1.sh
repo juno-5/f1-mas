@@ -31,6 +31,7 @@ echo "[4/9] Deploying config files..."
 rsync -az "$SCRIPT_DIR/config/persona-registry.md" \
           "$SCRIPT_DIR/config/selection-rules.md" \
           "$SCRIPT_DIR/config/task-templates.md" \
+          "$SCRIPT_DIR/config/tribe-registry.md" \
           "$SERVER:~/projects/mayacrew-f1crew/f1-mas/config/"
 
 # 5. Org → server data (domains.yaml, functions.yaml — hot-reloaded)
