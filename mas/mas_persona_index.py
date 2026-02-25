@@ -592,15 +592,23 @@ class PersonaIndex:
     # ── Public API ──
 
     def get(self, persona_id: str) -> PersonaEntry | None:
-        """Look up persona by ID (e.g. 'F1-11') or callsign (e.g. 'Sentinel')."""
+        """Look up persona by ID (e.g. 'F1-11'), callsign (e.g. 'Sentinel'),
+        or slug (e.g. 'hank-choi' → 'Hank Choi')."""
         with self._lock:
             entry = self._by_id.get(persona_id)
             if entry:
                 return entry
             # Fallback: try callsign (case-insensitive)
-            resolved_id = self._by_callsign.get(persona_id.lower())
+            key = persona_id.lower()
+            resolved_id = self._by_callsign.get(key)
             if resolved_id:
                 return self._by_id.get(resolved_id)
+            # Fallback: normalize slug (hyphens/underscores → spaces)
+            normalized = key.replace("-", " ").replace("_", " ")
+            if normalized != key:
+                resolved_id = self._by_callsign.get(normalized)
+                if resolved_id:
+                    return self._by_id.get(resolved_id)
             return None
 
     def by_category(self, category: str) -> list[PersonaEntry]:
