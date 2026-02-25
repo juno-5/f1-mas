@@ -17,7 +17,7 @@ from .mas_templates import (
 )
 from .mas_agent_runner import run_agent, run_agents_parallel, run_synthesis
 from .mas_insight_capture import strip_insights
-from .mas_tools import get_tools_for_query
+from .mas_tools import get_tools_for_query, prefetch_web_search
 
 
 PATTERN_SINGLE = "single"
@@ -362,6 +362,7 @@ def _fetch_library_context(domain: str) -> str:
 def _build_agent_prompt(persona: PersonaEntry, query: str, index: PersonaIndex,
                         extra_context: str = "", amm_context: str = None,
                         nas_context: str = None, library_context: str = None,
+                        web_context: str = "",
                         domain: str = "") -> str:
     """Build a prompt for a persona agent.
 
@@ -370,6 +371,7 @@ def _build_agent_prompt(persona: PersonaEntry, query: str, index: PersonaIndex,
             Pass pre-fetched value for multi-agent patterns to avoid redundant calls.
         nas_context: Pre-fetched NAS context. If None, fetches independently.
         library_context: Pre-fetched library context. If None, fetches independently.
+        web_context: Pre-fetched web search results for real-time data injection.
         domain: Primary domain for NAS relevance check.
     """
     # Extract key sections from character file
@@ -398,6 +400,8 @@ def _build_agent_prompt(persona: PersonaEntry, query: str, index: PersonaIndex,
         full_query += amm_context
     if nas_context:
         full_query += nas_context
+    if web_context:
+        full_query += web_context
     if extra_context:
         full_query += f"\n\n## Previous Context\n{extra_context}"
 
@@ -419,13 +423,26 @@ def _execute_single(request_id: str, query: str, persona: PersonaEntry, index: P
     agent_id = state.add_agent(request_id, persona.id, persona.callsign, persona.role)
     nas_context = _fetch_nas_context(query, domain=persona.category)
     library_context = _fetch_library_context(persona.category)
-    prompt = _build_agent_prompt(persona, query, index, nas_context=nas_context,
-                                 library_context=library_context)
 
     # Determine available tools for this query
     tools = get_tools_for_query(query, domain=persona.category) or None
+
+    # Web search pre-fetch: if only web_search tool is needed, pre-fetch results
+    # and inject as context instead of running tool loop (saves ~85% cost)
+    web_context = ""
+    if tools and cfg.get("web_search_prefetch", True):
+        tool_names = {t["function"]["name"] for t in tools}
+        if tool_names == {"web_search"}:
+            web_context = prefetch_web_search(query)
+            if web_context:
+                _log(f"[{request_id}] Web pre-fetch: {len(web_context)} chars → tools disabled")
+                tools = None  # Disable tool loop → haiku eligible, batch eligible
+
     if tools:
         _log(f"[{request_id}] Tools enabled: {len(tools)} tool(s)")
+
+    prompt = _build_agent_prompt(persona, query, index, nas_context=nas_context,
+                                 library_context=library_context, web_context=web_context)
 
     # Notify Slack progress
     _slack_agent_progress(request_id, persona.callsign, "running")
@@ -465,6 +482,18 @@ def _execute_parallel(
 
     # Determine available tools for this query
     tools = get_tools_for_query(query, domain=personas[0].category if personas else "") or None
+
+    # Web search pre-fetch: if only web_search tool is needed, pre-fetch results
+    # and inject as context for ALL agents (shared context, single search cost)
+    web_context = ""
+    if tools and cfg.get("web_search_prefetch", True):
+        tool_names = {t["function"]["name"] for t in tools}
+        if tool_names == {"web_search"}:
+            web_context = prefetch_web_search(query)
+            if web_context:
+                _log(f"[{request_id}] Web pre-fetch: {len(web_context)} chars → tools disabled for all agents")
+                tools = None  # Disable tool loop for all agents
+
     if tools:
         _log(f"[{request_id}] Tools enabled: {len(tools)} tool(s)")
 
@@ -473,7 +502,7 @@ def _execute_parallel(
     for p in personas:
         agent_id = state.add_agent(request_id, p.id, p.callsign, p.role)
         prompt = _build_agent_prompt(p, query, index, amm_context="",
-                                     nas_context=nas_context)
+                                     nas_context=nas_context, web_context=web_context)
         agents_info.append({
             "agent_id": agent_id,
             "prompt": prompt,
@@ -576,6 +605,17 @@ def _execute_relay(
 
     # Determine available tools for this query
     tools = get_tools_for_query(query, domain=personas[0].category if personas else "") or None
+
+    # Web search pre-fetch for relay pattern
+    web_context = ""
+    if tools and cfg.get("web_search_prefetch", True):
+        tool_names = {t["function"]["name"] for t in tools}
+        if tool_names == {"web_search"}:
+            web_context = prefetch_web_search(query)
+            if web_context:
+                _log(f"[{request_id}] Web pre-fetch: {len(web_context)} chars → tools disabled")
+                tools = None
+
     if tools:
         _log(f"[{request_id}] Tools enabled: {len(tools)} tool(s)")
 
@@ -585,7 +625,8 @@ def _execute_relay(
     for i, persona in enumerate(personas):
         agent_id = state.add_agent(request_id, persona.id, persona.callsign, persona.role)
         prompt = _build_agent_prompt(persona, query, index, extra_context=previous_output,
-                                     amm_context=amm_context, nas_context=nas_context)
+                                     amm_context=amm_context, nas_context=nas_context,
+                                     web_context=web_context)
 
         _slack_agent_progress(request_id, persona.callsign, "running")
         result = run_agent(request_id, agent_id, prompt, persona.id, persona.callsign, tools=tools, query=query)

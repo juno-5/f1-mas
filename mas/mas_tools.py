@@ -242,6 +242,113 @@ def _execute_web_search(arguments: dict) -> str:
         return json.dumps({"error": f"Web search failed: {str(e)}"})
 
 
+def prefetch_web_search(query: str, max_queries: int = 3, results_per_query: int = 5) -> str:
+    """Pre-fetch web search results for prompt injection (no tool loop needed).
+
+    Runs multiple Brave searches in parallel and returns formatted markdown context.
+    This allows agents to use real-time data without the tool loop, enabling:
+    - haiku model (vs forced sonnet for tool-use)
+    - single inference call (vs 2+ rounds in tool loop)
+    - batch inference compatibility
+
+    Returns empty string if no results or search disabled.
+    """
+    if not cfg.get("web_search_enabled", True):
+        return ""
+    if not _WEB_RELEVANT_RE.search(query):
+        return ""
+
+    api_key = _get_brave_api_key()
+    if not api_key:
+        return ""
+
+    # Build search queries: original + English variant
+    queries = [query.strip()]
+
+    # Extract key terms and create an English-augmented search
+    # (Korean queries often benefit from English keyword search too)
+    import re as _re
+    english_terms = _re.findall(r'[A-Za-z]{2,}', query)
+    korean_terms = _re.findall(r'[가-힣]+', query)
+
+    if english_terms:
+        # Add year-augmented English search
+        en_q = " ".join(english_terms) + " 2025 2026 benchmark data"
+        if en_q.strip() != queries[0]:
+            queries.append(en_q)
+
+    if korean_terms and len(queries) < max_queries:
+        # Add broader Korean search with "최신" prefix
+        kr_q = "최신 " + " ".join(korean_terms[:4]) + " 트렌드 데이터"
+        if kr_q not in queries:
+            queries.append(kr_q)
+
+    queries = queries[:max_queries]
+
+    # Execute searches in parallel using threads
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+
+    def _do_search(q: str) -> list[dict]:
+        try:
+            resp = httpx.get(
+                _BRAVE_SEARCH_ENDPOINT,
+                params={"q": q, "count": results_per_query},
+                headers={
+                    "Accept": "application/json",
+                    "X-Subscription-Token": api_key,
+                },
+                timeout=8.0,
+            )
+            if resp.status_code != 200:
+                return []
+            data = resp.json()
+            return data.get("web", {}).get("results", [])
+        except Exception:
+            return []
+
+    all_results = []
+    seen_urls = set()
+
+    with ThreadPoolExecutor(max_workers=max_queries) as pool:
+        futures = {pool.submit(_do_search, q): q for q in queries}
+        for f in as_completed(futures, timeout=10):
+            try:
+                results = f.result()
+                for r in results:
+                    url = r.get("url", "")
+                    if url and url not in seen_urls:
+                        seen_urls.add(url)
+                        all_results.append(r)
+            except Exception:
+                pass
+
+    if not all_results:
+        return ""
+
+    # Format as markdown context
+    lines = ["\n\n## Web Search Results (Real-time Data)"]
+    lines.append(f"*{len(all_results)} results from {len(queries)} searches*\n")
+
+    for i, r in enumerate(all_results[:12], 1):
+        title = r.get("title", "")
+        url = r.get("url", "")
+        desc = r.get("description", "")
+        age = r.get("age", "")
+        age_str = f" ({age})" if age else ""
+        lines.append(f"{i}. **{title}**{age_str}")
+        lines.append(f"   {url}")
+        if desc:
+            lines.append(f"   {desc}")
+        lines.append("")
+
+    lines.append("*Use the data above to support your response with real-time sources.*")
+
+    result = "\n".join(lines)
+    print(f"[mas-tools] Web pre-fetch: {len(queries)} queries → "
+          f"{len(all_results)} results ({len(result)} chars)", flush=True)
+    return result
+
+
 # --------------------------------------------------------------------------
 # Worker Local Tools — sent to worker nodes for local execution
 # --------------------------------------------------------------------------
