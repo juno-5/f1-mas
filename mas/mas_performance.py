@@ -32,10 +32,11 @@ class PerformanceRecord:
     duration_ms: int
     output_length: int
     model: str
-    model_reason: str = ""
     # Request context
     request_status: str
     agent_count: int
+    # Optional
+    model_reason: str = ""
 
 
 def _ledger_path(date_str: str = "") -> str:
