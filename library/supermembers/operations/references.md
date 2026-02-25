@@ -12,7 +12,7 @@
 | [슈퍼멤버스가 무엇인가](https://www.notion.so/26a983e32b3280e79b7dcfe6daa945c9) | Notion | 서비스 정의 |
 | [[중요!] 슈퍼멤버스 이용 방법](https://www.notion.so/21f983e32b3280f2a6b8e4415e36e16b) | Notion | 가맹점 이용확인 처리 가이드 |
 | [슈퍼멤버스 업무 자료](https://www.notion.so/39866b75f9144616854231c1da79eb1b) | Notion | 업무 자료 허브 |
-| [슈퍼멤버스 앱 소개](https://www.notion.so/f48d45b9b1d54457aeef606ae423af09) | Notion | 앱 소개 페이지 |
+| [슈퍼멤버스 인수인계 내역](https://www.notion.so/22b983e32b328096a246fd5ccbd3dc44) | Notion | 전체 인수인계 기록 (developers에서 이동) |
 
 ## 제품 운영 정책
 
