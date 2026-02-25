@@ -6,11 +6,13 @@ MAS agent runner sends these as `tools` param, then executes tool_calls locally.
 Tool categories:
 - NAS: Node Agent System — remote PC exec, doc search
 - Infra: Service status, health checks, log access
+- Web: Brave Search API — real-time web information
 - (future) Commerce: Qoo10/Amazon/Shopee seller APIs
 - (future) Analytics: GA4, internal dashboards
 """
 
 import json
+import os
 import re
 import subprocess
 
@@ -152,6 +154,95 @@ INFRA_TOOLS = [
 ]
 
 # --------------------------------------------------------------------------
+# Web Search Tool — Brave Search API for real-time information
+# --------------------------------------------------------------------------
+
+_BRAVE_SEARCH_ENDPOINT = "https://api.search.brave.com/res/v1/web/search"
+
+WEB_SEARCH_TOOLS = [
+    {
+        "type": "function",
+        "function": {
+            "name": "web_search",
+            "description": "Search the web for real-time information using Brave Search. Use when the query asks about recent trends, current data, platform updates, market prices, news, or anything that requires up-to-date information beyond training data.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {"type": "string", "description": "Search query string"},
+                    "count": {"type": "integer", "description": "Number of results (1-10, default 5)", "default": 5},
+                },
+                "required": ["query"],
+            },
+        },
+    },
+]
+
+
+def _get_brave_api_key() -> str:
+    """Get Brave Search API key from config or environment."""
+    key = cfg.get("brave_api_key", "")
+    if not key:
+        key = os.environ.get("BRAVE_API_KEY", "")
+    if not key:
+        # Fallback: read from Gateway config (same server)
+        try:
+            import pathlib
+            gw_config = pathlib.Path.home() / ".f1crew" / "f1crew.json"
+            if gw_config.exists():
+                data = json.loads(gw_config.read_text())
+                key = data.get("tools", {}).get("web", {}).get("search", {}).get("apiKey", "")
+        except Exception:
+            pass
+    return key
+
+
+def _execute_web_search(arguments: dict) -> str:
+    """Execute Brave Search API call."""
+    query = arguments.get("query", "").strip()
+    if not query:
+        return json.dumps({"error": "Empty search query"})
+
+    api_key = _get_brave_api_key()
+    if not api_key:
+        return json.dumps({"error": "No Brave API key configured (set brave_api_key in mas-config.json or BRAVE_API_KEY env)"})
+
+    count = min(max(arguments.get("count", 5), 1), 10)
+
+    try:
+        resp = httpx.get(
+            _BRAVE_SEARCH_ENDPOINT,
+            params={"q": query, "count": count},
+            headers={
+                "Accept": "application/json",
+                "X-Subscription-Token": api_key,
+            },
+            timeout=10.0,
+        )
+
+        if resp.status_code != 200:
+            return json.dumps({"error": f"Brave API {resp.status_code}: {resp.text[:200]}"})
+
+        data = resp.json()
+        results = data.get("web", {}).get("results", [])
+
+        formatted = []
+        for r in results[:count]:
+            formatted.append({
+                "title": r.get("title", ""),
+                "url": r.get("url", ""),
+                "description": r.get("description", ""),
+                "age": r.get("age", ""),
+            })
+
+        return json.dumps({"query": query, "count": len(formatted), "results": formatted}, ensure_ascii=False)
+
+    except httpx.TimeoutException:
+        return json.dumps({"error": "Brave Search API timeout"})
+    except Exception as e:
+        return json.dumps({"error": f"Web search failed: {str(e)}"})
+
+
+# --------------------------------------------------------------------------
 # Worker Local Tools — sent to worker nodes for local execution
 # --------------------------------------------------------------------------
 
@@ -230,6 +321,10 @@ def execute_tool(name: str, arguments: dict) -> str:
     Called by the MAS agent runner when LLM returns tool_calls.
     Handles NAS tools and Infra tools.
     """
+    # --- Web Search ---
+    if name == "web_search":
+        return _execute_web_search(arguments)
+
     # --- Infra tools ---
     if name.startswith("infra_"):
         return _execute_infra_tool(name, arguments)
@@ -368,6 +463,24 @@ _NAS_RELEVANT_RE = re.compile(
     re.IGNORECASE,
 )
 
+_WEB_RELEVANT_RE = re.compile(
+    # Temporal markers — queries needing current/recent data
+    r"최근|최신|현재|지금|올해|이번.{0,2}(?:달|주|분기|년)|실시간|"
+    r"\brecent\b|\blatest\b|\bcurrent\b|\btoday\b|202[5-9]|"
+    # Platform-specific updates/changes
+    r"(?:알고리즘|정책|가이드라인|규정).{0,6}(?:변경|업데이트|개정)|"
+    r"(?:algorithm|policy|guideline).{0,6}(?:change|update)|"
+    # Market/pricing data
+    r"(?:CPM|CPC|CPA|CTR|ROAS).{0,6}(?:평균|벤치마크|비교|데이터)|"
+    r"시장.{0,4}(?:동향|트렌드|규모|점유율)|market.{0,4}(?:trend|size|share)|"
+    # News/events
+    r"뉴스|news|신규.{0,4}(?:기능|출시|런칭)|"
+    r"(?:릴스|틱톡|인스타그램|유튜브).{0,6}(?:변경|업데이트|알고리즘|정책)|"
+    # Explicit search intent
+    r"(?:검색|찾아|조사).{0,4}(?:봐|줘|해)",
+    re.IGNORECASE,
+)
+
 _INFRA_RELEVANT_RE = re.compile(
     r"서버.{0,4}(?:상태|확인|장애|재시작|다운|점검|접속|로그|에러)|"
     r"\bserver.{0,4}(?:status|down|restart|error|log|check)\b|"
@@ -413,6 +526,10 @@ def get_tools_for_query(query: str, domain: str = "") -> list[dict]:
     # Infra tools: service status, health, logs, deployment
     if _INFRA_RELEVANT_RE.search(query):
         tools.extend(INFRA_TOOLS)
+
+    # Web search: real-time information (recent trends, market data, platform updates)
+    if cfg.get("web_search_enabled", True) and _WEB_RELEVANT_RE.search(query):
+        tools.extend(WEB_SEARCH_TOOLS)
 
     # Future: commerce tools
     # if _COMMERCE_RELEVANT_RE.search(query):
