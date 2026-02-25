@@ -1,0 +1,59 @@
+id: node-batch-update
+name: "Node Batch Update"
+description: "전체 노드 일괄 명령 실행 (업데이트, 점검 등)"
+domain: nas
+
+triggers:
+  - pattern: "(?:노드|node).{0,8}(?:일괄|전체|batch|모두).{0,8}(?:업데이트|실행|명령|점검)"
+    confidence: 0.9
+  - pattern: "(?:전체|모든).{0,6}(?:노드|맥미니|PC).{0,6}(?:업데이트|패치|점검|확인)"
+    confidence: 0.85
+  - keywords: ["노드 일괄 업데이트", "batch update", "전체 노드 점검"]
+    confidence: 1.0
+
+config:
+  model: haiku
+  timeout: 120
+  max_tokens: 2048
+  fallback_to_pipeline: true
+
+steps:
+  - id: list_nodes
+    type: tool
+    tool: nas_list_nodes
+    args: {}
+
+  - id: batch_exec
+    type: nas_exec
+    tag: macmini
+    command: "uptime && sw_vers -productVersion && df -h / | tail -1"
+    timeout: 30
+
+  - id: summarize
+    type: inference
+    model: haiku
+    max_tokens: 2048
+    prompt: |
+      노드 일괄 점검 결과를 분석하여 간결한 리포트를 작성해주세요.
+
+      ## 노드 목록
+      {steps.list_nodes.output}
+
+      ## 일괄 실행 결과
+      {steps.batch_exec.output}
+
+      요청: {query}
+
+      형식:
+      - 노드별 상태 요약 (온라인/오프라인, OS 버전, 디스크 사용률)
+      - 이상 노드 하이라이트
+      - 전체 판정
+
+output:
+  format: |
+    ## Node Batch Report
+
+    {steps.summarize.output}
+
+    ---
+    _Routine: {routine.id} | {routine.duration_ms}ms_

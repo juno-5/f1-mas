@@ -1,10 +1,10 @@
 # Auto × MAS — Cumulative Summary
 
-## System Status (as of Cycle #54, 2026-02-25)
+## System Status (as of Cycle #68, 2026-02-25)
 - **MAS**: healthy, 204 personas, 190+ requests today, $10.74+ daily cost
 - **Cost**: auto model selection active — sonnet 63%, haiku 37%. Avg $0.073/request
 - **Persona utilization**: 48/204 (23.5%). Epsilon-greedy exploration (10%) active to improve diversity.
-- **Insight capture**: Active, fully verified. Per-agent domain routing. Feedback loop confirmed. Source filter active (auto-*/test: queries excluded). 18 dev insights (cleaned from 47), mkt 94, models 30.
+- **Insight capture**: Active, fully verified. Per-agent domain routing. Feedback loop confirmed. Source filter active (auto-*/test: queries excluded). 14 dev insights (cleaned from 47), mkt 14, models 4. 5 domains at 0 (low traffic, normal).
 - **Constitution**: P0 block + P1 early refusal active. Medical/legal/financial queries refused at server level.
 - **Auto model**: `auto_model_enabled=True`. Strong/weak signal scoring → sonnet/haiku selection.
 - **Library injection**: refs 3000 chars + last 5 insights (~5-7K total per agent). Feedback loop verified: agents reference injected insights in outputs.
@@ -141,3 +141,4 @@
 - 2026-02-25 (Cycle #54): **Test insight pollution fix** — 30 test-generated insights cleaned from developers library (436→218 lines). Source prefix filter added to mas_orchestrator.py. Verified: auto-* queries skip insight capture, organic queries captured normally.
 - 2026-02-25 (Cycles #55-#60): System health audit — cross-domain insight status (5 domains empty, normal), domain detection OK, failure rate 1.1% organic (17.8% with infra), cost $12.34/day ($0.065/request), persona diversity improved (Forge 7.6%), output quality mean 5124 chars.
 - 2026-02-25 (Cycle #61): **Meta-framework routing fix** — Next.js/SSR/ISR/hydration keywords added to developers domain. "Next.js App Router" was misrouted to uiux via function→domain inference. Verified: 3 test queries all route to developers.
+- 2026-02-25 (Cycles #62-#68): Library feedback loop verified (6/7 insight-derived concepts in output). Function coverage 25/91 (27.5%, traffic-driven). Stale sessions resolved (509→88, 17MB→1.4MB). Execution times normal (median 66s, P95 189s). Routines active (4 defined, 5 intercepts/day). NAS+AMM integration healthy.
