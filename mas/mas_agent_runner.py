@@ -175,13 +175,19 @@ def _select_inference_endpoint(has_tools: bool = False) -> str:
     return "chat"
 
 
-def call_xapi_inference(prompt: str, model: str = None, timeout: int = None,
+def call_xapi_inference(prompt: str = None, model: str = None, timeout: int = None,
                         user: str = "mas:agent", max_tokens: int = 8192,
-                        force_direct: bool = False) -> dict:
+                        force_direct: bool = False,
+                        messages: list[dict] | None = None) -> dict:
     """Call LLM via xapi — Gateway (/chat) or direct Anthropic (/raw).
 
     When inference_mode="direct" in config (or force_direct=True), uses /inference/raw
     which bypasses Gateway entirely → 96% token reduction for MAS inference.
+
+    Args:
+        prompt: Single user message (convenience). Ignored if messages is provided.
+        messages: Full messages array for multi-turn conversations.
+                  When provided, takes precedence over prompt.
 
     Returns {"text": str, "model": str, "error": str|None,
              "usage": {"input": int, "output": int, "cacheRead": int, "cacheWrite": int},
@@ -199,6 +205,9 @@ def call_xapi_inference(prompt: str, model: str = None, timeout: int = None,
 
     endpoint = "raw" if force_direct else _select_inference_endpoint()
 
+    # Use explicit messages array if provided, otherwise wrap prompt
+    api_messages = messages if messages else [{"role": "user", "content": prompt}]
+
     max_retries = cfg.get("inference_max_retries", 3)
     last_error = ""
     for attempt in range(max_retries):
@@ -207,7 +216,7 @@ def call_xapi_inference(prompt: str, model: str = None, timeout: int = None,
                 f"{xapi_url}/inference/{endpoint}",
                 json={
                     "model": full_model,
-                    "messages": [{"role": "user", "content": prompt}],
+                    "messages": api_messages,
                     "user": user,
                     "max_tokens": max_tokens,
                     "timeout": timeout,
@@ -329,10 +338,12 @@ def call_xapi_with_tools(
 ) -> dict:
     """Call LLM with text-based tool-use loop (ReAct pattern).
 
-    Uses existing xapi/Gateway infrastructure. Tools are described as text in the
-    prompt. When the LLM outputs <tool_call> blocks, we parse them, execute the
-    tools locally, inject <tool_result> blocks, and re-call until the LLM gives
-    a final answer without tool calls.
+    Uses multi-turn messages for prompt caching — earlier messages are cached by
+    Anthropic, reducing token cost by ~30-50% on subsequent rounds.
+
+    When the LLM outputs <tool_call> blocks, we parse them, execute the tools
+    locally, inject <tool_result> blocks as a new user message, and re-call
+    until the LLM gives a final answer without tool calls.
 
     Returns same format as call_xapi_inference.
     """
@@ -350,10 +361,12 @@ def call_xapi_with_tools(
 
     total_usage = {"input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0}
     total_cost = 0.0
-    conversation = augmented_prompt
+    # Multi-turn messages array — earlier messages get prompt-cached by Anthropic
+    messages = [{"role": "user", "content": augmented_prompt}]
 
     for round_i in range(max_tool_rounds + 1):
-        result = call_xapi_inference(conversation, model=model, timeout=timeout, user=user)
+        result = call_xapi_inference(model=model, timeout=timeout, user=user,
+                                     messages=messages)
 
         if result.get("error"):
             result["usage"] = _merge_usage(total_usage, result.get("usage", {}))
@@ -407,17 +420,14 @@ def call_xapi_with_tools(
                 f"<tool_result name=\"{tool_name}\">\n{tool_result}\n</tool_result>"
             )
 
-        # Build continuation prompt: original + assistant response + tool results
-        # Strip tool_call blocks from assistant text for cleaner context
-        clean_text = _TOOL_CALL_RE.sub("", text).strip()
-        continuation = (
-            f"{conversation}\n\n"
-            f"## Assistant Response\n{clean_text}\n\n"
-            f"## Tool Results\n" + "\n\n".join(tool_results) + "\n\n"
-            f"Continue your response using the tool results above. "
-            f"Do NOT repeat the tool calls."
-        )
-        conversation = continuation
+        # Append assistant response + tool results as new messages (multi-turn).
+        # Earlier messages get prompt-cached → no context duplication.
+        messages.append({"role": "assistant", "content": text})
+        messages.append({"role": "user", "content":
+            "## Tool Results\n" + "\n\n".join(tool_results) + "\n\n"
+            "Continue your response using the tool results above. "
+            "Do NOT repeat the tool calls."
+        })
 
     # Max rounds exceeded — return last text
     clean_text = _TOOL_CALL_RE.sub("", text).strip() if 'text' in dir() else ""
