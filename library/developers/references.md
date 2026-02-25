@@ -77,7 +77,7 @@
 |----------|-----|------|
 | [슈퍼멤버스 챗봇 콘솔 인수인계서 (1)](https://www.notion.so/1-2fc983e32b3280af9bfec994039cc6b8) | Notion | 챗봇 콘솔 5개 영역 구조, CX팀 KPI 대시보드 (Analytics), 첫 응대 시간 지표 |
 | [슈퍼멤버스 챗봇 인수인계서](https://www.notion.so/1-2fc983e32b3280499a07dfcf4dbb92a8) | Notion | QA_DB 3단 구조 (카테고리→세부질문→답변), 챗봇 시스템 추적/보완 가이드 |
-| [슈퍼멤버스 인수인계 내역](https://www.notion.so/22b983e32b328096a246fd5ccbd3dc44) | Notion | 전체 인수인계 기록 |
+| ~~[슈퍼멤버스 인수인계 내역](https://www.notion.so/22b983e32b328096a246fd5ccbd3dc44)~~ | — | → supermembers/operations로 이동 (개발 아닌 운영 문서) |
 
 ### 분석 & 테스트
 

@@ -61,7 +61,7 @@
 | [wadiz_email](https://docs.google.com/spreadsheets/d/1Po-WWKASekxhyZbdZpd2RQ03uGeJxD_V_XL0ORGB6P8/) | cosduck-app | wadiz 이메일 캠페인 (발송수/전환수/오픈율/가입전환율) |
 | [희다 화장품](https://docs.google.com/spreadsheets/d/1WjdUtl-Wr1CaUeR2GT2K115PqkPHioLfgBk1-4gRZdA/) | cosduck-app | HEEDA 제품 마스터 (카테고리/바코드/시리얼) |
 | [희다 구매지원금](https://docs.google.com/spreadsheets/d/1hegsZBuO2LWvPxobVCKym6TEI75dj3AvdpQXPutu_lM/) | cosduck-app | HEEDA 구매지원금 PayPal 송금 데이터 |
-| [희다 매출 관리](https://docs.google.com/spreadsheets/d/1UwUClZBTxhsb_WPU0J6il-ec7027-3MwtlkAi4fRewQ/) | cosduck-app | HEEDA 매출 트래킹 (private) |
+| ~~희다 매출 관리~~ | — | 🔒 비공개 (매출 데이터) — 삭제 |
 | [수출바우처 사업실적증명서](https://docs.google.com/spreadsheets/d/1e2_YEgUcWxCr459YtV7AUKcNBYdWw7h2d57a73KPWAU/) | 데이바우처 | 수출바우처 참여인력 증명서 (성명/학위/전문분야) |
 
 ## Operations (Slack 파일 업로드)
@@ -82,7 +82,7 @@
 | [슈퍼멤버스가 무엇인가](https://www.notion.so/26a983e32b3280e79b7dcfe6daa945c9) | Notion | 서비스 정의 |
 | [[중요!] 슈퍼멤버스 이용 방법](https://www.notion.so/21f983e32b3280f2a6b8e4415e36e16b) | Notion | 가맹점 이용확인 처리 가이드 (확인코드 55, 블로거 방문 인증) |
 | [슈퍼멤버스 업무 자료](https://www.notion.so/39866b75f9144616854231c1da79eb1b) | Notion | 업무 자료 허브 |
-| [슈퍼멤버스 앱 소개](https://www.notion.so/f48d45b9b1d54457aeef606ae423af09) | Notion | 앱 소개 페이지 |
+| ~~슈퍼멤버스 앱 소개~~ | — | 🗑 삭제 (빈 페이지 — 오래된 자료) |
 | [24.12.20 코스덕/슈멤 팀별 우선순위 설정 회의](https://www.notion.so/24-12-20-162983e32b3280d5872fe62534f01294) | Notion | 팀별 우선순위 회의록 |
 
 ### 기존 Slack 소스
@@ -148,7 +148,7 @@
 | [크리에이터 수집용 크롤링 방법](https://www.notion.so/2d8983e32b32801ca904e83de6889f8b) | Notion | 코스덕 크롤링 앱(확장 프로그램) 사용법 |
 
 | [FBT 입고 프로세스](https://www.notion.so/FBT-2e3983e32b3280d4a56fe296f3872aa7) | Notion | FBT 포털 접속 → 인바운드 오더 → SKU별 입고 |
-| [커머스 비용 정산](https://www.notion.so/2e9983e32b3280d189d9e1ff03af7e00) | Notion | 커머스 비용 기록 시트 연동 |
+| ~~커머스 비용 정산~~ | — | 🔒 비공개 (매출/비용 데이터) — 삭제 |
 
 ### 광고 & 캠페인 프로세스
 

@@ -97,7 +97,7 @@
 
 | Resource | Source | 비고 |
 |----------|--------|------|
-| [캠페인 정산 시트](https://docs.google.com/spreadsheets/d/1vTlYhi1a8tiTG0cce4GkbUT_OlzugrTiPi-bt5I5Hu8/) | superchart-youtube_reels | 입금/세금계산서 정산 트래킹 (182건) |
+| ~~캠페인 정산 시트~~ | — | 🔒 비공개 (세부 매출 데이터 포함) — 삭제 |
 | [리드/미팅/유료전환 분석](https://docs.google.com/spreadsheets/d/17rbcp5He5-7tLV0vEUvTAzCxbxWKZBnAJWgqaty2S6A/) | superchart-youtube_reels | 월별 리드→미팅→신규유료 전환율 분석 (코드/리드/지인/대행사별) |
 
 ---
