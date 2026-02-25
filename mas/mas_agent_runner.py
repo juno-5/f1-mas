@@ -496,7 +496,8 @@ def run_agent(
         # treat as partial success rather than discarding the work.
         if partial_text:
             usage = result.get("usage", {})
-            tokens_used = usage.get("input", 0) + usage.get("output", 0)
+            tokens_used = (usage.get("input", 0) + usage.get("output", 0)
+                    + usage.get("cacheRead", 0) + usage.get("cacheWrite", 0))
             cost_usd = result.get("cost_usd", 0.0)
             print(f"[agent-runner] {callsign} partial ({duration_ms}ms, {len(partial_text)} chars, "
                   f"{_fmt_tokens(usage)}, ${cost_usd:.4f}) — {error_msg}", flush=True)
@@ -532,7 +533,8 @@ def run_agent(
 
     text = filter_output(result["text"])
     usage = result.get("usage", {})
-    tokens_used = usage.get("input", 0) + usage.get("output", 0)
+    tokens_used = (usage.get("input", 0) + usage.get("output", 0)
+                    + usage.get("cacheRead", 0) + usage.get("cacheWrite", 0))
     cost_usd = result.get("cost_usd", 0.0)
 
     if not text.strip():
@@ -693,7 +695,8 @@ def _run_agents_batch(
                 "cacheRead": b_cache_read,
                 "cacheWrite": b_cache_write,
             }
-            tokens_used = usage.get("input", 0) + usage.get("output", 0)
+            tokens_used = (usage.get("input", 0) + usage.get("output", 0)
+                    + usage.get("cacheRead", 0) + usage.get("cacheWrite", 0))
             cost_usd = item.get("cost_usd", 0.0)
 
             if not text.strip():
@@ -1016,7 +1019,8 @@ def run_synthesis(request_id: str, prompt: str) -> dict:
 
     text = filter_output(result["text"])
     usage = result.get("usage", {})
-    tokens_used = usage.get("input", 0) + usage.get("output", 0)
+    tokens_used = (usage.get("input", 0) + usage.get("output", 0)
+                    + usage.get("cacheRead", 0) + usage.get("cacheWrite", 0))
     cost_usd = result.get("cost_usd", 0.0)
 
     print(f"[agent-runner] MAS-Synth completed ({duration_ms}ms, {len(text)} chars, "

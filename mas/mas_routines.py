@@ -252,7 +252,8 @@ def _exec_inference_step(step: dict, ctx: dict) -> str:
 
     # Track tokens
     usage = result.get("usage", {})
-    tokens = usage.get("input", 0) + usage.get("output", 0)
+    tokens = (usage.get("input", 0) + usage.get("output", 0)
+              + usage.get("cacheRead", 0) + usage.get("cacheWrite", 0))
     ctx.setdefault("_tokens", 0)
     ctx["_tokens"] += tokens
     ctx.setdefault("_cost", 0.0)
