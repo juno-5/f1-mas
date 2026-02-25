@@ -157,6 +157,10 @@ class PersonaIndex:
         try:
             mtime = os.path.getmtime(registry_path)
             if mtime == self._registry_mtime and self._loaded:
+                # Still attempt tribe/squad load if not yet populated
+                # (tribe_registry_path may have been added to config after boot)
+                if not self._tribes:
+                    self.load_tribes()
                 return
             self._registry_mtime = mtime
         except OSError:
