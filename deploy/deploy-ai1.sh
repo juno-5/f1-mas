@@ -53,10 +53,17 @@ echo "[8/9] Deploying scripts..."
 scp "$SCRIPT_DIR"/scripts/*.py "$SERVER:~/.f1crew/scripts/mas/" 2>/dev/null || true
 scp "$SCRIPT_DIR"/scripts/*.sh "$SERVER:~/.f1crew/scripts/mas/" 2>/dev/null || true
 
-# 9. Systemd service
+# 9. Systemd service (conditional daemon-reload — avoids cascade restarts)
 echo "[9/9] Deploying systemd service..."
-scp "$SCRIPT_DIR/systemd/mas.service" "$SERVER:~/.config/systemd/user/mas.service"
-ssh "$SERVER" 'systemctl --user daemon-reload'
+LOCAL_HASH=$(md5sum "$SCRIPT_DIR/systemd/mas.service" 2>/dev/null | cut -d' ' -f1)
+REMOTE_HASH=$(ssh "$SERVER" 'md5sum ~/.config/systemd/user/mas.service 2>/dev/null | cut -d" " -f1')
+if [ "$LOCAL_HASH" != "$REMOTE_HASH" ]; then
+    echo "  Service file changed — copying + daemon-reload"
+    scp "$SCRIPT_DIR/systemd/mas.service" "$SERVER:~/.config/systemd/user/mas.service"
+    ssh "$SERVER" 'systemctl --user daemon-reload'
+else
+    echo "  Service file unchanged — skipping daemon-reload"
+fi
 
 echo ""
 echo "=== Deploy complete ==="
