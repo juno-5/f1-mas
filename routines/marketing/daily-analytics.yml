@@ -1,0 +1,111 @@
+id: daily-analytics
+name: "Daily Marketing Analytics Report"
+description: "Meta Ads + GA4 + Mixpanel 실제 API 데이터 기반 리포트 (할루시네이션 방지)"
+domain: marketing
+
+triggers:
+  - pattern: "(?:데일리|일일|매일).{0,6}(?:마케팅|광고|애널리틱스).{0,6}(?:리포트|분석|보고)"
+    confidence: 0.95
+  - pattern: "(?:마케팅|광고).{0,6}(?:전일|어제|오늘).{0,6}(?:리포트|분석|보고|요약)"
+    confidence: 0.9
+  - keywords: ["데일리 마케팅 리포트", "daily marketing report", "통합 리포트"]
+    confidence: 1.0
+
+config:
+  model: sonnet
+  timeout: 120
+  max_tokens: 8192
+  fallback_to_pipeline: false  # 폴백 금지 — 데이터 없으면 실패해야 함
+
+steps:
+  # Step 1: 전일 데이터 수집 (API 실제 호출)
+  - id: fetch_yesterday
+    type: nas_exec
+    tag: macmini
+    command: |
+      cd ~/.f1crew/scripts/mas && python3 fetch-analytics.py 2>&1
+    timeout: 60
+
+  # Step 2: 오늘 현재까지 데이터 (18시 리포트용)
+  - id: fetch_today
+    type: nas_exec
+    tag: macmini
+    command: |
+      cd ~/.f1crew/scripts/mas && python3 fetch-analytics.py --today 2>&1
+    timeout: 60
+
+  # Step 3: 주간 추이 데이터
+  - id: fetch_week
+    type: nas_exec
+    tag: macmini
+    command: |
+      cd ~/.f1crew/scripts/mas && python3 fetch-analytics.py --week --source meta 2>&1
+    timeout: 60
+
+  # Step 4: 분석 (LLM은 분석만 — 숫자 생성 금지)
+  - id: analyze
+    type: inference
+    model: sonnet
+    max_tokens: 8192
+    prompt: |
+      아래 데이터는 실제 API에서 방금 수집한 원본 JSON입니다.
+
+      ## 절대 규칙 (반드시 준수)
+      1. 아래 JSON에 없는 숫자를 절대 만들어내지 마세요.
+      2. API에서 0이 나오면 0으로 보고하세요. "데이터 없음"이라고 쓰세요.
+      3. "purchase", "구매" 이벤트는 Mixpanel에 존재하지 않습니다. 언급하지 마세요.
+      4. GA4에 revenue/매출 데이터가 0이면 "매출 데이터 없음"이라고 명시하세요.
+      5. 모든 숫자 옆에 데이터 소스를 표기하세요: (Meta API), (GA4 API), (Mixpanel API)
+      6. 추정치를 쓸 때는 반드시 "추정"이라고 명시하세요.
+      7. API 에러가 있으면 해당 섹션에 "⚠️ API 에러: {에러내용}"으로 표기하세요.
+
+      ## 전일 데이터 (Raw JSON)
+      ```json
+      {steps.fetch_yesterday.output}
+      ```
+
+      ## 오늘 현재까지 (Raw JSON)
+      ```json
+      {steps.fetch_today.output}
+      ```
+
+      ## 주간 Meta Ads (Raw JSON)
+      ```json
+      {steps.fetch_week.output}
+      ```
+
+      ## 리포트 형식
+
+      :chart_with_upwards_trend: *슈퍼멤버스 데일리 마케팅 리포트*
+
+      【Meta Ads — 전일】
+      - 지출, 노출, 클릭, CTR, 리드(actions에서 lead 타입), CPL
+      - 전일 대비 변화율 (주간 데이터에서 계산)
+      - CPL 기준 TOP 3 크리에이티브 (top_ads에서)
+
+      【Mixpanel — 전일】
+      - 주요 이벤트: impressionHome, viewCampaignDetail, clickCampaignApplyBtn, submitApplicationComplete, registerSucceeded
+      - 퍼널 전환율 계산 (각 단계별 비율)
+      - 유니크 유저 수 (unique_users에서)
+
+      【GA4 — 전일】
+      - 앱 (325653255): 세션, 사용자, 신규사용자, 이탈률
+      - 사장님사이트 (283026891): 세션, 사용자, 평균체류시간
+
+      【주간 추이 요약】
+      - 7일 Meta Ads 지출/클릭/리드 합계
+
+      【인사이트 및 개선사항】
+      - 이상 지표 감지시 알림
+      - 액션 아이템 제안
+
+      ---
+      _데이터 소스: Meta Ads API v21.0, GA4 Data API v1beta, Mixpanel Segmentation API_
+      _수집 시각: {steps.fetch_yesterday.output 중 fetch_timestamp}_
+
+output:
+  format: |
+    {steps.analyze.output}
+
+    ---
+    _Routine: {routine.id} | Data verified via API | {routine.duration_ms}ms_
