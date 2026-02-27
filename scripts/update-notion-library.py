@@ -31,9 +31,12 @@ PRODUCT_EMOJI = {
     "commerce": "🛒",
 }
 
+# Sections to exclude from Notion upload (matched against H2/H3 titles)
+SKIP_SECTIONS = ["수출바우처"]
 
-def notion_request(method, path, body=None):
-    """Make a Notion API request."""
+
+def notion_request(method, path, body=None, timeout=30, retries=3):
+    """Make a Notion API request with retry."""
     url = f"https://api.notion.com/v1/{path}"
     headers = {
         "Authorization": f"Bearer {TOKEN}",
@@ -41,14 +44,23 @@ def notion_request(method, path, body=None):
         "Content-Type": "application/json",
     }
     data = json.dumps(body).encode() if body else None
-    req = urllib.request.Request(url, data=data, headers=headers, method=method)
-    try:
-        with urllib.request.urlopen(req, timeout=30) as resp:
-            return json.loads(resp.read())
-    except urllib.error.HTTPError as e:
-        err_body = e.read().decode()
-        print(f"  API error {e.code}: {err_body[:200]}")
-        return None
+    for attempt in range(retries):
+        req = urllib.request.Request(url, data=data, headers=headers, method=method)
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                return json.loads(resp.read())
+        except urllib.error.HTTPError as e:
+            err_body = e.read().decode()
+            print(f"  API error {e.code}: {err_body[:200]}")
+            return None
+        except (TimeoutError, urllib.error.URLError) as e:
+            if attempt < retries - 1:
+                wait = 2 ** (attempt + 1)
+                print(f"  Timeout (attempt {attempt+1}/{retries}), retrying in {wait}s...")
+                time.sleep(wait)
+            else:
+                print(f"  Failed after {retries} attempts: {e}")
+                return None
 
 
 def get_all_children(block_id):
@@ -70,19 +82,22 @@ def get_all_children(block_id):
 
 
 def delete_block(block_id):
-    """Archive (delete) a block."""
-    return notion_request("DELETE", f"blocks/{block_id}")
+    """Archive (delete) a block. Fast fail for already-archived blocks."""
+    return notion_request("DELETE", f"blocks/{block_id}", timeout=10, retries=1)
 
 
-def append_children(block_id, children):
-    """Append children blocks (max 100 per call)."""
-    for i in range(0, len(children), 100):
-        batch = children[i:i+100]
-        result = notion_request("PATCH", f"blocks/{block_id}/children", {"children": batch})
+def append_children(block_id, children, batch_size=50):
+    """Append children blocks in batches."""
+    total = len(children)
+    for i in range(0, total, batch_size):
+        batch = children[i:i+batch_size]
+        batch_num = i // batch_size + 1
+        result = notion_request("PATCH", f"blocks/{block_id}/children", {"children": batch}, timeout=60)
         if not result:
-            print(f"  Failed to append batch {i//100 + 1}")
+            print(f"  Failed batch {batch_num} (items {i}-{i+len(batch)})")
             return False
-        time.sleep(0.35)
+        print(f"  Uploaded {min(i+batch_size, total)}/{total} blocks...")
+        time.sleep(0.5)
     return True
 
 
@@ -112,19 +127,29 @@ def callout(text, emoji="📚"):
         }
     }
 
-def bulleted_item_link(title, url, desc=""):
-    """Create a bulleted list item with a link and optional description."""
+def bulleted_item_link(title, url, desc="", date="", source_icon=""):
+    """Create a bulleted list item with source icon, link, optional description, and code-formatted date."""
     rich = []
+    # Source type icon prefix (🅽, Ⓖ, 💻, 💬)
+    if source_icon:
+        rich.append({"type": "text", "text": {"content": f"{source_icon} "}, "annotations": {"color": "gray"}})
     if url and url.startswith("http"):
         rich.append({"type": "text", "text": {"content": title, "link": {"url": url}}, "annotations": {"bold": True}})
     else:
         rich.append({"type": "text", "text": {"content": title}, "annotations": {"bold": True}})
     if desc:
         rich.append({"type": "text", "text": {"content": f" — {desc}"}})
+    if date:
+        rich.append({"type": "text", "text": {"content": "  "}})
+        rich.append({"type": "text", "text": {"content": date}, "annotations": {"code": True, "color": "gray"}})
     return {"type": "bulleted_list_item", "bulleted_list_item": {"rich_text": rich}}
 
-def bulleted_item_text(text):
-    return {"type": "bulleted_list_item", "bulleted_list_item": {"rich_text": [{"type": "text", "text": {"content": text}}]}}
+def bulleted_item_text(text, date=""):
+    rich = [{"type": "text", "text": {"content": text}}]
+    if date:
+        rich.append({"type": "text", "text": {"content": "  "}})
+        rich.append({"type": "text", "text": {"content": date}, "annotations": {"code": True, "color": "gray"}})
+    return {"type": "bulleted_list_item", "bulleted_list_item": {"rich_text": rich}}
 
 def toc():
     return {"type": "table_of_contents", "table_of_contents": {"color": "default"}}
@@ -150,6 +175,8 @@ def parse_references_md(filepath):
     blocks = []
     lines = content.split('\n')
     i = 0
+    skipping = False  # True when inside a SKIP_SECTIONS section
+    skip_level = 0    # heading level that triggered skip (2 or 3)
 
     while i < len(lines):
         line = lines[i].rstrip()
@@ -161,12 +188,19 @@ def parse_references_md(filepath):
 
         # H1 - skip (we add our own product heading)
         if line.startswith('# '):
+            skipping = False
             i += 1
             continue
 
         # H2 → Notion heading_2
         if line.startswith('## '):
             title = line[3:].strip()
+            if any(s in title for s in SKIP_SECTIONS):
+                skipping = True
+                skip_level = 2
+                i += 1
+                continue
+            skipping = False
             blocks.append(heading2(title))
             i += 1
             continue
@@ -174,7 +208,22 @@ def parse_references_md(filepath):
         # H3 → Notion heading_3
         if line.startswith('### '):
             title = line[4:].strip()
+            if skipping and skip_level <= 2:
+                # H3 inside a skipped H2 — keep skipping
+                i += 1
+                continue
+            if any(s in title for s in SKIP_SECTIONS):
+                skipping = True
+                skip_level = 3
+                i += 1
+                continue
+            skipping = False
             blocks.append(heading3(title))
+            i += 1
+            continue
+
+        # Skip all content inside a skipped section
+        if skipping:
             i += 1
             continue
 
@@ -190,18 +239,41 @@ def parse_references_md(filepath):
                 if len(cells) >= 2:
                     title_cell = cells[0] if cells else ""
                     link_cell = cells[1] if len(cells) > 1 else ""
-                    desc_cell = cells[3] if len(cells) > 3 else (cells[2] if len(cells) > 2 else "")
+
+                    # Detect 5-column (생성일|등록일|비고) vs 4-column (등록일|비고)
+                    if len(cells) >= 5:
+                        created_cell = cells[2].strip().strip('`') if cells[2].strip() != '—' else ""
+                        reg_cell = cells[3].strip().strip('`') if cells[3].strip() != '—' else ""
+                        desc_cell = cells[4] if len(cells) > 4 else ""
+                    elif len(cells) >= 4:
+                        created_cell = ""
+                        reg_cell = cells[2].strip().strip('`') if cells[2].strip() != '—' else ""
+                        desc_cell = cells[3] if len(cells) > 3 else ""
+                    else:
+                        created_cell = ""
+                        reg_cell = ""
+                        desc_cell = cells[2] if len(cells) > 2 else ""
+
+                    # Build date display: "생성일 (등록일)" or just one
+                    date_str = created_cell or reg_cell or ""
 
                     # Skip strikethrough (deleted/private items)
                     if title_cell.startswith('~~') or '🔒' in row or '🗑' in row:
                         i += 1
                         continue
 
-                    # Extract URL from link column: [Source](url)
+                    # Extract URL and source icon from link column: [🅽 Notion](url)
                     link_match = re.search(r'\[([^\]]+)\]\(([^)]+)\)', link_cell)
                     url = ""
+                    source_icon = ""
                     if link_match:
+                        source_label = link_match.group(1)
                         url = link_match.group(2)
+                        # Extract icon from source label (e.g., "🅽 Notion" → "🅽")
+                        for icon in ["🅽", "Ⓖ", "💻", "💬"]:
+                            if icon in source_label:
+                                source_icon = icon
+                                break
 
                     # Also check if link is in title cell (old format fallback)
                     if not url:
@@ -216,12 +288,12 @@ def parse_references_md(filepath):
                         continue
 
                     if url and url.startswith("http"):
-                        blocks.append(bulleted_item_link(title, url, desc_cell))
+                        blocks.append(bulleted_item_link(title, url, desc_cell, date_str, source_icon))
                     else:
                         text = title
                         if desc_cell:
                             text += f" — {desc_cell}"
-                        blocks.append(bulleted_item_text(text))
+                        blocks.append(bulleted_item_text(text, date_str))
 
                 i += 1
             continue
@@ -243,27 +315,44 @@ def main():
         print("ERROR: NOTION_API_TOKEN not set")
         sys.exit(1)
 
+    skip_delete = "--skip-delete" in sys.argv
+
     print(f"=== Notion Library Page Updater (4-Product Structure) ===")
     print(f"Page: {PAGE_ID}")
 
-    # Step 1: Get existing blocks
-    print("\n[1] Fetching existing blocks...")
-    existing = get_all_children(PAGE_ID)
-    print(f"  Found {len(existing)} blocks")
+    if skip_delete:
+        print("\n[1-2] Skipping delete (--skip-delete)")
+    else:
+        # Step 1: Get existing blocks
+        print("\n[1] Fetching existing blocks...")
+        existing = get_all_children(PAGE_ID)
+        print(f"  Found {len(existing)} blocks")
 
-    # Step 2: Delete non-archived blocks
-    print(f"\n[2] Deleting existing blocks...")
-    to_delete = [b for b in existing if not b.get("archived", False)]
-    print(f"  {len(to_delete)} active blocks to delete")
-    deleted = 0
-    for block in to_delete:
-        result = delete_block(block["id"])
-        if result:
-            deleted += 1
-        time.sleep(0.15)
-        if deleted % 20 == 0 and deleted > 0:
-            print(f"  Deleted {deleted}/{len(to_delete)}...")
-    print(f"  Deleted {deleted} blocks")
+    # Step 2: Delete active blocks (silently skip archived)
+    if not skip_delete:
+        print(f"\n[2] Deleting existing blocks...")
+        total = len(existing)
+        print(f"  {total} blocks to process")
+        deleted = 0
+        skipped = 0
+        preserved = 0
+        for block in existing:
+            btype = block.get("type", "")
+            if btype in ("child_page", "child_database"):
+                preserved += 1
+            elif block.get("archived", False):
+                skipped += 1
+            else:
+                result = delete_block(block["id"])
+                if result:
+                    deleted += 1
+                else:
+                    skipped += 1  # archived at API level or failed — skip silently
+            time.sleep(0.1)
+            done = deleted + skipped + preserved
+            if done % 50 == 0 and done > 0:
+                print(f"  Progress {done}/{total} (deleted={deleted}, skipped={skipped}, preserved={preserved})...")
+        print(f"  Done: {deleted} deleted, {skipped} skipped, {preserved} child pages preserved")
 
     # Step 3: Build new content
     print("\n[3] Building new content...")

@@ -6,60 +6,60 @@
 
 ## 서비스 개요 & 온보딩
 
-| 문서명 | 링크 | 등록일 | 비고 |
-|--------|------|--------|------|
-| 슈퍼멤버스 (메인) | [Notion](https://www.notion.so/fe909eb83ed34bd4817f18239a0a3074) | 2026-02-24 | 워크스페이스 루트 |
-| 슈퍼멤버스 서비스에 대한 이해 | [Notion](https://www.notion.so/2fe983e32b3281ad93ffd58f328a47c9) | 2026-02-24 | 신규 입사자 온보딩 — 소개 노션, 사이트 체험, 소구 포인트 |
-| 슈퍼멤버스 이해하기 | [Notion](https://www.notion.so/16c983e32b328086b930e3b9b84b4ac2) | 2026-02-24 | 소구 포인트 (체험단 모집 불필요, 등급별 혜택, 보고서) |
-| 슈퍼멤버스가 무엇인가 | [Notion](https://www.notion.so/26a983e32b3280e79b7dcfe6daa945c9) | 2026-02-24 | 서비스 정의 |
-| [중요!] 슈퍼멤버스 이용 방법 | [Notion](https://www.notion.so/21f983e32b3280f2a6b8e4415e36e16b) | 2026-02-24 | 가맹점 이용확인 처리 가이드 |
-| 슈퍼멤버스 업무 자료 | [Notion](https://www.notion.so/39866b75f9144616854231c1da79eb1b) | 2026-02-24 | 업무 자료 허브 |
-| 슈퍼멤버스 인수인계 내역 | [Notion](https://www.notion.so/22b983e32b328096a246fd5ccbd3dc44) | 2026-02-24 | 전체 인수인계 기록 |
-| 24.12.20 코스덕/슈멤 팀별 우선순위 설정 회의 | [Notion](https://www.notion.so/24-12-20-162983e32b3280d5872fe62534f01294) | 2026-02-24 | 팀별 우선순위 회의록 |
+| 문서명 | 링크 | 생성일 | 등록일 | 비고 |
+|--------|------|--------|--------|------|
+| 슈퍼멤버스 (메인) | [🅽 Notion](https://www.notion.so/fe909eb83ed34bd4817f18239a0a3074) | `2023-05-12` | `2026-02-24` | 워크스페이스 루트 |
+| 슈퍼멤버스 서비스에 대한 이해 | [🅽 Notion](https://www.notion.so/2fe983e32b3281ad93ffd58f328a47c9) | `2026-02-05` | `2026-02-24` | 신규 입사자 온보딩 — 소개 노션, 사이트 체험, 소구 포인트 |
+| 슈퍼멤버스 이해하기 | [🅽 Notion](https://www.notion.so/16c983e32b328086b930e3b9b84b4ac2) | `2024-12-30` | `2026-02-24` | 소구 포인트 (체험단 모집 불필요, 등급별 혜택, 보고서) |
+| 슈퍼멤버스가 무엇인가 | [🅽 Notion](https://www.notion.so/26a983e32b3280e79b7dcfe6daa945c9) | `2025-09-10` | `2026-02-24` | 서비스 정의 |
+| [중요!] 슈퍼멤버스 이용 방법 | [🅽 Notion](https://www.notion.so/21f983e32b3280f2a6b8e4415e36e16b) | `2025-06-27` | `2026-02-24` | 가맹점 이용확인 처리 가이드 |
+| 슈퍼멤버스 업무 자료 | [🅽 Notion](https://www.notion.so/39866b75f9144616854231c1da79eb1b) | `2024-07-30` | `2026-02-24` | 업무 자료 허브 |
+| 슈퍼멤버스 인수인계 내역 | [🅽 Notion](https://www.notion.so/22b983e32b328096a246fd5ccbd3dc44) | `2025-07-09` | `2026-02-24` | 전체 인수인계 기록 |
+| 24.12.20 코스덕/슈멤 팀별 우선순위 설정 회의 | [🅽 Notion](https://www.notion.so/24-12-20-162983e32b3280d5872fe62534f01294) | `2024-12-20` | `2026-02-24` | 팀별 우선순위 회의록 |
 
 ## 제품 운영 정책
 
-| 문서명 | 링크 | 등록일 | 비고 |
-|--------|------|--------|------|
-| 슈퍼멤버스 제품 운영 정책 | [Notion DB](https://www.notion.so/264983e32b3280cb9814f22f5201f5e5) | 2026-02-24 | 제품 운영 정책 데이터베이스 |
-| 슈퍼멤버스 제품 기본 운영 구조 (with zoey) | [Notion](https://www.notion.so/with-zoey-2f4983e32b328169afede4d72667b686) | 2026-02-24 | 제품 운영 기본 구조 |
-| 슈퍼멤버스_제품 체험단 기본 매뉴얼 | [Notion](https://www.notion.so/_-2f4983e32b32812a8287f94759e0b6d3) | 2026-02-24 | 체험단 기본 매뉴얼 |
-| 슈퍼멤버스 제품 이용 업체 특이사항 | [Notion](https://www.notion.so/2f4983e32b3281c7807bdac2aef8aefc) | 2026-02-24 | 업체별 특이사항 |
-| 슈퍼멤버스 제품 진행 프로세스 | [Notion](https://www.notion.so/1a1983e32b328138a245f55f1325bc99) | 2026-02-24 | 제품 광고 진행 절차 |
-| 슈퍼멤버스 광고 검수 프로세스 (제품) | [Notion](https://www.notion.so/1a1983e32b32817bb268f5714400e28b) | 2026-02-24 | 제품 광고 검수 체크리스트 |
-| 슈퍼멤버스 제품 결제 방식 | [Notion](https://www.notion.so/264983e32b328010af18c38fe9596688) | 2026-02-24 | 제품 결제 방식 정의 |
+| 문서명 | 링크 | 생성일 | 등록일 | 비고 |
+|--------|------|--------|--------|------|
+| 슈퍼멤버스 제품 운영 정책 | [🅽 Notion DB](https://www.notion.so/264983e32b3280cb9814f22f5201f5e5) | `2025-09-04` | `2026-02-24` | 제품 운영 정책 데이터베이스 |
+| 슈퍼멤버스 제품 기본 운영 구조 (with zoey) | [🅽 Notion](https://www.notion.so/with-zoey-2f4983e32b328169afede4d72667b686) | `2026-01-26` | `2026-02-24` | 제품 운영 기본 구조 |
+| 슈퍼멤버스_제품 체험단 기본 매뉴얼 | [🅽 Notion](https://www.notion.so/_-2f4983e32b32812a8287f94759e0b6d3) | `2026-01-26` | `2026-02-24` | 체험단 기본 매뉴얼 |
+| 슈퍼멤버스 제품 이용 업체 특이사항 | [🅽 Notion](https://www.notion.so/2f4983e32b3281c7807bdac2aef8aefc) | `2026-01-26` | `2026-02-24` | 업체별 특이사항 |
+| 슈퍼멤버스 제품 진행 프로세스 | [🅽 Notion](https://www.notion.so/1a1983e32b328138a245f55f1325bc99) | `2025-02-21` | `2026-02-24` | 제품 광고 진행 절차 |
+| 슈퍼멤버스 광고 검수 프로세스 (제품) | [🅽 Notion](https://www.notion.so/1a1983e32b32817bb268f5714400e28b) | `2025-02-21` | `2026-02-24` | 제품 광고 검수 체크리스트 |
+| 슈퍼멤버스 제품 결제 방식 | [🅽 Notion](https://www.notion.so/264983e32b328010af18c38fe9596688) | `2025-09-04` | `2026-02-24` | 제품 결제 방식 정의 |
 
 ## 매장 운영 프로세스
 
-| 문서명 | 링크 | 등록일 | 비고 |
-|--------|------|--------|------|
-| 슈퍼멤버스 매장 진행 프로세스 | [Notion](https://www.notion.so/1a1983e32b32819a9df9c8a51319e3a6) | 2026-02-24 | 매장 광고 진행 절차 |
-| 슈퍼멤버스 광고 검수 프로세스 (매장) | [Notion](https://www.notion.so/1a1983e32b3281438ca9f230f7af390c) | 2026-02-24 | 매장 광고 검수 절차 |
-| 슈퍼멤버스 매장 > 광고 등록 프로세스 | [Notion](https://www.notion.so/1bc983e32b32801d88d0d398db972ab1) | 2026-02-24 | 매장 광고 등록 절차 |
-| 슈퍼멤버스 가맹점 이용 프로세스 (매장) | [Notion](https://www.notion.so/03dd02487d9b449c9edbb8dcef5a9bd8) | 2026-02-24 | 가맹점 매장 이용 절차 |
-| 슈퍼멤버스 가맹점 이용 프로세스 (제품) | [Notion](https://www.notion.so/8651f1db48ae42e8bcc86df8d47c8a2e) | 2026-02-24 | 광고 등록 절차 (키워드, 등급별 품목) |
-| 유저에게 매장이 보이는 조건 | [Notion](https://www.notion.so/263983e32b3280b68c9bd67c28807545) | 2026-02-24 | 매장 노출 조건 |
-| 매장 정렬 로직 | [Notion](https://www.notion.so/263983e32b32800c9367dcb0b7beab2e) | 2026-02-24 | 매장 정렬 알고리즘 |
-| 네이버 플레이스 키워드 세팅 가이드북 | [Notion](https://www.notion.so/259983e32b32804c9a20c5338039a61e) | 2026-02-24 | 네이버 검색 기반 매장 키워드 설정 |
+| 문서명 | 링크 | 생성일 | 등록일 | 비고 |
+|--------|------|--------|--------|------|
+| 슈퍼멤버스 매장 진행 프로세스 | [🅽 Notion](https://www.notion.so/1a1983e32b32819a9df9c8a51319e3a6) | `2025-02-21` | `2026-02-24` | 매장 광고 진행 절차 |
+| 슈퍼멤버스 광고 검수 프로세스 (매장) | [🅽 Notion](https://www.notion.so/1a1983e32b3281438ca9f230f7af390c) | `2025-02-21` | `2026-02-24` | 매장 광고 검수 절차 |
+| 슈퍼멤버스 매장 > 광고 등록 프로세스 | [🅽 Notion](https://www.notion.so/1bc983e32b32801d88d0d398db972ab1) | `2025-03-20` | `2026-02-24` | 매장 광고 등록 절차 |
+| 슈퍼멤버스 가맹점 이용 프로세스 (매장) | [🅽 Notion](https://www.notion.so/03dd02487d9b449c9edbb8dcef5a9bd8) | `2023-02-01` | `2026-02-24` | 가맹점 매장 이용 절차 |
+| 슈퍼멤버스 가맹점 이용 프로세스 (제품) | [🅽 Notion](https://www.notion.so/8651f1db48ae42e8bcc86df8d47c8a2e) | `2023-02-02` | `2026-02-24` | 광고 등록 절차 (키워드, 등급별 품목) |
+| 유저에게 매장이 보이는 조건 | [🅽 Notion](https://www.notion.so/263983e32b3280b68c9bd67c28807545) | `2025-09-03` | `2026-02-24` | 매장 노출 조건 |
+| 매장 정렬 로직 | [🅽 Notion](https://www.notion.so/263983e32b32800c9367dcb0b7beab2e) | `2025-09-03` | `2026-02-24` | 매장 정렬 알고리즘 |
+| 네이버 플레이스 키워드 세팅 가이드북 | [🅽 Notion](https://www.notion.so/259983e32b32804c9a20c5338039a61e) | `2025-08-24` | `2026-02-24` | 네이버 검색 기반 매장 키워드 설정 |
 
 ## 결제 & 정산
 
-| 문서명 | 링크 | 등록일 | 비고 |
-|--------|------|--------|------|
-| 슈퍼멤버스 결제 프로세스 | [Notion](https://www.notion.so/14c983e32b328001b8a4d0cebe3348dd) | 2026-02-24 | 결제 전체 플로우 |
-| 슈멤 정기 결제 로직 | [Notion](https://www.notion.so/193983e32b32808f9926da633a852bfb) | 2026-02-24 | 정기 결제 로직 상세 |
-| 슈퍼멤버스 제품 인원 수 및 구매 후 환급금 오류 | [Notion](https://www.notion.so/2cb983e32b328047bf95cdf2e0ec4ab4) | 2026-02-24 | 환급금 오류 케이스 |
-| 슈퍼멤버스 이용약관 개선 | [Notion](https://www.notion.so/237983e32b328020884afa27c008006f) | 2026-02-24 | 이용약관 개선 |
-| 사장님사이트 장기결제플랜 금액 정리 | [GSheet](https://docs.google.com/spreadsheets/d/14Ijw6fMQFd5BDHR3SJJZaLu5K9QLUV92FDYl5SruYOg/) | 2026-02-24 | 장기 결제 플랜 금액 비교 |
+| 문서명 | 링크 | 생성일 | 등록일 | 비고 |
+|--------|------|--------|--------|------|
+| 슈퍼멤버스 결제 프로세스 | [🅽 Notion](https://www.notion.so/14c983e32b328001b8a4d0cebe3348dd) | `2024-11-28` | `2026-02-24` | 결제 전체 플로우 |
+| 슈멤 정기 결제 로직 | [🅽 Notion](https://www.notion.so/193983e32b32808f9926da633a852bfb) | `2025-02-07` | `2026-02-24` | 정기 결제 로직 상세 |
+| 슈퍼멤버스 제품 인원 수 및 구매 후 환급금 오류 | [🅽 Notion](https://www.notion.so/2cb983e32b328047bf95cdf2e0ec4ab4) | `2025-12-16` | `2026-02-24` | 환급금 오류 케이스 |
+| 슈퍼멤버스 이용약관 개선 | [🅽 Notion](https://www.notion.so/237983e32b328020884afa27c008006f) | `2025-07-21` | `2026-02-24` | 이용약관 개선 |
+| 사장님사이트 장기결제플랜 금액 정리 | [Ⓖ Sheet](https://docs.google.com/spreadsheets/d/14Ijw6fMQFd5BDHR3SJJZaLu5K9QLUV92FDYl5SruYOg/) | — | `2026-02-24` | 장기 결제 플랜 금액 비교 |
 
 ## 개밥먹기 & 사용성
 
-| 문서명 | 링크 | 등록일 | 비고 |
-|--------|------|--------|------|
-| 슈퍼멤버스 개밥먹기 | [Notion DB](https://www.notion.so/269983e32b328058932dd264301db825) | 2026-02-24 | 개밥먹기 결과 데이터베이스 |
-| 슈퍼멤버스 사장님 홈페이지 개밥먹기 | [Notion](https://www.notion.so/269983e32b328074bc17c9bf1f99d24f) | 2026-02-24 | 사장님 사이트 사용성 테스트 |
-| 슈퍼멤버스 사장님 블로그 콘텐츠 업로드 방법 | [Notion](https://www.notion.so/296983e32b3280fda4f0f78245fef979) | 2026-02-24 | 사장님 블로그 업로드 가이드 |
-| 슈퍼멤버스 카테고리 개편 | [Notion](https://www.notion.so/1b3983e32b32801ba849fb3088bd3db8) | 2026-02-24 | 카테고리 구조 개편 |
+| 문서명 | 링크 | 생성일 | 등록일 | 비고 |
+|--------|------|--------|--------|------|
+| 슈퍼멤버스 개밥먹기 | [🅽 Notion DB](https://www.notion.so/269983e32b328058932dd264301db825) | `2025-09-09` | `2026-02-24` | 개밥먹기 결과 데이터베이스 |
+| 슈퍼멤버스 사장님 홈페이지 개밥먹기 | [🅽 Notion](https://www.notion.so/269983e32b328074bc17c9bf1f99d24f) | `2025-09-09` | `2026-02-24` | 사장님 사이트 사용성 테스트 |
+| 슈퍼멤버스 사장님 블로그 콘텐츠 업로드 방법 | [🅽 Notion](https://www.notion.so/296983e32b3280fda4f0f78245fef979) | `2025-10-24` | `2026-02-24` | 사장님 블로그 업로드 가이드 |
+| 슈퍼멤버스 카테고리 개편 | [🅽 Notion](https://www.notion.so/1b3983e32b32801ba849fb3088bd3db8) | `2025-03-11` | `2026-02-24` | 카테고리 구조 개편 |
 
 ---
 
@@ -67,69 +67,69 @@
 
 ### 앱 설계 & 성능
 
-| 문서명 | 링크 | 등록일 | 비고 |
-|--------|------|--------|------|
-| 슈퍼멤버스 앱 경로 정의 | [Notion](https://www.notion.so/23f983e32b3280e186e5d041fba51922) | 2026-02-24 | 앱 라우팅 경로 전체 정의 |
-| 슈퍼멤버스 앱 속도 개선 | [Notion](https://www.notion.so/23e983e32b3280538b83d776146dd139) | 2026-02-24 | 앱 속도 개선 프로젝트 |
-| 앱 홈 화면 UX 속도 20% 개선 | [Notion](https://www.notion.so/UX-20-22a983e32b3281c5b1d7f49a001bcd48) | 2026-02-24 | 홈 화면 속도 최적화 |
-| 매장 지도 리스트 로딩 속도 30% 개선 | [Notion](https://www.notion.so/30-223983e32b32816f9268ed3b18bcb8da) | 2026-02-24 | 지도 로딩 최적화 |
+| 문서명 | 링크 | 생성일 | 등록일 | 비고 |
+|--------|------|--------|--------|------|
+| 슈퍼멤버스 앱 경로 정의 | [🅽 Notion](https://www.notion.so/23f983e32b3280e186e5d041fba51922) | `2025-07-29` | `2026-02-24` | 앱 라우팅 경로 전체 정의 |
+| 슈퍼멤버스 앱 속도 개선 | [🅽 Notion](https://www.notion.so/23e983e32b3280538b83d776146dd139) | `2025-07-28` | `2026-02-24` | 앱 속도 개선 프로젝트 |
+| 앱 홈 화면 UX 속도 20% 개선 | [🅽 Notion](https://www.notion.so/UX-20-22a983e32b3281c5b1d7f49a001bcd48) | `2025-07-08` | `2026-02-24` | 홈 화면 속도 최적화 |
+| 매장 지도 리스트 로딩 속도 30% 개선 | [🅽 Notion](https://www.notion.so/30-223983e32b32816f9268ed3b18bcb8da) | `2025-07-01` | `2026-02-24` | 지도 로딩 최적화 |
 
 ### API 마이그레이션
 
-| 문서명 | 링크 | 등록일 | 비고 |
-|--------|------|--------|------|
-| 구 서버 API → 새 서버 API 교체 (2건) | [Notion](https://www.notion.so/API-API-2-22a983e32b3281c5b6aff27b12ad14f2) | 2026-02-24 | API 마이그레이션 #1 |
-| 구 서버 API → 새 서버 API 교체 | [Notion](https://www.notion.so/API-API-238983e32b3280478d10e8ffa48dcf90) | 2026-02-24 | API 마이그레이션 #2 |
-| Supermembers Console API Server | [Notion](https://www.notion.so/Supermembers-Console-API-Server-2be983e32b3281638c53d63c4cc7208c) | 2026-02-24 | 콘솔 API 서버 구조 |
+| 문서명 | 링크 | 생성일 | 등록일 | 비고 |
+|--------|------|--------|--------|------|
+| 구 서버 API → 새 서버 API 교체 (2건) | [🅽 Notion](https://www.notion.so/API-API-2-22a983e32b3281c5b6aff27b12ad14f2) | `2025-07-08` | `2026-02-24` | API 마이그레이션 #1 |
+| 구 서버 API → 새 서버 API 교체 | [🅽 Notion](https://www.notion.so/API-API-238983e32b3280478d10e8ffa48dcf90) | `2025-07-22` | `2026-02-24` | API 마이그레이션 #2 |
+| Supermembers Console API Server | [🅽 Notion](https://www.notion.so/Supermembers-Console-API-Server-2be983e32b3281638c53d63c4cc7208c) | `2025-12-03` | `2026-02-24` | 콘솔 API 서버 구조 |
 
 ### 서버 인프라
 
-| 문서명 | 링크 | 등록일 | 비고 |
-|--------|------|--------|------|
-| AWS API Server : 구서버 | [Notion](https://www.notion.so/2be983e32b32813088b7c60090efbb52) | 2026-02-24 | Express.js 기반, /api 디렉토리 구조 |
-| API Server : 신서버 | [Notion](https://www.notion.so/2be983e32b32816e8eb8e20f110b816f) | 2026-02-24 | 슈퍼멤버스/슈퍼차트 백엔드 Express.js API 서버 |
+| 문서명 | 링크 | 생성일 | 등록일 | 비고 |
+|--------|------|--------|--------|------|
+| AWS API Server : 구서버 | [🅽 Notion](https://www.notion.so/2be983e32b32813088b7c60090efbb52) | `2025-12-03` | `2026-02-24` | Express.js 기반, /api 디렉토리 구조 |
+| API Server : 신서버 | [🅽 Notion](https://www.notion.so/2be983e32b32816e8eb8e20f110b816f) | `2025-12-03` | `2026-02-24` | 슈퍼멤버스/슈퍼차트 백엔드 Express.js API 서버 |
 
 ### AI & 자동화
 
-| 문서명 | 링크 | 등록일 | 비고 |
-|--------|------|--------|------|
-| 앱 내 블로그 포스팅 AI 초안 작성 | [Notion](https://www.notion.so/AI-23e983e32b328083bb1bfebb694eb75e) | 2026-02-24 | AI 블로그 포스팅 (비활성화 상태) |
-| 블로그 부정적인 리뷰 감지 | [Notion](https://www.notion.so/23e983e32b32805db0b9cc9455468b0c) | 2026-02-24 | 리뷰 감지 시스템 |
-| supermembers-rag | [Notion](https://www.notion.so/supermembers-rag-2e8983e32b328001a5f5da3c2acb9186) | 2026-02-24 | RAG 시스템 설계 |
+| 문서명 | 링크 | 생성일 | 등록일 | 비고 |
+|--------|------|--------|--------|------|
+| 앱 내 블로그 포스팅 AI 초안 작성 | [🅽 Notion](https://www.notion.so/AI-23e983e32b328083bb1bfebb694eb75e) | `2025-07-28` | `2026-02-24` | AI 블로그 포스팅 (비활성화 상태) |
+| 블로그 부정적인 리뷰 감지 | [🅽 Notion](https://www.notion.so/23e983e32b32805db0b9cc9455468b0c) | `2025-07-28` | `2026-02-24` | 리뷰 감지 시스템 |
+| supermembers-rag | [🅽 Notion](https://www.notion.so/supermembers-rag-2e8983e32b328001a5f5da3c2acb9186) | `2026-01-14` | `2026-02-24` | RAG 시스템 설계 |
 
 ### 챗봇 인수인계
 
-| 문서명 | 링크 | 등록일 | 비고 |
-|--------|------|--------|------|
-| 챗봇 콘솔 인수인계서 (1) | [Notion](https://www.notion.so/1-2fc983e32b3280af9bfec994039cc6b8) | 2026-02-24 | 챗봇 콘솔 5개 영역, CX팀 KPI 대시보드 |
-| 챗봇 인수인계서 | [Notion](https://www.notion.so/1-2fc983e32b3280499a07dfcf4dbb92a8) | 2026-02-24 | QA_DB 3단 구조, 챗봇 추적/보완 가이드 |
+| 문서명 | 링크 | 생성일 | 등록일 | 비고 |
+|--------|------|--------|--------|------|
+| 챗봇 콘솔 인수인계서 (1) | [🅽 Notion](https://www.notion.so/1-2fc983e32b3280af9bfec994039cc6b8) | `2026-02-03` | `2026-02-24` | 챗봇 콘솔 5개 영역, CX팀 KPI 대시보드 |
+| 챗봇 인수인계서 | [🅽 Notion](https://www.notion.so/1-2fc983e32b3280499a07dfcf4dbb92a8) | `2026-02-03` | `2026-02-24` | QA_DB 3단 구조, 챗봇 추적/보완 가이드 |
 
 ### 이벤트 트래킹
 
-| 문서명 | 링크 | 등록일 | 비고 |
-|--------|------|--------|------|
-| Mixpanel 앱 이벤트 명명 시트 | [GSheet](https://docs.google.com/spreadsheets/d/1JOwxPZv74fS94kUDIRnbjGGoDrUmlpMsGrhweIUq/) | 2026-02-24 | 앱 이벤트명 정의 |
-| 믹스패널 SDK 설치 (앱) | [Notion](https://www.notion.so/SDK-200983e32b3280f9abbbdb132d93bd5d) | 2026-02-24 | 앱 Mixpanel SDK |
-| 믹스패널 SDK 설치 (웹) | [Notion](https://www.notion.so/SDK-200983e32b32803daac3d6ac40445afe) | 2026-02-24 | 웹 Mixpanel SDK |
-| 슈멤 APP 문제점 | [Notion DB](https://www.notion.so/2b6983e32b32802c8424f20c1bfcd3f2) | 2026-02-24 | 앱 이슈 트래커 |
+| 문서명 | 링크 | 생성일 | 등록일 | 비고 |
+|--------|------|--------|--------|------|
+| Mixpanel 앱 이벤트 명명 시트 | [Ⓖ Sheet](https://docs.google.com/spreadsheets/d/1JOwxPZv74fS94kUDIRnbjGGoDrUmlpMsGrhweIUq/) | — | `2026-02-24` | 앱 이벤트명 정의 |
+| 믹스패널 SDK 설치 (앱) | [🅽 Notion](https://www.notion.so/SDK-200983e32b3280f9abbbdb132d93bd5d) | `2025-05-27` | `2026-02-24` | 앱 Mixpanel SDK |
+| 믹스패널 SDK 설치 (웹) | [🅽 Notion](https://www.notion.so/SDK-200983e32b32803daac3d6ac40445afe) | `2025-05-27` | `2026-02-24` | 웹 Mixpanel SDK |
+| 슈멤 APP 문제점 | [🅽 Notion DB](https://www.notion.so/2b6983e32b32802c8424f20c1bfcd3f2) | `2025-11-25` | `2026-02-24` | 앱 이슈 트래커 |
 
 ### 인프라 & 테스트
 
-| 문서명 | 링크 | 등록일 | 비고 |
-|--------|------|--------|------|
-| 슈멤 테스트 매장 생성 방법 | [Notion](https://www.notion.so/193983e32b32807db5bfef2ad42e9cf3) | 2026-02-24 | 테스트 매장 세팅 가이드 |
-| 테스트 가맹점 열람 가능한 계정 전환 | [Notion](https://www.notion.so/55c9e5b12d084392be4736c536e426d8) | 2026-02-24 | 테스트 계정 설정 |
-| ceo.supermembers.co.kr | [Notion](https://www.notion.so/ceo-supermembers-co-kr-7d11940be518402faa9cef02be097b20) | 2026-02-24 | 사장님 사이트 기술 스펙 |
-| 슈멤앱 > ip 블락 | [Notion](https://www.notion.so/ip-124373cdcc9d4c70891a72dc18d740e5) | 2026-02-24 | IP 차단 정책/구현 |
+| 문서명 | 링크 | 생성일 | 등록일 | 비고 |
+|--------|------|--------|--------|------|
+| 슈멤 테스트 매장 생성 방법 | [🅽 Notion](https://www.notion.so/193983e32b32807db5bfef2ad42e9cf3) | `2025-02-07` | `2026-02-24` | 테스트 매장 세팅 가이드 |
+| 테스트 가맹점 열람 가능한 계정 전환 | [🅽 Notion](https://www.notion.so/55c9e5b12d084392be4736c536e426d8) | `2023-03-16` | `2026-02-24` | 테스트 계정 설정 |
+| ceo.supermembers.co.kr | [🅽 Notion](https://www.notion.so/ceo-supermembers-co-kr-7d11940be518402faa9cef02be097b20) | `2022-06-22` | `2026-02-24` | 사장님 사이트 기술 스펙 |
+| 슈멤앱 > ip 블락 | [🅽 Notion](https://www.notion.so/ip-124373cdcc9d4c70891a72dc18d740e5) | `2022-07-27` | `2026-02-24` | IP 차단 정책/구현 |
 
 ### Ads_Payment 정합성
 
-| 문서명 | 링크 | 등록일 | 비고 |
-|--------|------|--------|------|
-| Ads_Payment 관리 기능 기획서 | [Slack](https://supermembers.slack.com/files/U0AG2SSK7NV/F0AG133MBQC/admin_features.md) | 2026-02-24 | 결제 정합성 — 5개 핵심 기능 기획 (610줄) |
-| Ads_Payment & Channels 필드 레퍼런스 | [Slack](https://supermembers.slack.com/files/U0AG2SSK7NV/F0AGAC9MMJ5/field_reference.md) | 2026-02-24 | 결제 데이터 필드 및 규칙 (331줄) |
-| Ads_Payment 테이블 수정 규칙 | [Slack](https://supermembers.slack.com/files/U0AG2SSK7NV/F0AFR387VMH/payment_rule.md) | 2026-02-24 | 결제 데이터 수정 판단 기준 (307줄) |
-| Ads_Payment 비정상 케이스 탐지 도구 | [Slack](https://supermembers.slack.com/files/U0AG2SSK7NV/F0AGRNX3A4Q/readme.md) | 2026-02-24 | 결제 규칙 위배 탐지 도구 (218줄) |
+| 문서명 | 링크 | 생성일 | 등록일 | 비고 |
+|--------|------|--------|--------|------|
+| Ads_Payment 관리 기능 기획서 | [💬 Slack](https://supermembers.slack.com/files/U0AG2SSK7NV/F0AG133MBQC/admin_features.md) | — | `2026-02-24` | 결제 정합성 — 5개 핵심 기능 기획 (610줄) |
+| Ads_Payment & Channels 필드 레퍼런스 | [💬 Slack](https://supermembers.slack.com/files/U0AG2SSK7NV/F0AGAC9MMJ5/field_reference.md) | — | `2026-02-24` | 결제 데이터 필드 및 규칙 (331줄) |
+| Ads_Payment 테이블 수정 규칙 | [💬 Slack](https://supermembers.slack.com/files/U0AG2SSK7NV/F0AFR387VMH/payment_rule.md) | — | `2026-02-24` | 결제 데이터 수정 판단 기준 (307줄) |
+| Ads_Payment 비정상 케이스 탐지 도구 | [💬 Slack](https://supermembers.slack.com/files/U0AG2SSK7NV/F0AGRNX3A4Q/readme.md) | — | `2026-02-24` | 결제 규칙 위배 탐지 도구 (218줄) |
 
 ---
 
@@ -137,59 +137,98 @@
 
 ### 광고 & 퍼포먼스
 
-| 문서명 | 링크 | 등록일 | 비고 |
-|--------|------|--------|------|
-| 슈퍼멤버스 광고 관리 | [GSheet](https://docs.google.com/spreadsheets/d/1vwGiOCmMK2MK_9N3YM5apcHLtej-tKj0TmtLhuV) | 2026-02-24 | 광고 성과 트래킹 시트 |
-| 슈퍼멤버스 매장 일별 기록 | [GSheet](https://docs.google.com/spreadsheets/d/1I4ORuaHwjINmG-kyDU8VlS-a3r0C4VXaoszQ_37U/) | 2026-02-24 | 매장별 일일 기록 |
-| Facebook Network 마케팅 플래너 | [GSheet](https://docs.google.com/spreadsheets/d/1YF-yrwNYvZ4IzHykyWuEJU-V_7rdsT7JhdLWbph-j48/) | 2026-02-24 | FB Network 광고 플래너 (250110~) |
-| 릴스 알고리즘 & 인플루언서 분석 | [Notion](https://www.notion.so/20f983e32b32809bb6fff486450520b5) | 2026-02-24 | 후킹(첫 3초), 완시율, 인플루언서 성과 |
-| 메타 광고 성과 하락 이슈 분석 | [Notion](https://www.notion.so/1d8983e32b32800ba39ae8e6a4da4b8e) | 2026-02-24 | submitLeadForm 비용 9만→20만원 급등 분석 |
+| 문서명 | 링크 | 생성일 | 등록일 | 비고 |
+|--------|------|--------|--------|------|
+| 슈퍼멤버스 광고 관리 | [Ⓖ Sheet](https://docs.google.com/spreadsheets/d/1vwGiOCmMK2MK_9N3YM5apcHLtej-tKj0TmtLhuV) | — | `2026-02-24` | 광고 성과 트래킹 시트 |
+| 슈퍼멤버스 매장 일별 기록 | [Ⓖ Sheet](https://docs.google.com/spreadsheets/d/1I4ORuaHwjINmG-kyDU8VlS-a3r0C4VXaoszQ_37U/) | — | `2026-02-24` | 매장별 일일 기록 |
+| Facebook Network 마케팅 플래너 | [Ⓖ Sheet](https://docs.google.com/spreadsheets/d/1YF-yrwNYvZ4IzHykyWuEJU-V_7rdsT7JhdLWbph-j48/) | `2025-01-10` | `2026-02-24` | FB Network 광고 플래너 (250110~) |
+| 릴스 알고리즘 & 인플루언서 분석 | [🅽 Notion](https://www.notion.so/20f983e32b32809bb6fff486450520b5) | `2025-06-11` | `2026-02-24` | 후킹(첫 3초), 완시율, 인플루언서 성과 |
+| 메타 광고 성과 하락 이슈 분석 | [🅽 Notion](https://www.notion.so/1d8983e32b32800ba39ae8e6a4da4b8e) | `2025-04-17` | `2026-02-24` | submitLeadForm 비용 9만→20만원 급등 분석 |
 
 ### 랜딩페이지 & 브랜딩
 
-| 문서명 | 링크 | 등록일 | 비고 |
-|--------|------|--------|------|
-| 경쟁사 랜딩 캡쳐 | [Notion](https://www.notion.so/2bf983e32b3280499a30da495c8f0f5c) | 2026-02-24 | 경쟁사 랜딩 페이지 레퍼런스 |
-| 랜딩페이지 최적화 전략 설계 | [Notion](https://www.notion.so/292983e32b3280f59accdef858ce607a) | 2026-02-24 | CTA 클릭률 개선 |
-| SaaS 서비스 랜딩 레퍼런스 | [Notion](https://www.notion.so/7c361a28e0af449ab604aafc757d2002) | 2026-02-24 | SaaS 랜딩 벤치마크 |
+| 문서명 | 링크 | 생성일 | 등록일 | 비고 |
+|--------|------|--------|--------|------|
+| 경쟁사 랜딩 캡쳐 | [🅽 Notion](https://www.notion.so/2bf983e32b3280499a30da495c8f0f5c) | `2025-12-04` | `2026-02-24` | 경쟁사 랜딩 페이지 레퍼런스 |
+| 랜딩페이지 최적화 전략 설계 | [🅽 Notion](https://www.notion.so/292983e32b3280f59accdef858ce607a) | `2025-10-20` | `2026-02-24` | CTA 클릭률 개선 |
+| SaaS 서비스 랜딩 레퍼런스 | [🅽 Notion](https://www.notion.so/7c361a28e0af449ab604aafc757d2002) | `2021-09-24` | `2026-02-24` | SaaS 랜딩 벤치마크 |
 
 ### 마케팅 전략 & 기획
 
-| 문서명 | 링크 | 등록일 | 비고 |
-|--------|------|--------|------|
-| 슈퍼멤버스 마케팅 기획 | [Notion](https://www.notion.so/13f983e32b3280808e58e7d634d85f7a) | 2026-02-24 | 마케팅 전체 기획 |
-| 서비스 소개서 | [Notion](https://www.notion.so/1dadd91c78b54f6997fe37991b5f65f6) | 2026-02-24 | 대외용 서비스 소개서 |
-| 카카오톡 채널 개선 | [Notion](https://www.notion.so/1bd983e32b3280c48423c7420f7d9c0a) | 2026-02-24 | 카카오톡 채널 최적화 |
-| 버스트렙스 마케팅 보고서 | [Notion](https://www.notion.so/246983e32b328019bfefe5c410b15586) | 2026-02-24 | 버스트렙스 마케팅 결과 |
-| [SP-22] 마케팅 실행 | [Notion](https://www.notion.so/SP-22-06783a06c2f94a139993668003bb05c8) | 2026-02-24 | 마케팅 실행 스프린트 |
+| 문서명 | 링크 | 생성일 | 등록일 | 비고 |
+|--------|------|--------|--------|------|
+| 슈퍼멤버스 마케팅 기획 | [🅽 Notion](https://www.notion.so/13f983e32b3280808e58e7d634d85f7a) | `2024-11-15` | `2026-02-24` | 마케팅 전체 기획 |
+| 서비스 소개서 | [🅽 Notion](https://www.notion.so/1dadd91c78b54f6997fe37991b5f65f6) | `2024-02-28` | `2026-02-24` | 대외용 서비스 소개서 |
+| 카카오톡 채널 개선 | [🅽 Notion](https://www.notion.so/1bd983e32b3280c48423c7420f7d9c0a) | `2025-03-21` | `2026-02-24` | 카카오톡 채널 최적화 |
+| 버스트렙스 마케팅 보고서 | [🅽 Notion](https://www.notion.so/246983e32b328019bfefe5c410b15586) | `2025-08-05` | `2026-02-24` | 버스트렙스 마케팅 결과 |
+| [SP-22] 마케팅 실행 | [🅽 Notion](https://www.notion.so/SP-22-06783a06c2f94a139993668003bb05c8) | `2022-07-06` | `2026-02-24` | 마케팅 실행 스프린트 |
 
 ### 콘텐츠 마케팅 (블로그/SNS)
 
-| 문서명 | 링크 | 등록일 | 비고 |
-|--------|------|--------|------|
-| 저비용 마케팅 전략 : 체험단으로 시작하기 | [Notion](https://www.notion.so/294983e32b328155a83fdb22e7bc0d01) | 2026-02-24 | 체험단 마케팅 콘텐츠 |
-| 슈퍼멤버스 체험단 vs 일반 체험단 차이점 3가지 | [Notion](https://www.notion.so/vs-3-294983e32b3281e79dd8f5aa08ad4f63) | 2026-02-24 | 비교 콘텐츠 |
-| 자동화 마케팅 끝판왕, 슈퍼멤버스 | [Notion](https://www.notion.so/208983e32b32806bb94fe77068930a05) | 2026-02-24 | 자동화 마케팅 콘텐츠 |
-| testimonial-슈멤 정착 | [Notion](https://www.notion.so/testimonial-222983e32b32800c84fec0c347050956) | 2026-02-24 | 고객 후기 모음 |
-| 슈퍼멤버스 연말결산 | [Notion](https://www.notion.so/150983e32b328044a001d85a4d9e927a) | 2026-02-24 | 연말결산 콘텐츠 |
+| 문서명 | 링크 | 생성일 | 등록일 | 비고 |
+|--------|------|--------|--------|------|
+| 저비용 마케팅 전략 : 체험단으로 시작하기 | [🅽 Notion](https://www.notion.so/294983e32b328155a83fdb22e7bc0d01) | `2025-10-22` | `2026-02-24` | 체험단 마케팅 콘텐츠 |
+| 슈퍼멤버스 체험단 vs 일반 체험단 차이점 3가지 | [🅽 Notion](https://www.notion.so/vs-3-294983e32b3281e79dd8f5aa08ad4f63) | `2025-10-22` | `2026-02-24` | 비교 콘텐츠 |
+| 자동화 마케팅 끝판왕, 슈퍼멤버스 | [🅽 Notion](https://www.notion.so/208983e32b32806bb94fe77068930a05) | `2025-06-04` | `2026-02-24` | 자동화 마케팅 콘텐츠 |
+| testimonial-슈멤 정착 | [🅽 Notion](https://www.notion.so/testimonial-222983e32b32800c84fec0c347050956) | `2025-06-30` | `2026-02-24` | 고객 후기 모음 |
+| 슈퍼멤버스 연말결산 | [🅽 Notion](https://www.notion.so/150983e32b328044a001d85a4d9e927a) | `2024-12-02` | `2026-02-24` | 연말결산 콘텐츠 |
 
 ### 광고 소재 (워크스페이스 문서)
 
-| 문서명 | 소스 | 등록일 | 비고 |
-|--------|------|--------|------|
-| 슈퍼멤버스 광고 프로젝트 | [PROJECT.md](marketing/PROJECT.md) | 2026-02-24 | 5.7KB, 광고 프로젝트 전체 개요 |
-| 상위 광고 소재 딥 분석 | [deep-analysis.md](marketing/deep-analysis.md) | 2026-02-24 | 9.1KB, 상위 소재 심층 분석 |
-| Meta 광고 소재 분석 리포트 | [meta-ads-analysis.md](marketing/meta-ads-analysis.md) | 2026-02-24 | 7.9KB, Meta 광고 성과 분석 |
-| 영상 기획안 v2 | [video-planning-v2.md](marketing/video-planning-v2.md) | 2026-02-24 | 9.9KB, 영상 기획안 |
-| 프로덕션 레디 스크립트 | [production-ready-scripts.md](marketing/production-ready-scripts.md) | 2026-02-24 | 18KB, 촬영 스크립트 |
-| 소재 자동 베리에이션 워크플로우 | [variation-workflow.md](marketing/variation-workflow.md) | 2026-02-24 | 13KB, 소재 자동화 |
+| 문서명 | 링크 | 생성일 | 등록일 | 비고 |
+|--------|------|--------|--------|------|
+| 슈퍼멤버스 광고 프로젝트 | [💻 MD](https://www.notion.so/SUPERMEMBERS-313983e32b3281efba6ae02ea8ca2af3) | — | `2026-02-24` | 광고 프로젝트 전체 개요 |
+| 상위 광고 소재 딥 분석 | [💻 MD](https://www.notion.so/SUPERMEMBERS-313983e32b3281dc8145f03c3da1b3ee) | — | `2026-02-24` | 상위 소재 심층 분석 |
+| Meta 광고 소재 분석 리포트 | [💻 MD](https://www.notion.so/SUPERMEMBERS-Meta-313983e32b328196bc15eb5783ee643c) | — | `2026-02-24` | Meta 광고 성과 분석 |
+| 영상 기획안 v2 | [💻 MD](https://www.notion.so/SUPERMEMBERS-v2-313983e32b32819c9361e4b06ad95777) | — | `2026-02-24` | 영상 기획안 |
+| 프로덕션 레디 스크립트 | [💻 MD](https://www.notion.so/SUPERMEMBERS-313983e32b3281b79c73cd37076a3553) | — | `2026-02-24` | 촬영 스크립트 |
+| 소재 자동 베리에이션 워크플로우 | [💻 MD](https://www.notion.so/SUPERMEMBERS-313983e32b3281479803de6fdd599d23) | — | `2026-02-24` | 소재 자동화 |
+
+### 메타 광고소재 제작 가이드
+
+| 문서명 | 링크 | 생성일 | 등록일 | 비고 |
+|--------|------|--------|--------|------|
+| META 광고 제작 + AI 활용 소재 제작 방법 | [🅽 Notion](https://www.notion.so/2f4983e32b3281628f21cedc1868f83d) | `2026-01-26` | `2026-02-26` | 나노바나나/Grok AI 활용 소재 제작 |
+| 메타 광고 가이드 | [🅽 Notion](https://www.notion.so/183983e32b3280daa34ee977d1698fd8) | `2025-01-22` | `2026-02-26` | 메타 광고 기본 가이드 |
+| AI 프롬포트 팁 (이미지) | [🅽 Notion](https://www.notion.so/2f4983e32b32818aa03fce8a3ea74351) | `2026-01-26` | `2026-02-26` | Grok, 나노바나나/Higgsfield AI 이미지 |
+| AI 마케팅 활용 가이드 | [🅽 Notion](https://www.notion.so/25e983e32b3280889a65e1df92f8dace) | `2025-08-29` | `2026-02-26` | AI 마케팅 활용 |
+| 메타에서 먹히는 앵글 찾기 | [🅽 Notion](https://www.notion.so/22a983e32b3281c7887edd4cf426393a) | `2025-07-08` | `2026-02-26` | 메타 광고 앵글 분석 |
+| meta 광고 소재 정리 | [🅽 Notion](https://www.notion.so/21f983e32b3280346b01dcfd4aba0893) | `2025-06-27` | `2026-02-26` | 소재 전체 정리 |
+| Meta 광고 소재 & 성과 | [🅽 Notion](https://www.notion.so/264983e32b32805abac6e9d12dc496ac) | `2025-09-04` | `2026-02-26` | 소재별 성과 데이터 |
+| 성과 좋은 메타 광고 소구점 | [🅽 Notion](https://www.notion.so/2c5983e32b3280c6af22ee1b995ed334) | `2025-12-10` | `2026-02-26` | 고성과 소구점 정리 |
+| 메타 소재 학습점 | [🅽 Notion](https://www.notion.so/261983e32b32804f8e7af38ed441db26) | `2025-09-01` | `2026-02-26` | 소재 학습점 |
+| 소재 인사이트 정리 | [🅽 Notion](https://www.notion.so/26b983e32b328067808800ff9e9b1704eb) | `2025-09-11` | `2026-02-26` | 소재별 인사이트 |
+| 리뷰 활용 영상 소재 구도 & A/B 테스트 | [🅽 Notion](https://www.notion.so/30d983e32b328165981900c169fb2e8f9b) | `2026-02-20` | `2026-02-26` | B/A 구도 영상 A/B 테스트 |
+| B&A 포멧 참고 이미지 소재 | [🅽 Notion](https://www.notion.so/30d983e32b3281eb8619feafadf4d05b) | `2026-02-20` | `2026-02-26` | B&A 이미지 소재 |
+| 소재 개발 | [🅽 Notion](https://www.notion.so/30d983e32b3281bd84a1e92ac9147cab) | `2026-02-20` | `2026-02-26` | 소재 개발 전략 |
 
 ### 실험 & 프로모션
 
-| 문서명 | 링크 | 등록일 | 비고 |
-|--------|------|--------|------|
-| 첫달 100원 실험 결과 | [Notion](https://www.notion.so/mayacrew/100-2-ARC-100-2b7983e32b32801ea140c4bc7712ba4e) | 2026-02-24 | 25.12~26.01 가격 실험 결과 |
-| 웨비나 자료 참고 | [Notion](https://www.notion.so/mayacrew/279983e32b32806fae42d7b3d1c3a89d) | 2026-02-24 | 웨비나 콘텐츠 제작용 |
+| 문서명 | 링크 | 생성일 | 등록일 | 비고 |
+|--------|------|--------|--------|------|
+| 첫달 100원 실험 결과 | [🅽 Notion](https://www.notion.so/mayacrew/100-2-ARC-100-2b7983e32b32801ea140c4bc7712ba4e) | `2025-11-26` | `2026-02-24` | 25.12~26.01 가격 실험 결과 |
+| 웨비나 자료 참고 | [🅽 Notion](https://www.notion.so/mayacrew/279983e32b32806fae42d7b3d1c3a89d) | `2025-09-25` | `2026-02-24` | 웨비나 콘텐츠 제작용 |
+
+---
+
+## 기획 (Planning)
+
+### 영수증 리뷰 — 신규 BM
+
+| 문서명 | 링크 | 생성일 | 등록일 | 비고 |
+|--------|------|--------|--------|------|
+| 네이버 영수증 리뷰 작성 기반 신규 BM | [🅽 Notion](https://www.notion.so/BM-2e3983e32b3280eb9d62dd8083bd27fa) | `2026-01-09` | `2026-02-26` | 영수증 리뷰 BM 전체 기획 |
+| [신규BM] 영수증 리뷰 서비스 내부 운영 정책 | [🅽 Notion](https://www.notion.so/BM-2fd983e32b328027af30f07224ee163e) | `2026-02-04` | `2026-02-26` | 내부 운영 정책 |
+| [신규BM] 포인트 인출 및 본인인증 운영 정책 | [🅽 Notion](https://www.notion.so/BM-2ee983e32b32800a89d0f07ba0d0d262) | `2026-01-20` | `2026-02-26` | 포인트 인출/본인인증 |
+| [신규BM] 개인정보 처리방침 | [🅽 Notion](https://www.notion.so/BM-2fe983e32b3280fe8b87c6cd60e0e165) | `2026-02-05` | `2026-02-26` | 영수증 리뷰 개인정보 처리 |
+| [신규BM] 서비스 이용약관 | [🅽 Notion](https://www.notion.so/BM-2fe983e32b3280d9adbcf21081f24900) | `2026-02-05` | `2026-02-26` | 영수증 리뷰 이용약관 |
+| 네이버 예약 및 영수증 리뷰 문의 감소책 | [🅽 Notion](https://www.notion.so/2ca983e32b32806e9cb9cb58e65d3755) | `2025-12-15` | `2026-02-26` | CX 문의 감소 전략 |
+| 영수증리뷰 등록 링크 안내 | [🅽 Notion](https://www.notion.so/2c6983e32b32813281e2e69a75ae4b14) | `2025-12-11` | `2026-02-26` | 등록 링크 안내 가이드 |
+| 영수증 리뷰 강화 | [🅽 Notion](https://www.notion.so/2c6983e32b3281979852fa80f85c4ff8) | `2025-12-11` | `2026-02-26` | 영수증 리뷰 강화 방안 |
+| '구글 리뷰' -> '영수증 리뷰' 변경 상세페이지 미적용 | [🅽 Notion](https://www.notion.so/2b6983e32b32817d9a18f7045067f8c0) | `2025-11-25` | `2026-02-26` | UI 텍스트 변경 이슈 |
+| [Supermembers] 영수증리뷰하고 네이버포인트받기 | [🅽 Notion](https://www.notion.so/Supermembers-22b983e32b32810aa8fad553c16ca330) | `2025-07-09` | `2026-02-26` | UX 설계 (현재 사용안함) |
+| 스토어리뷰 — 네이버 영수증 리뷰 (포토) 항목 추가 | [🅽 Notion](https://www.notion.so/0c2ca74bf8cd47fbbf37d041c6789144) | `2022-07-08` | `2026-02-26` | 캠페인 수락 과정 항목 추가 |
+| 구매지원금 — 매장 리뷰 필수 영수증 리뷰 (포토) 추가 | [🅽 Notion](https://www.notion.so/05f30ab7030349efa75b6d40d109d5e1) | `2022-07-07` | `2026-02-26` | 구매지원금 영수증 리뷰 필수화 |
 
 ---
 
@@ -197,49 +236,49 @@
 
 ### 리드 관리
 
-| 문서명 | 링크 | 등록일 | 비고 |
-|--------|------|--------|------|
-| 리드 온도 체계 | [Notion](https://www.notion.so/mayacrew/2bf983e32b3280dcb9ffc973cc8acc06) | 2026-02-24 | 통화 리드 온도 정의 (세일즈팀 공통) |
+| 문서명 | 링크 | 생성일 | 등록일 | 비고 |
+|--------|------|--------|--------|------|
+| 리드 온도 체계 | [🅽 Notion](https://www.notion.so/mayacrew/2bf983e32b3280dcb9ffc973cc8acc06) | `2025-12-04` | `2026-02-24` | 통화 리드 온도 정의 (세일즈팀 공통) |
 
 ### 사장님 여정 & 리텐션
 
-| 문서명 | 링크 | 등록일 | 비고 |
-|--------|------|--------|------|
-| 슈멤 사장님 해지 방어 프로젝트 | [Notion](https://www.notion.so/303983e32b32804cbfdec5b885643d74) | 2026-02-24 | 해지 방어 전략 (2026-02~) |
-| 사장님 여정 개선 | [Notion](https://www.notion.so/18c983e32b32801ba39ec14511ac4f48) | 2026-02-24 | 광고 정보 입력 전환율 A/B 테스트 |
-| 성과(효익) 체감율 높이기 | [Notion](https://www.notion.so/1c0983e32b3280edae11f619081faa4a) | 2026-02-24 | 성과 체감율 개선 전략 |
-| 온보딩 프로세스 | [Notion](https://www.notion.so/ea4b30c204194fc9a5fd7947e7438f1a) | 2026-02-24 | 신규 사장님 온보딩 |
-| 매장 이탈률 감소 전략 | [Notion](https://www.notion.so/1f8983e32b3281ee9712d87c230e60d5) | 2026-02-24 | 월평균 이탈율 12~14%, 목표 10% 미만 |
-| 사전 이탈 방어 라벨링 기준 | [Notion](https://www.notion.so/1d6983e32b3280b78f59f5530c146a0e) | 2026-02-24 | 이탈 위험 매장 라벨링 |
-| 리워드 제공 | [Notion](https://www.notion.so/1-223983e32b3280bd9d2dffe2bab59d7c) | 2026-02-24 | 리워드 기반 리텐션 |
+| 문서명 | 링크 | 생성일 | 등록일 | 비고 |
+|--------|------|--------|--------|------|
+| 슈멤 사장님 해지 방어 프로젝트 | [🅽 Notion](https://www.notion.so/303983e32b32804cbfdec5b885643d74) | `2026-02-10` | `2026-02-24` | 해지 방어 전략 (2026-02~) |
+| 사장님 여정 개선 | [🅽 Notion](https://www.notion.so/18c983e32b32801ba39ec14511ac4f48) | `2025-01-31` | `2026-02-24` | 광고 정보 입력 전환율 A/B 테스트 |
+| 성과(효익) 체감율 높이기 | [🅽 Notion](https://www.notion.so/1c0983e32b3280edae11f619081faa4a) | `2025-03-24` | `2026-02-24` | 성과 체감율 개선 전략 |
+| 온보딩 프로세스 | [🅽 Notion](https://www.notion.so/ea4b30c204194fc9a5fd7947e7438f1a) | `2024-07-26` | `2026-02-24` | 신규 사장님 온보딩 |
+| 매장 이탈률 감소 전략 | [🅽 Notion](https://www.notion.so/1f8983e32b3281ee9712d87c230e60d5) | `2025-05-19` | `2026-02-24` | 월평균 이탈율 12~14%, 목표 10% 미만 |
+| 사전 이탈 방어 라벨링 기준 | [🅽 Notion](https://www.notion.so/1d6983e32b3280b78f59f5530c146a0e) | `2025-04-15` | `2026-02-24` | 이탈 위험 매장 라벨링 |
+| 리워드 제공 | [🅽 Notion](https://www.notion.so/1-223983e32b3280bd9d2dffe2bab59d7c) | `2025-07-01` | `2026-02-24` | 리워드 기반 리텐션 |
 
 ### 이탈 분석
 
-| 문서명 | 링크 | 등록일 | 비고 |
-|--------|------|--------|------|
-| 이탈 데이터 분석 | [Notion](https://www.notion.so/2ee983e32b328031a16ae988c347b8ee) | 2026-02-24 | 1월 신규 광고주 이탈 패턴 |
+| 문서명 | 링크 | 생성일 | 등록일 | 비고 |
+|--------|------|--------|--------|------|
+| 이탈 데이터 분석 | [🅽 Notion](https://www.notion.so/2ee983e32b328031a16ae988c347b8ee) | `2026-01-20` | `2026-02-24` | 1월 신규 광고주 이탈 패턴 |
 
 ### 퍼널 & 전환
 
-| 문서명 | 링크 | 등록일 | 비고 |
-|--------|------|--------|------|
-| 2차 퍼널 개선 | [Notion](https://www.notion.so/2-29c983e32b3280cca92ff4cf31547c25) | 2026-02-24 | 2차 퍼널 전환율 개선 |
-| CTA 클릭률 개선 실험 | [Notion](https://www.notion.so/CTA-264983e32b328031ad04eb2f05b4d060) | 2026-02-24 | 랜딩 히어로 섹션 CTA 실험 |
-| 도입 문의 퍼널 — 혜택 소구 전환율 개선 | [Notion](https://www.notion.so/277983e32b3280d796f1da16a424c20c) | 2026-02-24 | 1차 히어로 섹션 기반 개선 |
+| 문서명 | 링크 | 생성일 | 등록일 | 비고 |
+|--------|------|--------|--------|------|
+| 2차 퍼널 개선 | [🅽 Notion](https://www.notion.so/2-29c983e32b3280cca92ff4cf31547c25) | `2025-10-30` | `2026-02-24` | 2차 퍼널 전환율 개선 |
+| CTA 클릭률 개선 실험 | [🅽 Notion](https://www.notion.so/CTA-264983e32b328031ad04eb2f05b4d060) | `2025-09-04` | `2026-02-24` | 랜딩 히어로 섹션 CTA 실험 |
+| 도입 문의 퍼널 — 혜택 소구 전환율 개선 | [🅽 Notion](https://www.notion.so/277983e32b3280d796f1da16a424c20c) | `2025-09-23` | `2026-02-24` | 1차 히어로 섹션 기반 개선 |
 
 ### 경쟁사 분석
 
-| 문서명 | 링크 | 등록일 | 비고 |
-|--------|------|--------|------|
-| 경쟁사와 슈퍼멤버스의 비교 | [Notion](https://www.notion.so/2ff983e32b3281bb86fee65163ae09ed) | 2026-02-24 | 온보딩 과제 — 경쟁사 비교 |
-| 슈퍼멤버스 및 경쟁사 분석 | [Notion](https://www.notion.so/175983e32b32808f87a2e38084d36a9e) | 2026-02-24 | 시장 분석 |
+| 문서명 | 링크 | 생성일 | 등록일 | 비고 |
+|--------|------|--------|--------|------|
+| 경쟁사와 슈퍼멤버스의 비교 | [🅽 Notion](https://www.notion.so/2ff983e32b3281bb86fee65163ae09ed) | `2026-02-06` | `2026-02-24` | 온보딩 과제 — 경쟁사 비교 |
+| 슈퍼멤버스 및 경쟁사 분석 | [🅽 Notion](https://www.notion.so/175983e32b32808f87a2e38084d36a9e) | `2025-01-08` | `2026-02-24` | 시장 분석 |
 
 ### 고객 성공 사례
 
-| 문서명 | 링크 | 등록일 | 비고 |
-|--------|------|--------|------|
-| 우수기업 선정 & 인터뷰 | [Notion](https://www.notion.so/196983e32b3280e58be8f2d4b4fd8467) | 2026-02-24 | 우수 고객 인터뷰 |
-| 2025 사장님 설문조사 | [Notion](https://www.notion.so/2025-19f983e32b3280b5ba5fd6dc5b7fdc2c) | 2026-02-24 | 사장님 만족도 설문 |
+| 문서명 | 링크 | 생성일 | 등록일 | 비고 |
+|--------|------|--------|--------|------|
+| 우수기업 선정 & 인터뷰 | [🅽 Notion](https://www.notion.so/196983e32b3280e58be8f2d4b4fd8467) | `2025-02-10` | `2026-02-24` | 우수 고객 인터뷰 |
+| 2025 사장님 설문조사 | [🅽 Notion](https://www.notion.so/2025-19f983e32b3280b5ba5fd6dc5b7fdc2c) | `2025-02-19` | `2026-02-24` | 사장님 만족도 설문 |
 
 ---
 
@@ -247,28 +286,28 @@
 
 ### 앱 UX 설계
 
-| 문서명 | 링크 | 등록일 | 비고 |
-|--------|------|--------|------|
-| 앱 UX 설계 플로우 | [Notion](https://www.notion.so/Supermembers-UX-22b983e32b32812987c0e0c415f98429) | 2026-02-24 | 앱 전체 UX 플로우 |
-| 사장님사이트 UX 설계 플로우 | [Notion](https://www.notion.so/Supermembers-UX-22b983e32b328122ab60d6359c1a900c) | 2026-02-24 | 사장님 사이트 UX |
-| 인플루언서 측 랜딩 페이지 | [Notion](https://www.notion.so/Supermembers-22b983e32b3281018ff0eab69a775f11) | 2026-02-24 | 인플루언서 랜딩 설계 |
+| 문서명 | 링크 | 생성일 | 등록일 | 비고 |
+|--------|------|--------|--------|------|
+| 앱 UX 설계 플로우 | [🅽 Notion](https://www.notion.so/Supermembers-UX-22b983e32b32812987c0e0c415f98429) | `2025-07-09` | `2026-02-24` | 앱 전체 UX 플로우 |
+| 사장님사이트 UX 설계 플로우 | [🅽 Notion](https://www.notion.so/Supermembers-UX-22b983e32b328122ab60d6359c1a900c) | `2025-07-09` | `2026-02-24` | 사장님 사이트 UX |
+| 인플루언서 측 랜딩 페이지 | [🅽 Notion](https://www.notion.so/Supermembers-22b983e32b3281018ff0eab69a775f11) | `2025-07-09` | `2026-02-24` | 인플루언서 랜딩 설계 |
 
 ### 블로거 UX 개선
 
-| 문서명 | 링크 | 등록일 | 비고 |
-|--------|------|--------|------|
-| 블로거 체험단 탐색 여정 개선 | [Notion](https://www.notion.so/2c0983e32b328099bc15c69e224f5b82) | 2026-02-24 | 홈 화면 정보 구조 개선 (2026-02~) |
-| 블로거 할인 적용 방식 인지 UX | [Notion](https://www.notion.so/2d3983e32b32809b9084c51899844c30) | 2026-02-24 | 기대금액 vs 실제금액 갭 해소 |
-| 지도 기반 체험단 탐색 고도화 | [Notion](https://www.notion.so/2d3983e32b3280b49ee8eb529ffe692f) | 2026-02-24 | 지도 이용자 전환율 30%↑ |
-| 블로거 리텐션 Growth | [Notion](https://www.notion.so/Growth-2b5983e32b328059bafbcef73f77f24) | 2026-02-24 | 블로거 리텐션 UX 전략 |
+| 문서명 | 링크 | 생성일 | 등록일 | 비고 |
+|--------|------|--------|--------|------|
+| 블로거 체험단 탐색 여정 개선 | [🅽 Notion](https://www.notion.so/2c0983e32b328099bc15c69e224f5b82) | `2025-12-05` | `2026-02-24` | 홈 화면 정보 구조 개선 (2026-02~) |
+| 블로거 할인 적용 방식 인지 UX | [🅽 Notion](https://www.notion.so/2d3983e32b32809b9084c51899844c30) | `2025-12-24` | `2026-02-24` | 기대금액 vs 실제금액 갭 해소 |
+| 지도 기반 체험단 탐색 고도화 | [🅽 Notion](https://www.notion.so/2d3983e32b3280b49ee8eb529ffe692f) | `2025-12-24` | `2026-02-24` | 지도 이용자 전환율 30%↑ |
+| 블로거 리텐션 Growth | [🅽 Notion](https://www.notion.so/Growth-2b5983e32b328059bafbcef73f77f24) | — | `2026-02-24` | 블로거 리텐션 UX 전략 |
 
 ### UI 개선
 
-| 문서명 | 링크 | 등록일 | 비고 |
-|--------|------|--------|------|
-| 금액 미리 계산하기 UI 개선 | [Notion](https://www.notion.so/ui-2c7983e32b3280a9a2b7c17e78cd5f8c) | 2026-02-24 | 금액 계산 기능 UI |
-| QA 콘솔 UI 개선 | [Notion](https://www.notion.so/QA-UI-2a9983e32b3280f8a783e795dfac0b89) | 2026-02-24 | 챗봇 개선 |
-| 카드 UI 정보 우선순위 | [Notion](https://www.notion.so/UI-2b6983e32b32811cb539d44f2515292e) | 2026-02-24 | 지역 우선 표시 |
+| 문서명 | 링크 | 생성일 | 등록일 | 비고 |
+|--------|------|--------|--------|------|
+| 금액 미리 계산하기 UI 개선 | [🅽 Notion](https://www.notion.so/ui-2c7983e32b3280a9a2b7c17e78cd5f8c) | `2025-12-12` | `2026-02-24` | 금액 계산 기능 UI |
+| QA 콘솔 UI 개선 | [🅽 Notion](https://www.notion.so/QA-UI-2a9983e32b3280f8a783e795dfac0b89) | `2025-11-12` | `2026-02-24` | 챗봇 개선 |
+| 카드 UI 정보 우선순위 | [🅽 Notion](https://www.notion.so/UI-2b6983e32b32811cb539d44f2515292e) | `2025-11-25` | `2026-02-24` | 지역 우선 표시 |
 
 ---
 
@@ -276,60 +315,60 @@
 
 ### CS 운영 SOP
 
-| 문서명 | 링크 | 등록일 | 비고 |
-|--------|------|--------|------|
-| SOP 프로세스 작성 양식 | [Notion](https://www.notion.so/SOP-1df983e32b32808cad91c1d8b9e87cb5) | 2026-02-24 | CX 프로세스 작성 양식 |
-| CX SOP 백업 목록 | [Notion](https://www.notion.so/CX-SOP-2ea983e32b32809e9065fd1380a58682) | 2026-02-24 | 전체 SOP (도입문의/결제실패/해지 등) |
-| 결제 실패 대응 프로세스 | [Notion](https://www.notion.so/New-1f3983e32b3280ed93f3ce5fbc1cf65d) | 2026-02-24 | 카드 삭제/한도 초과 등 대응 |
+| 문서명 | 링크 | 생성일 | 등록일 | 비고 |
+|--------|------|--------|--------|------|
+| SOP 프로세스 작성 양식 | [🅽 Notion](https://www.notion.so/SOP-1df983e32b32808cad91c1d8b9e87cb5) | `2025-04-24` | `2026-02-24` | CX 프로세스 작성 양식 |
+| CX SOP 백업 목록 | [🅽 Notion](https://www.notion.so/CX-SOP-2ea983e32b32809e9065fd1380a58682) | `2026-01-16` | `2026-02-24` | 전체 SOP (도입문의/결제실패/해지 등) |
+| 결제 실패 대응 프로세스 | [🅽 Notion](https://www.notion.so/New-1f3983e32b3280ed93f3ce5fbc1cf65d) | `2025-05-14` | `2026-02-24` | 카드 삭제/한도 초과 등 대응 |
 
 ### VOC & CS
 
-| 문서명 | 링크 | 등록일 | 비고 |
-|--------|------|--------|------|
-| VOC 처리 표준 운영 절차 (SOP) | [Notion](https://www.notion.so/VOC-SOP-2bd983e32b3281478ed2d033ccc9b569) | 2026-02-24 | VOC SOP (2025-12~) |
-| 주간 VOC 현황 | [Notion DB](https://www.notion.so/150983e32b328036aadcd00441427ba2) | 2026-02-24 | 주간 VOC 데이터베이스 |
-| CS 사진 모음 | [Notion DB](https://www.notion.so/2c6983e32b3280e3a31de886bd6e16c5) | 2026-02-24 | CS 사진 아카이브 |
-| 자주묻는 질문 | [Notion](https://www.notion.so/16d983e32b3280b59d55fe1cce8cd997) | 2026-02-24 | FAQ (문의 유형별 답변) |
-| 주요 오류 문의 대처 : 매장편 | [Notion](https://www.notion.so/2ca983e32b3280a79098f898faac737e) | 2026-02-24 | 매장 오류 대응 |
-| 앱스토어 대댓글 답변 | [Notion](https://www.notion.so/2c4983e32b32807492aadbd1f54c4dda) | 2026-02-24 | 앱스토어 리뷰 대응 |
-| CX팀 VOC 구글 시트 | [GSheet](https://docs.google.com/spreadsheets/d/1eB89KrgxW1651-pKWmqZRuJYnnzNMr2U1OcDkMfL480/) | 2026-02-24 | VOC 데이터 (926건) |
+| 문서명 | 링크 | 생성일 | 등록일 | 비고 |
+|--------|------|--------|--------|------|
+| VOC 처리 표준 운영 절차 (SOP) | [🅽 Notion](https://www.notion.so/VOC-SOP-2bd983e32b3281478ed2d033ccc9b569) | `2025-12-02` | `2026-02-24` | VOC SOP (2025-12~) |
+| 주간 VOC 현황 | [🅽 Notion DB](https://www.notion.so/150983e32b328036aadcd00441427ba2) | `2024-12-02` | `2026-02-24` | 주간 VOC 데이터베이스 |
+| CS 사진 모음 | [🅽 Notion DB](https://www.notion.so/2c6983e32b3280e3a31de886bd6e16c5) | `2025-12-11` | `2026-02-24` | CS 사진 아카이브 |
+| 자주묻는 질문 | [🅽 Notion](https://www.notion.so/16d983e32b3280b59d55fe1cce8cd997) | `2024-12-31` | `2026-02-24` | FAQ (문의 유형별 답변) |
+| 주요 오류 문의 대처 : 매장편 | [🅽 Notion](https://www.notion.so/2ca983e32b3280a79098f898faac737e) | `2025-12-15` | `2026-02-24` | 매장 오류 대응 |
+| 앱스토어 대댓글 답변 | [🅽 Notion](https://www.notion.so/2c4983e32b32807492aadbd1f54c4dda) | `2025-12-09` | `2026-02-24` | 앱스토어 리뷰 대응 |
+| CX팀 VOC 구글 시트 | [Ⓖ Sheet](https://docs.google.com/spreadsheets/d/1eB89KrgxW1651-pKWmqZRuJYnnzNMr2U1OcDkMfL480/) | `2025-02-26` | `2026-02-24` | VOC 데이터 (926건) |
 
 ### CX 팀 온보딩
 
-| 문서명 | 링크 | 등록일 | 비고 |
-|--------|------|--------|------|
-| CX 팀 온보딩 프로세스 | [Notion](https://www.notion.so/CX-2fd983e32b3280d59220d5407ab6c9bd) | 2026-02-24 | CX 팀원 온보딩 절차 |
-| CX팀 합류 환영 | [Notion DB](https://www.notion.so/2fe983e32b32804b831fd9f68791de3e) | 2026-02-24 | CX 온보딩 허브 |
+| 문서명 | 링크 | 생성일 | 등록일 | 비고 |
+|--------|------|--------|--------|------|
+| CX 팀 온보딩 프로세스 | [🅽 Notion](https://www.notion.so/CX-2fd983e32b3280d59220d5407ab6c9bd) | `2026-02-04` | `2026-02-24` | CX 팀원 온보딩 절차 |
+| CX팀 합류 환영 | [🅽 Notion DB](https://www.notion.so/2fe983e32b32804b831fd9f68791de3e) | `2026-02-05` | `2026-02-24` | CX 온보딩 허브 |
 
 ### 전화 스크립트
 
-| 문서명 | 링크 | 등록일 | 비고 |
-|--------|------|--------|------|
-| 전화 스크립트 (매장) | [Notion](https://www.notion.so/1a1983e32b32816bb6d7c1f31b298d72) | 2026-02-24 | 매장 전화 응대 |
-| 전화 스크립트 (제품) | [Notion](https://www.notion.so/1a1983e32b32819693d6e0ede5b8fadb) | 2026-02-24 | 제품 전화 응대 |
-| 리텐션 발송 템플릿 | [Notion](https://www.notion.so/305983e32b32813d969efbcd3b813a44) | 2026-02-24 | 회신/확인/진행확정 이메일 템플릿 |
+| 문서명 | 링크 | 생성일 | 등록일 | 비고 |
+|--------|------|--------|--------|------|
+| 전화 스크립트 (매장) | [🅽 Notion](https://www.notion.so/1a1983e32b32816bb6d7c1f31b298d72) | `2025-02-21` | `2026-02-24` | 매장 전화 응대 |
+| 전화 스크립트 (제품) | [🅽 Notion](https://www.notion.so/1a1983e32b32819693d6e0ede5b8fadb) | `2025-02-21` | `2026-02-24` | 제품 전화 응대 |
+| 리텐션 발송 템플릿 | [🅽 Notion](https://www.notion.so/305983e32b32813d969efbcd3b813a44) | `2026-02-12` | `2026-02-24` | 회신/확인/진행확정 이메일 템플릿 |
 
 ### 블로거 관리
 
-| 문서명 | 링크 | 등록일 | 비고 |
-|--------|------|--------|------|
-| 블로거 심사 | [Notion](https://www.notion.so/b25ce97a07f34fa09eb360b4f12e1c09) | 2026-02-24 | 블로거 심사 기준 |
-| 블로거 패널티 가이드 | [Notion](https://www.notion.so/15b983e32b32804a858dea1290b3eecc) | 2026-02-24 | 패널티 기준 및 운영 |
-| 앱 공지사항 정리 | [Notion](https://www.notion.so/181983e32b3280c9b6c8d1135fcc468c) | 2026-02-24 | 공지사항 이력 |
+| 문서명 | 링크 | 생성일 | 등록일 | 비고 |
+|--------|------|--------|--------|------|
+| 블로거 심사 | [🅽 Notion](https://www.notion.so/b25ce97a07f34fa09eb360b4f12e1c09) | `2024-01-30` | `2026-02-24` | 블로거 심사 기준 |
+| 블로거 패널티 가이드 | [🅽 Notion](https://www.notion.so/15b983e32b32804a858dea1290b3eecc) | `2024-12-13` | `2026-02-24` | 패널티 기준 및 운영 |
+| 앱 공지사항 정리 | [🅽 Notion](https://www.notion.so/181983e32b3280c9b6c8d1135fcc468c) | `2025-01-20` | `2026-02-24` | 공지사항 이력 |
 
 ---
 
 ## 운영 시트
 
-| 문서명 | 링크 | 등록일 | 비고 |
-|--------|------|--------|------|
-| 슈퍼멤버스 3.0 기획서 | [GSheet](https://docs.google.com/spreadsheets/d/1HzzvkFPOBDH6x7mX8xjXUwHTWwwSua0fbHLnFDeumFg/) | 2026-02-24 | 3.0 기획/설계 |
-| 단계별 푸시발송 리스트 | [GSheet](https://docs.google.com/spreadsheets/d/1_ettWTKoRohFYkxOiUOY30AJ3VwyxnrO6H58VDWMyFU/) | 2026-02-24 | 카카오 알림톡 템플릿 관리 |
-| 키워드 노출 순위 트래킹 | [GSheet](https://docs.google.com/spreadsheets/d/1bb2WE0xEw3bPwt3rDsUjyjOJQgqyjdTP4uUHxfdshzY/) | 2026-02-24 | 매장별 주간 키워드 순위 (1,579건) |
-| 상위노출 키워드 업체 리스트 | [GSheet](https://docs.google.com/spreadsheets/d/1QSaI8fF_EvnoDKhuNaDqZ-szAzMa7BW5xDozV3cH3U8/) | 2026-02-24 | 키워드 20개+ 업체 관리 (4,194건) |
-| 블로거 메일 발송 리스트 | [GSheet](https://docs.google.com/spreadsheets/d/1tDsAVHQGAQnTTrz4wlPdRPPaCj65-U2mDVHO3q_Dp5M/) | 2026-02-24 | 블로거 이메일 발송 |
-| 이슈 및 개선 리스트 | [Notion](https://www.notion.so/mayacrew/d69f2a2d5cc94410920a7bd4f8510bfc) | 2026-02-24 | 서비스 이슈 트래킹 |
+| 문서명 | 링크 | 생성일 | 등록일 | 비고 |
+|--------|------|--------|--------|------|
+| 슈퍼멤버스 3.0 기획서 | [Ⓖ Sheet](https://docs.google.com/spreadsheets/d/1HzzvkFPOBDH6x7mX8xjXUwHTWwwSua0fbHLnFDeumFg/) | — | `2026-02-24` | 3.0 기획/설계 |
+| 단계별 푸시발송 리스트 | [Ⓖ Sheet](https://docs.google.com/spreadsheets/d/1_ettWTKoRohFYkxOiUOY30AJ3VwyxnrO6H58VDWMyFU/) | `2021-03-10` | `2026-02-24` | 카카오 알림톡 템플릿 관리 |
+| 키워드 노출 순위 트래킹 | [Ⓖ Sheet](https://docs.google.com/spreadsheets/d/1bb2WE0xEw3bPwt3rDsUjyjOJQgqyjdTP4uUHxfdshzY/) | `2024-11-07` | `2026-02-24` | 매장별 주간 키워드 순위 (1,579건) |
+| 상위노출 키워드 업체 리스트 | [Ⓖ Sheet](https://docs.google.com/spreadsheets/d/1QSaI8fF_EvnoDKhuNaDqZ-szAzMa7BW5xDozV3cH3U8/) | `2023-11-15` | `2026-02-24` | 키워드 20개+ 업체 관리 (4,194건) |
+| 블로거 메일 발송 리스트 | [Ⓖ Sheet](https://docs.google.com/spreadsheets/d/1tDsAVHQGAQnTTrz4wlPdRPPaCj65-U2mDVHO3q_Dp5M/) | — | `2026-02-24` | 블로거 이메일 발송 |
+| 이슈 및 개선 리스트 | [🅽 Notion](https://www.notion.so/mayacrew/d69f2a2d5cc94410920a7bd4f8510bfc) | `2023-09-26` | `2026-02-24` | 서비스 이슈 트래킹 |
 
 ---
 
-*Last updated: 2026-02-25*
+*Last updated: 2026-02-26*
