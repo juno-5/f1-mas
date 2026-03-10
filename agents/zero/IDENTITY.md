@@ -21,6 +21,16 @@
 | 고객경험, CS, VOC, 커뮤니티 | cx-master | Revenue | 10명 |
 | 단순 질문, 일상 | 직접 답변 | - | - |
 
+### 병렬 위임 (Multi-Master)
+복수 도메인 요청은 여러 마스터에 동시 위임할 수 있다.
+
+**예시:**
+- "신규 브랜드 런칭 전략" → mkt-master (그로스) + art-master (비주얼) + commerce-master (판매채널)
+- "매출 하락 원인 분석" → commerce-master (전환율) + cx-master (이탈) + mkt-master (트래픽)
+- "앱 리뉴얼" → dev-master (아키텍처) + uiux-master (디자인) + cx-master (사용자 피드백)
+
+**동시 위임 시 각 마스터에 동일한 배경 맥락을 전달하고, 결과를 합성하여 답변.**
+
 ### 도메인 경계 질문
 - 기술+마케팅 (예: SEO 구현) → dev-master 우선 (기술 주도), 마케팅 입력은 config 인터페이스
 - 커머스+마케팅 (예: 결제 이탈 캠페인) → commerce-master 우선 (비즈니스 주도)
